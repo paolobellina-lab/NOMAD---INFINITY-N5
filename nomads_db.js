@@ -1004,3 +1004,130 @@ const nomadsDatabase_Part5 = [
         skills: "BS Attack (+1SD), Courage, Martial Arts L1, Mimetism (-3), NWI" 
     }
 ];
+const nomadsDatabase_Part6 = [
+    // --- MOTORIZED BOUNTY HUNTER ---
+    {
+        id_profilo: "motorized_bh_bsg",
+        nome: "Motorized Bounty Hunter",
+        arma: "Boarding Shotgun, Heavy Riotstopper / Pistol, PARA CC Weapon(-6)", 
+        cc: 17, bs: 12, wip: 13, arm: 1, 
+        skills: "Booty (ReRoll), Dodge (+2), Impetuous, Limited Cover, Mimetism (-3), Motorcycle" 
+    },
+    {
+        id_profilo: "motorized_bh_smg",
+        nome: "Motorized Bounty Hunter",
+        arma: "Submachine Gun, Chain-colt(+1B) / Pistol, PARA CC Weapon(-6)", 
+        cc: 17, bs: 12, wip: 13, arm: 1, 
+        skills: "Booty (ReRoll), Dodge (+2), Impetuous, Limited Cover, Mimetism (-3), Motorcycle" 
+    },
+    {
+        id_profilo: "motorized_bh_redfury",
+        nome: "Motorized Bounty Hunter",
+        arma: "Red Fury / Breaker Pistol, PARA CC Weapon(-6)", 
+        cc: 17, bs: 12, wip: 13, arm: 1, 
+        skills: "Booty (ReRoll), Dodge (+2), Impetuous, Limited Cover, Mimetism (-3), Motorcycle" 
+    },
+
+    // --- DIGGER ---
+    {
+        id_profilo: "digger_rifle",
+        nome: "Digger",
+        arma: "Rifle, Light Shotgun, Grenades / Pistol, AP CC Weapon (PS=6)", 
+        cc: 21, bs: 11, wip: 12, arm: 2, 
+        skills: "Booty, CC Attack (+1B), Courage, Dodge (+1), Impetuous, Natural Born Warrior, No Cover, Transmutation (1)" 
+    },
+    {
+        id_profilo: "digger_chain",
+        nome: "Digger",
+        arma: "Chain Rifle(+1B), Grenades / Pistol, AP CC Weapon (PS=6)", 
+        cc: 21, bs: 11, wip: 12, arm: 2, 
+        skills: "Booty, CC Attack (+1B), Courage, Dodge (+1), Impetuous, Natural Born Warrior, No Cover, Transmutation (1)" 
+    },
+
+    // --- TRIPHAMMER (TAG Mercenario) ---
+    {
+        id_profilo: "triphammer_spitfire",
+        nome: "Triphammer (TAG)",
+        arma: "AP Spitfire, Heavy Flamethrower / AP CC Weapon (PS=4)", 
+        cc: 17, bs: 13, wip: 12, arm: 7, 
+        skills: "Booty, BS Attack (SR-1), CC Attack (Antimaterial), Dodge (PH=9), Gizmokit (PH=10), Tactical Awareness, Transmutation (2)" 
+    },
+    {
+        id_profilo: "triphammer_chain",
+        nome: "Triphammer (TAG)",
+        arma: "AP Spitfire, Chain-colt(+1B) / AP CC Weapon (PS=4)", 
+        cc: 17, bs: 13, wip: 12, arm: 7, 
+        skills: "Booty, BS Attack (SR-1), CC Attack (Antimaterial), Dodge (PH=9), Gizmokit (PH=10), Tactical Awareness, Transmutation (2)" 
+    },
+    {
+        id_profilo: "triphammer_hsg",
+        nome: "Triphammer (TAG)",
+        arma: "Heavy Shotgun, Thunderbolt(+1B) / AP CC Weapon (PS=4)", 
+        cc: 17, bs: 13, wip: 12, arm: 7, 
+        skills: "Booty, BS Attack (SR-1), CC Attack (Antimaterial), Dodge (PH=9), Gizmokit (PH=10), Tactical Awareness, Transmutation (2)" 
+    },
+    {
+        id_profilo: "triphammer_hrl",
+        nome: "Triphammer (TAG)",
+        arma: "Heavy Shotgun, Heavy Rocket Launcher, Panzerfaust(+1B) / AP CC Weapon (PS=4)", 
+        cc: 17, bs: 13, wip: 12, arm: 7, 
+        skills: "Booty, BS Attack (SR-1), CC Attack (Antimaterial), Dodge (PH=9), Gizmokit (PH=10), Tactical Awareness, Transmutation (2)" 
+    },
+
+    // --- TURTLEMEK (Drone di supporto) ---
+    {
+        id_profilo: "turtlemek",
+        nome: "TurtleMek",
+        arma: "Nessuna", 
+        cc: 10, bs: 0, wip: 12, arm: 0, 
+        skills: "Courage, Dodge (+3), Mimetism (-3), Peripheral (Ancillary), Specialist Operative" 
+    },
+
+    // --- BEASTHUNTERS ---
+    {
+        id_profilo: "beasthunter_panzerfaust",
+        nome: "Beasthunter",
+        arma: "Heavy Flamethrower, Panzerfaust, AP Mine / Pistol, DA CC Weapon(PS=5)", 
+        cc: 21, bs: 11, wip: 12, arm: 0, 
+        skills: "Surprise Attack (-3), Camouflage, Forward Deployment (+8), Mimetism (-3), Religious Troop, Stealth, Super-Jump, Terrain (Total)" 
+    },
+    {
+        id_profilo: "beasthunter_bow",
+        nome: "Beasthunter",
+        arma: "Heavy Flamethrower, Tactical Bow, AP Mine / Pistol, DA CC Weapon(PS=5)", 
+        cc: 21, bs: 11, wip: 12, arm: 0, 
+        skills: "Surprise Attack (-3), Camouflage, Forward Deployment (+8), Mimetism (-3), Religious Troop, Stealth, Super-Jump, Terrain (Total)" 
+    },
+
+    // --- SAMSA ---
+    {
+        id_profilo: "samsa",
+        nome: "Samsa",
+        arma: "Plasma Rifle, D-Charges / Pistol, CC Weapon", 
+        cc: 15, bs: 13, wip: 13, arm: 1, 
+        skills: "Decoy (1), Dodge (+1), Exrah, Infiltration, Mimetism (-3), Specialist Operative, Super-Jump, Surprise Attack (-3)" 
+    },
+
+    // --- YOJIMBO ---
+    {
+        id_profilo: "yojimbo",
+        nome: "Yojimbo",
+        arma: "Contender(+1B), Nanopulser, Smoke Grenades, Crazykoala / Pistol, DA CC Weapon(PS=3)", 
+        cc: 24, bs: 12, wip: 13, arm: 1, 
+        skills: "Courage, Dodge (+1), Immunity (Critical), Martial Arts L4, Minelayer, No Cover, No Wound Incapacitation, Stealth" 
+    }
+];
+
+// --- UNIONE FINALE DEL DATABASE ---
+// Inserisci questa riga alla fine del file per unire tutti i 6 blocchi in un unico grande array
+const masterNomadsDatabase = [
+    ...nomadsDatabase_Part1,
+    ...nomadsDatabase_Part2,
+    ...nomadsDatabase_Part3,
+    ...nomadsDatabase_Part4,
+    ...nomadsDatabase_Part5,
+    ...nomadsDatabase_Part6
+];
+
+// Esportazione per poterlo leggere nell'App
+window.masterNomadsDatabase = masterNomadsDatabase;
