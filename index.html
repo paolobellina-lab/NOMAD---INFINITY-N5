@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NOMADS TACTICAL TERMINAL</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ff41">
+    
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        body { background: #0d0f12; color: #00ff41; font-family: 'Share Tech Mono', monospace; padding: 15px; border: 1px solid #00ff41; }
+        body { background: #0d0f12; color: #00ff41; font-family: 'Share Tech Mono', monospace; padding: 15px; border: 1px solid #00ff41; min-height: 100vh; }
         h2 { text-shadow: 0 0 10px #00ff41; text-align: center; text-transform: uppercase; }
         .section { background: rgba(0,255,65,0.05); border: 1px solid #00ff41; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        input, select { background: #000; color: #00ff41; border: 1px solid #00ff41; width: 100%; padding: 10px; margin: 5px 0; font-family: inherit; }
+        input, select { background: #000; color: #00ff41; border: 1px solid #00ff41; width: 100%; padding: 10px; margin: 5px 0; font-family: inherit; box-sizing: border-box; }
         button { width: 100%; padding: 15px; margin-top: 10px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; border: none; }
         .btn-nomad { background: #00ff41; color: #000; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
         .btn-status { background: #444; color: #00ff41; border: 1px solid #00ff41; margin-top: 5px; font-size: 12px; }
@@ -19,6 +23,7 @@
 </head>
 <body>
     <h2>-- NOMADS HACKER TOOL --</h2>
+    
     <div id="setup">
         <div class="section">
             <input type="text" id="unitAlias" placeholder="SOPRANNOME (es. BLU)">
@@ -32,31 +37,42 @@
 
     <div id="battle" style="display:none;">
         <button id="btnListen" class="btn-nomad">🎤 TRASMISSIONE VOCALE</button>
-        <div id="console" style="font-size: 12px; margin-top: 20px; color: #008f11;">[LOG]: In attesa di segnale...</div>
+        <div id="console" style="font-size: 12px; margin-top: 20px; color: #008f11; background: #000; padding: 10px; border: 1px solid #008f11;">[LOG]: In attesa di segnale...</div>
     </div>
 
     <script type="module">
-        // --- FUNZIONE SEMPRE ACCESO (WAKE LOCK) ---
-let wakeLock = null;
-const requestWakeLock = async () => {
-  try {
-    wakeLock = await navigator.wakeLock.request('screen');
-    console.log('Schermo bloccato: SEMPRE ACCESO');
-  } catch (err) {
-    console.error(`${err.name}, ${err.message}`);
-  }
-};
-requestWakeLock();
-
-// --- FORZA SCHERMO INTERO AL TOCCO ---
-document.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    }
-});
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // --- REGISTRAZIONE SERVICE WORKER ---
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registrato!', reg))
+                .catch(err => console.log('Errore SW:', err));
+        }
+
+        // --- FUNZIONE SEMPRE ACCESO (WAKE LOCK) ---
+        let wakeLock = null;
+        const requestWakeLock = async () => {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Schermo sempre acceso attivato');
+                }
+            } catch (err) {
+                console.error(`Errore WakeLock: ${err.message}`);
+            }
+        };
+
+        // --- FORZA SCHERMO INTERO E WAKE LOCK AL TOCCO ---
+        document.addEventListener('click', () => {
+            requestWakeLock();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => console.log("Errore Fullscreen"));
+            }
+        });
+
+        // --- FIREBASE CONFIG ---
         const firebaseConfig = { /* INCOLLA QUI IL TUO CONFIG FIREBASE */ };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -64,24 +80,41 @@ document.addEventListener('click', () => {
         let roster = [];
         window.addUnit = async () => {
             const alias = document.getElementById('unitAlias').value.toUpperCase();
-            const unit = { alias, name: document.getElementById('unitName').value, weapon: document.getElementById('unitWeapon').value, bs: document.getElementById('unitBS').value, state: "ACTIVE", player: "G_NOMADS", modifiers: [] };
+            if(!alias) return alert("Inserisci un soprannome!");
+            
+            const unit = { 
+                alias, 
+                name: document.getElementById('unitName').value, 
+                weapon: document.getElementById('unitWeapon').value, 
+                bs: document.getElementById('unitBS').value, 
+                state: "ACTIVE", 
+                player: "G_NOMADS", 
+                modifiers: [] 
+            };
+            
             await setDoc(doc(db, "sessione_corrente", alias), unit);
             roster.push(unit);
-            alert("Unità caricata!");
+            alert("Unità " + alias + " caricata!");
         };
 
-        window.startBattle = () => { document.getElementById('setup').style.display='none'; document.getElementById('battle').style.display='block'; };
+        window.startBattle = () => { 
+            document.getElementById('setup').style.display='none'; 
+            document.getElementById('battle').style.display='block'; 
+        };
 
+        // --- RICONOSCIMENTO VOCALE ---
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         recognition.lang = 'it-IT';
+        recognition.continuous = false;
+
         document.getElementById('btnListen').onclick = () => recognition.start();
 
         recognition.onstart = () => document.getElementById('btnListen').classList.add('recording');
+        
         recognition.onresult = async (event) => {
             document.getElementById('btnListen').classList.remove('recording');
             const testo = event.results[0][0].transcript.toLowerCase();
             document.getElementById('console').innerText = "> " + testo;
-            // Qui inseriresti la logica degli stati (morto, inconscio, etc.) vista prima
             elaboraStato(testo);
         };
 
@@ -92,7 +125,11 @@ document.addEventListener('click', () => {
                 if (testo.includes("morto")) s = "DEAD";
                 if (testo.includes("inconscio")) s = "UNCONSCIOUS";
                 if (testo.includes("attivo")) s = "ACTIVE";
-                if (s) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: s });
+                
+                if (s) {
+                    await updateDoc(doc(db, "sessione_corrente", match.alias), { state: s });
+                    document.getElementById('console').innerText += "\n[OK] Stato " + s + " inviato.";
+                }
             }
         }
     </script>
