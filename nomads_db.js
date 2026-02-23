@@ -422,3 +422,132 @@ const nomadsDatabase_Part2 = [
         skills: "ECM: Guided (-6), BS Attack (SR-1), Dodge (PH=11), Gizmokit (PH=11), NCO" // [cite: 1539, 1540]
     }
 ];
+const nomadsDatabase_Part3 = [
+    // --- KRIZA BORAC ---
+    {
+        id_profilo: "kriza_hmg",
+        nome: "Kriza Borac",
+        arma: "Heavy Machine Gun / Heavy Pistol, CC Weapon", 
+        cc: 16, bs: 13, wip: 13, arm: 5, 
+        skills: "360 Visor, Courage, Fireteam: Haris, Immunity (Shock)" 
+    },
+    {
+        id_profilo: "kriza_mk12",
+        nome: "Kriza Borac",
+        arma: "Mk12 / Heavy Pistol, CC Weapon", 
+        cc: 16, bs: 13, wip: 13, arm: 5, 
+        skills: "360 Visor, Courage, Fireteam: Haris, Immunity (Shock)" 
+    },
+
+    // --- TASKMASTER ---
+    {
+        id_profilo: "taskmaster_hmg",
+        nome: "Taskmaster",
+        arma: "Heavy Machine Gun, Crazykoala / Heavy Pistol, DA CC Weapon (PS=5)", 
+        cc: 20, bs: 13, wip: 13, arm: 5, 
+        skills: "Heavyweight, Courage, Kinematika L1, Mimetism (-3), NCO" 
+    },
+    {
+        id_profilo: "taskmaster_redfury",
+        nome: "Taskmaster",
+        arma: "Red Fury, Crazykoala / Heavy Pistol, DA CC Weapon (PS=5)", 
+        cc: 20, bs: 13, wip: 13, arm: 5, 
+        skills: "Heavyweight, Courage, Kinematika L1, Mimetism (-3), NCO" 
+    },
+
+    // --- HOLLOW MEN ---
+    {
+        id_profilo: "hollowmen_combi",
+        nome: "Hollow Men",
+        arma: "Combi Rifle, Chain-colt, Pitcher / Breaker Pistol, CC Weapon", 
+        cc: 15, bs: 13, wip: 13, arm: 3, 
+        skills: "Courage, Super-Jump (Jet Propulsion)" 
+    },
+    {
+        id_profilo: "hollowmen_ml",
+        nome: "Hollow Men",
+        arma: "Missile Launcher, Chain-colt / Breaker Pistol, CC Weapon", 
+        cc: 15, bs: 13, wip: 13, arm: 3, 
+        skills: "Courage, Super-Jump (Jet Propulsion)" 
+    },
+
+    // --- GECKO (TAG Leggero) ---
+    {
+        id_profilo: "gecko_combi",
+        nome: "Gecko",
+        arma: "2 Combi Rifles, Chain-colt / Heavy Pistol, CC Weapon", 
+        cc: 17, bs: 13, wip: 13, arm: 5, 
+        skills: "Courage, ECM: Hacker (-3), Heavyweight, Pilot" 
+    },
+    {
+        id_profilo: "gecko_mk12",
+        nome: "Gecko",
+        arma: "Mk12, Chain-colt / Heavy Pistol, CC Weapon", 
+        cc: 17, bs: 13, wip: 13, arm: 5, 
+        skills: "Courage, ECM: Hacker (-3), Heavyweight, Pilot" 
+    },
+
+    // --- BANDIT ---
+    {
+        id_profilo: "bandit_bsg",
+        nome: "Bandit",
+        arma: "Boarding Shotgun, Adhesive Launcher / Pistol, DA CC Weapon (PS=6)", 
+        cc: 22, bs: 11, wip: 13, arm: 1, 
+        skills: "Camouflage, Infiltration, Martial Arts L2, Scavenger, Stealth, Terrain (Total)" 
+    },
+    {
+        id_profilo: "bandit_combi",
+        nome: "Bandit (Hacker)",
+        arma: "Combi Rifle, Adhesive Launcher / Pistol, DA CC Weapon (PS=6)", 
+        cc: 22, bs: 11, wip: 13, arm: 1, 
+        skills: "Killer Hacking Device, Camouflage, Infiltration, Martial Arts L2, Scavenger, Stealth, Terrain (Total)" 
+    },
+
+    // --- WILDCAT ---
+    {
+        id_profilo: "wildcat_combi",
+        nome: "Wildcat",
+        arma: "Combi Rifle, Light Flamethrower, D-Charges / Pistol, CC Weapon", 
+        cc: 15, bs: 13, wip: 13, arm: 2, 
+        skills: "Courage, Immunity (Shock)" 
+    },
+    {
+        id_profilo: "wildcat_hrl",
+        nome: "Wildcat",
+        arma: "Heavy Rocket Launcher, Light Flamethrower / Pistol, CC Weapon", 
+        cc: 15, bs: 13, wip: 13, arm: 2, 
+        skills: "Courage, Immunity (Shock)" 
+    },
+
+    // --- TOMCAT ---
+    {
+        id_profilo: "tomcat_doctor",
+        nome: "Tomcat (Doctor)",
+        arma: "Combi Rifle, Light Flamethrower | MediKit / Pistol, CC Weapon", 
+        cc: 14, bs: 12, wip: 14, arm: 1, 
+        skills: "Doctor, Climbing Plus, Courage, Parachutist" 
+    },
+    {
+        id_profilo: "tomcat_engineer",
+        nome: "Tomcat (Engineer)",
+        arma: "Combi Rifle, Light Flamethrower, D-Charges / Pistol, CC Weapon", 
+        cc: 14, bs: 12, wip: 14, arm: 1, 
+        skills: "Engineer, Climbing Plus, Courage, Parachutist" 
+    },
+
+    // --- YUAN YUAN (Mercenario) ---
+    {
+        id_profilo: "yuanyuan_chain_da",
+        nome: "Yuan Yuan",
+        arma: "Chain Rifle, Smoke Grenades / Pistol, DA CC Weapon (PS=6)", 
+        cc: 20, bs: 9, wip: 13, arm: 0, 
+        skills: "Combat Jump, Impetuous, Martial Arts L3, Booty" 
+    },
+    {
+        id_profilo: "yuanyuan_chain_ap",
+        nome: "Yuan Yuan",
+        arma: "Chain Rifle, Smoke Grenades / Pistol, AP CC Weapon (PS=6)", 
+        cc: 20, bs: 9, wip: 13, arm: 0, 
+        skills: "Combat Jump, Impetuous, Martial Arts L3, Booty" 
+    }
+];
