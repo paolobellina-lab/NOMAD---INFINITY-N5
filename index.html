@@ -1,1 +1,82 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOMADS TACTICAL TERMINAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        body { background: #0d0f12; color: #00ff41; font-family: 'Share Tech Mono', monospace; padding: 15px; border: 1px solid #00ff41; }
+        h2 { text-shadow: 0 0 10px #00ff41; text-align: center; text-transform: uppercase; }
+        .section { background: rgba(0,255,65,0.05); border: 1px solid #00ff41; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        input, select { background: #000; color: #00ff41; border: 1px solid #00ff41; width: 100%; padding: 10px; margin: 5px 0; font-family: inherit; }
+        button { width: 100%; padding: 15px; margin-top: 10px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; border: none; }
+        .btn-nomad { background: #00ff41; color: #000; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
+        .btn-status { background: #444; color: #00ff41; border: 1px solid #00ff41; margin-top: 5px; font-size: 12px; }
+        .recording { background: #ff0000 !important; color: white !important; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+    <h2>-- NOMADS HACKER TOOL --</h2>
+    <div id="setup">
+        <div class="section">
+            <input type="text" id="unitAlias" placeholder="SOPRANNOME (es. BLU)">
+            <input type="text" id="unitName" placeholder="TIPO (es. ALGUACIL)">
+            <input type="text" id="unitWeapon" placeholder="ARMA (es. COMBI)">
+            <input type="number" id="unitBS" placeholder="BS BASE">
+            <button class="btn-nomad" onclick="addUnit()">UPLOAD UNIT TO DATABASE</button>
+        </div>
+        <button class="btn-status" onclick="startBattle()">ENTRA IN COMBATTIMENTO</button>
+    </div>
 
+    <div id="battle" style="display:none;">
+        <button id="btnListen" class="btn-nomad">🎤 TRASMISSIONE VOCALE</button>
+        <div id="console" style="font-size: 12px; margin-top: 20px; color: #008f11;">[LOG]: In attesa di segnale...</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = { /* INCOLLA QUI IL TUO CONFIG FIREBASE */ };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let roster = [];
+        window.addUnit = async () => {
+            const alias = document.getElementById('unitAlias').value.toUpperCase();
+            const unit = { alias, name: document.getElementById('unitName').value, weapon: document.getElementById('unitWeapon').value, bs: document.getElementById('unitBS').value, state: "ACTIVE", player: "G_NOMADS", modifiers: [] };
+            await setDoc(doc(db, "sessione_corrente", alias), unit);
+            roster.push(unit);
+            alert("Unità caricata!");
+        };
+
+        window.startBattle = () => { document.getElementById('setup').style.display='none'; document.getElementById('battle').style.display='block'; };
+
+        const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+        recognition.lang = 'it-IT';
+        document.getElementById('btnListen').onclick = () => recognition.start();
+
+        recognition.onstart = () => document.getElementById('btnListen').classList.add('recording');
+        recognition.onresult = async (event) => {
+            document.getElementById('btnListen').classList.remove('recording');
+            const testo = event.results[0][0].transcript.toLowerCase();
+            document.getElementById('console').innerText = "> " + testo;
+            // Qui inseriresti la logica degli stati (morto, inconscio, etc.) vista prima
+            elaboraStato(testo);
+        };
+
+        async function elaboraStato(testo) {
+            const match = roster.find(u => testo.includes(u.alias.toLowerCase()));
+            if (match) {
+                let s = "";
+                if (testo.includes("morto")) s = "DEAD";
+                if (testo.includes("inconscio")) s = "UNCONSCIOUS";
+                if (testo.includes("attivo")) s = "ACTIVE";
+                if (s) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: s });
+            }
+        }
+    </script>
+</body>
+</html>
