@@ -551,3 +551,174 @@ const nomadsDatabase_Part3 = [
         skills: "Combat Jump, Impetuous, Martial Arts L3, Booty" 
     }
 ];
+const nomadsDatabase_Part4 = [
+    // --- SWITCHER ---
+    {
+        id_profilo: "switcher_combi",
+        nome: "Switcher",
+        arma: "Combi Rifle, E/Mitter, Zapper / Pistol, Viral CC Weapon (PS=5)", 
+        cc: 15, bs: 12, wip: 13, arm: 1, 
+        skills: "Courage, Dogged, Tactical Awareness, Transmutation (WIP)" 
+    },
+    {
+        id_profilo: "switcher_thunderbolt",
+        nome: "Switcher",
+        arma: "Thunderbolt, E/M Carbine, E/M Grenades / Pistol, Viral CC Weapon (PS=5)", 
+        cc: 15, bs: 12, wip: 13, arm: 1, 
+        skills: "BS Attack (+1B), Courage, Dogged, Tactical Awareness, Transmutation (WIP)" 
+    },
+    {
+        id_profilo: "switcher_ap_smg",
+        nome: "Switcher (Forward Observer)",
+        arma: "AP Submachine Gun, Flash Pulse(+1B), E/M Grenades / Pistol, Viral CC Weapon (PS=5)", 
+        cc: 15, bs: 12, wip: 13, arm: 1, 
+        skills: "Forward Observer, Courage, Dogged, Tactical Awareness, Transmutation (WIP)" 
+    },
+
+    // --- TAG PILOTS ---
+    {
+        id_profilo: "gecko_pilot",
+        nome: "Gecko Pilot",
+        arma: "Combi Rifle | GizmoKit / Assault Pistol(+1B), CC Weapon", 
+        cc: 13, bs: 11, wip: 13, arm: 1, 
+        skills: "Specialist Operative, TAGCom" 
+    },
+    {
+        id_profilo: "szalamandra_pilot",
+        nome: "Szalamandra Pilot",
+        arma: "Light Shotgun, Cybermine / Pistol, CC Weapon", 
+        cc: 13, bs: 11, wip: 13, arm: 1, 
+        skills: "Hacker, Killer Hacking Device, Specialist Operative, TAGCom" 
+    },
+    {
+        id_profilo: "gator_pilot",
+        nome: "Gator Pilot",
+        arma: "Boarding Shotgun, D-Charges / Kobra Pistol, PARA CC Weapon(-6)", 
+        cc: 13, bs: 11, wip: 13, arm: 1, 
+        skills: "CC Attack (+9), Specialist Operative, TAGCom" 
+    },
+
+    // --- TRIGGERMEN ---
+    {
+        id_profilo: "triggermen_sniper",
+        nome: "Triggermen",
+        arma: "MULTI Sniper Rifle, E/Marat(+1B), Pulzar(+1B) / MULTI Pistol, CC Weapon(-3)", 
+        cc: 17, bs: 13, wip: 13, arm: 4, 
+        skills: "BS Attack (+1SD), CC Attack (+1B), Mimetism (-3), Regeneration (PH=14), Stealth, 360 Visor" 
+    },
+    {
+        id_profilo: "triggermen_hrl",
+        nome: "Triggermen",
+        arma: "Heavy Rocket Launcher, AP Submachine Gun / MULTI Pistol, CC Weapon(-3)", 
+        cc: 17, bs: 13, wip: 13, arm: 4, 
+        skills: "BS Attack (+1SD), CC Attack (+1B), Mimetism (-3), Regeneration (PH=14), Stealth, 360 Visor" 
+    },
+
+    // --- DRUZE ---
+    {
+        id_profilo: "druze_combi",
+        nome: "Druze",
+        arma: "Combi Rifle, Chain-colt / Viral Pistol, CC Weapon", 
+        cc: 16, bs: 12, wip: 13, arm: 1, 
+        skills: "BS Attack (SR-1), Warhorse, X Visor" 
+    },
+    {
+        id_profilo: "druze_hmg",
+        nome: "Druze",
+        arma: "Heavy Machine Gun, Chain-colt / Viral Pistol, CC Weapon", 
+        cc: 16, bs: 12, wip: 13, arm: 1, 
+        skills: "BS Attack (SR-1), Warhorse, X Visor" 
+    },
+    {
+        id_profilo: "druze_shock",
+        nome: "Druze",
+        arma: "Shock Marksman Rifle, Chain-colt / Viral Pistol, CC Weapon", 
+        cc: 16, bs: 12, wip: 13, arm: 1, 
+        skills: "BS Attack (SR-1), Warhorse, X Visor" 
+    },
+
+    // --- SCARFACE & CORDELIA (Mercenaries) ---
+    {
+        id_profilo: "scarface_alpha",
+        nome: "Scarface (TAG)",
+        arma: "Mk12(+1B), Heavy Rocket Launcher(+1B) / DA CC Weapon (PS=4)", 
+        cc: 22, bs: 13, wip: 13, arm: 7, 
+        skills: "Berserk (+3), BS Attack (SR-1), CC Attack (-3), Courage, Tactical Awareness" 
+    },
+    {
+        id_profilo: "scarface_gamma",
+        nome: "Scarface (TAG)",
+        arma: "AP Spitfire(+1B), Panzerfaust / DA CC Weapon (PS=4)", 
+        cc: 22, bs: 13, wip: 13, arm: 7, 
+        skills: "Berserk (+3), BS Attack (SR-1), CC Attack (-3), Courage, Tactical Awareness" 
+    },
+    {
+        id_profilo: "cordelia_turner",
+        nome: "Cordelia Turner",
+        arma: "Combi Rifle, D-Charges, PARA Mine / Boarding Pistol, CC Weapon", 
+        cc: 13, bs: 11, wip: 13, arm: 1, 
+        skills: "Courage, Engineer, Mimetism (-3), Deactivator, GizmoKit" 
+    },
+
+    // --- ANACONDA (TAG) ---
+    {
+        id_profilo: "anaconda_spitfire",
+        nome: "Anaconda (TAG)",
+        arma: "AP Spitfire, Heavy Flamethrower(+1B), Thunderbolt(AP) / DA CC Weapon (PS=4)", 
+        cc: 21, bs: 13, wip: 13, arm: 7, 
+        skills: "BS Attack (SR-1), Courage, Immunity (AP), Tactical Awareness, Warhorse" 
+    },
+    {
+        id_profilo: "anaconda_hmg",
+        nome: "Anaconda (TAG)",
+        arma: "Heavy Machine Gun, Light Shotgun(+2B), Panzerfaust / DA CC Weapon (PS=4)", 
+        cc: 21, bs: 13, wip: 13, arm: 7, 
+        skills: "BS Attack (SR-1), Courage, Immunity (AP), Tactical Awareness, Warhorse" 
+    },
+
+    // --- MONSTRUCKER ---
+    {
+        id_profilo: "monstrucker_smg",
+        nome: "Monstrucker",
+        arma: "Submachine Gun, Chain Rifle, Drop Bears / Pistol, CC Weapon", 
+        cc: 16, bs: 11, wip: 13, arm: 1, 
+        skills: "Climbing Plus, Engineer, Deactivator, GizmoKit" 
+    },
+
+    // --- HEROES & CHARACTERS ---
+    {
+        id_profilo: "saito_togan",
+        nome: "Saito Togan",
+        arma: "T2 Boarding Shotgun, Smoke Grenades / Pistol, EXP CC Weapon (PS=4)", 
+        cc: 24, bs: 11, wip: 13, arm: 1, 
+        skills: "Camouflage, Courage, Dodge (+1), Hidden Deployment, Infiltration, Martial Arts L4, Mimetism (-6), Stealth" 
+    },
+    {
+        id_profilo: "mcmurrough",
+        nome: "McMurrough",
+        arma: "Chain Rifle(+1B), Grenades (PS=6), Smoke Grenades / AP+DA CC Weapon (PS=6)", 
+        cc: 23, bs: 11, wip: 14, arm: 4, 
+        skills: "Berserk, Courage, Dodge (+2), Dogged, Immunity (ARM), Impetuous, Martial Arts L2, No Cover, Super-Jump" 
+    },
+    {
+        id_profilo: "spector",
+        nome: "Spector",
+        arma: "MULTI Rifle, Drop Bears(+1SD) / Boarding Pistol (PS=6), E/M CC Weapon (PS=6)", 
+        cc: 22, bs: 12, wip: 13, arm: 2, 
+        skills: "Courage, Dodge (+2), Martial Arts L3, Mimetism (-6), Natural Born Warrior, Specialist Operative, Stealth" 
+    },
+    {
+        id_profilo: "armand_sniper",
+        nome: "Armand",
+        arma: "MULTI Sniper Rifle, Nanopulser, Shock Mine / Breaker Pistol(+1B), Viral CC Weapon (PS=7)", 
+        cc: 21, bs: 13, wip: 13, arm: 2, 
+        skills: "BS Attack (Shock), Forward Deployment (+4), Mimetism (-6), Natural Born Warrior, Stealth, Transmutation (1)" 
+    },
+    {
+        id_profilo: "carmen",
+        nome: "Carmen",
+        arma: "Chain Rifle(+1B), Smoke Grenades, Smoke Grenade Launcher / AP Heavy Pistol(+1B), DA CC Weapon(PS=6)", 
+        cc: 22, bs: 11, wip: 13, arm: 1, 
+        skills: "Booty, CC Attack (-6), Courage, Dodge (+2), Dogged, Impetuous, Mimetism (-3), Natural Born Warrior" 
+    }
+];
