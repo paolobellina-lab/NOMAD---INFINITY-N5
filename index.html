@@ -3,41 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v3.0</title>
+    <title>NOMADS TACTICAL TERMINAL v4.0</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#A60000">
 
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@500;700&display=swap" rel="stylesheet">
     
     <script src="nomads_db.js"></script>
 
     <style>
-        body { background: #0d0f12; color: #00ff41; font-family: 'Share Tech Mono', monospace; padding: 15px; border: 1px solid #00ff41; min-height: 100vh; box-sizing: border-box; margin: 0; }
-        h2 { text-shadow: 0 0 10px #00ff41; text-align: center; text-transform: uppercase; border-bottom: 1px solid #00ff41; padding-bottom: 10px; }
-        .section { background: rgba(0,255,65,0.05); border: 1px solid #00ff41; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        input, select { background: #000; color: #00ff41; border: 1px solid #00ff41; width: 100%; padding: 12px; margin: 8px 0; font-family: inherit; font-size: 14px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; margin-top: 10px; cursor: pointer; font-family: inherit; font-size: 16px; font-weight: bold; text-transform: uppercase; border: none; }
-        .btn-nomad { background: #00ff41; color: #000; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
-        .btn-status { background: #111; color: #00ff41; border: 1px solid #00ff41; margin-top: 5px; font-size: 12px; }
-        .recording { background: #ff0000 !important; color: white !important; animation: blink 1s infinite; box-shadow: 0 0 15px #ff0000; }
+        /* NUOVO TEMA NOMADS: Rosso, Grigio, Arancione e Nero */
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: #1f1f1f;
+            --nomad-red: #cc0000;
+            --nomad-darkred: #8b0000;
+            --nomad-orange: #ff6600;
+            --text-main: #f0f0f0;
+            --text-dim: #aaaaaa;
+        }
+
+        body { 
+            background: var(--bg-color); 
+            color: var(--text-main); 
+            font-family: 'Share Tech Mono', monospace; 
+            padding: 15px; 
+            border: 2px solid var(--nomad-red); 
+            min-height: 100vh; 
+            box-sizing: border-box; 
+            margin: 0; 
+        }
+        h2 { 
+            font-family: 'Teko', sans-serif;
+            font-size: 28px;
+            color: #fff;
+            text-shadow: 2px 2px 0px var(--nomad-red); 
+            text-align: center; 
+            text-transform: uppercase; 
+            border-bottom: 2px solid var(--nomad-red); 
+            padding-bottom: 10px; 
+            margin-top: 0;
+        }
+        .section { 
+            background: var(--panel-bg); 
+            border-left: 4px solid var(--nomad-red); 
+            padding: 15px; 
+            margin-bottom: 20px; 
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+        input, select { 
+            background: #000; 
+            color: var(--text-main); 
+            border: 1px solid var(--nomad-red); 
+            width: 100%; 
+            padding: 12px; 
+            margin: 8px 0; 
+            font-family: inherit; 
+            font-size: 14px; 
+            box-sizing: border-box; 
+        }
+        input:focus, select:focus { border-color: var(--nomad-orange); outline: none; }
+        
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            margin-top: 10px; 
+            cursor: pointer; 
+            font-family: 'Teko', sans-serif; 
+            font-size: 22px; 
+            letter-spacing: 1px;
+            font-weight: bold; 
+            text-transform: uppercase; 
+            border: none; 
+            transition: 0.3s;
+        }
+        .btn-nomad { 
+            background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); 
+            color: #fff; 
+            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); 
+        }
+        .btn-nomad:hover { background: var(--nomad-orange); color: #000; }
+        
+        .btn-status { background: #222; color: var(--nomad-red); border: 1px solid var(--nomad-red); margin-top: 10px; font-size: 18px; }
+        
+        .recording { background: #ff0000 !important; color: white !important; animation: blink 1s infinite; box-shadow: 0 0 20px var(--nomad-orange); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        #console { font-size: 12px; margin-top: 20px; color: #00ff41; background: #000; padding: 15px; border: 1px solid #008f11; height: 200px; overflow-y: auto; white-space: pre-wrap; }
-        .roster-list { font-size: 12px; margin-top: 10px; border-top: 1px dashed #00ff41; padding-top: 10px; }
+        
+        #console { 
+            font-size: 13px; 
+            margin-top: 20px; 
+            color: var(--text-main); 
+            background: #050505; 
+            padding: 15px; 
+            border: 1px solid var(--nomad-red); 
+            border-left: 5px solid var(--nomad-orange);
+            height: 250px; 
+            overflow-y: auto; 
+            white-space: pre-wrap; 
+            line-height: 1.4;
+        }
+        .highlight { color: var(--nomad-orange); font-weight: bold; }
+        .alert { color: var(--nomad-red); font-weight: bold; }
+        .success { color: #00ff00; font-weight: bold; }
+        
+        .roster-list { font-size: 12px; margin-top: 10px; border-top: 1px dashed var(--nomad-red); padding-top: 10px; color: var(--text-dim); }
     </style>
 </head>
 <body>
-    <h2>-- CORREGIDOR DATANET --</h2>
+    <h2>-- TUNGUSKA DATANET --</h2>
     
     <div id="setup">
         <div class="section">
-            <h3 style="margin-top:0; font-size: 14px;">SCHIERAMENTO TRUPPE</h3>
+            <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
             
             <select id="dbSelect">
                 <option value="">-- SELEZIONA PROFILO DAL DATABASE --</option>
             </select>
             
-            <input type="text" id="unitAlias" placeholder="ASSEGNA SOPRANNOME (es. ALFA)">
+            <input type="text" id="unitAlias" placeholder="ASSEGNA SOPRANNOME (es. ROSSO)">
             
             <button class="btn-nomad" onclick="addUnitFromDB()">AGGIUNGI ALLA SQUADRA</button>
             
@@ -47,15 +131,15 @@
     </div>
 
     <div id="battle" style="display:none;">
-        <button id="btnListen" class="btn-nomad">🎤 COMANDO VOCALE</button>
-        <div id="console">[SISTEMA OPERATIVO]: Microfono in standby...</div>
+        <button id="btnListen" class="btn-nomad">🎤 ANALISI VOCALE TATTICA</button>
+        <p style="font-size: 10px; color: #aaa; text-align: center;">Es: "Rosso spara in copertura a distanza ottima" oppure "Rosso salva in copertura"</p>
+        <div id="console"><span class="highlight">[SISTEMA OPERATIVO]:</span> Microfono in standby... In attesa di ordini.</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // --- REGISTRAZIONE SERVICE WORKER E WAKELOCK ---
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
         
         let wakeLock = null;
@@ -64,7 +148,7 @@
             if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
         });
 
-        // --- FIREBASE CONFIG (Incolla la tua) ---
+        // --- FIREBASE CONFIG (Inserisci i tuoi dati) ---
         const firebaseConfig = { 
             apiKey: "IL_TUO_API_KEY",
             projectId: "IL_TUO_PROGETTO",
@@ -73,66 +157,52 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- POPOLAMENTO MENU A TENDINA ---
+        // --- POPOLAMENTO MENU DAL DATABASE ---
         window.onload = () => {
             const select = document.getElementById('dbSelect');
-            // Ordina alfabeticamente il database
-            window.masterNomadsDatabase.sort((a, b) => a.nome.localeCompare(b.nome));
-            
-            window.masterNomadsDatabase.forEach(unit => {
-                const option = document.createElement('option');
-                option.value = unit.id_profilo;
-                // Mostra Nome e la prima arma per far capire che variante è
-                const armaPrincipale = unit.arma.split('/')[0].split(',')[0].trim();
-                option.textContent = `${unit.nome} [${armaPrincipale}]`;
-                select.appendChild(option);
-            });
+            if(window.masterNomadsDatabase) {
+                window.masterNomadsDatabase.sort((a, b) => a.nome.localeCompare(b.nome));
+                window.masterNomadsDatabase.forEach(unit => {
+                    const option = document.createElement('option');
+                    option.value = unit.id_profilo;
+                    const armaPrincipale = unit.arma.split('/')[0].split(',')[0].trim();
+                    option.textContent = `${unit.nome} [${armaPrincipale}]`;
+                    select.appendChild(option);
+                });
+            } else {
+                alert("Errore: Master Database (nomads_db.js) non trovato!");
+            }
         };
 
         window.roster = [];
         
-        // --- AGGIUNGI UNITÀ DAL DATABASE ---
         window.addUnitFromDB = async () => {
             const select = document.getElementById('dbSelect');
             const aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
             const idProfilo = select.value;
 
-            if (!idProfilo || !aliasInput) {
-                alert("Seleziona una truppa e assegnagli un Soprannome!");
-                return;
-            }
+            if (!idProfilo || !aliasInput) return alert("Seleziona una truppa e assegnagli un Soprannome!");
 
-            // Trova il profilo completo nel Master Database
             const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
-
             const unit = { 
-                alias: aliasInput, 
-                name: dbUnit.nome, 
-                weapon: dbUnit.arma, 
-                bs: dbUnit.bs,
-                cc: dbUnit.cc,
-                wip: dbUnit.wip,
-                arm: dbUnit.arm,
-                skills: dbUnit.skills,
-                state: "ACTIVE", 
-                player: "G_NOMADS", 
-                modifiers: [] 
+                alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, 
+                bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills,
+                state: "ACTIVE", player: "G_NOMADS", modifiers: [] 
             };
             
             await setDoc(doc(db, "sessione_corrente", aliasInput), unit);
             window.roster.push(unit);
             
             document.getElementById('localRoster').innerText = `Unità caricate: ${window.roster.map(u => u.alias).join(', ')}`;
-            document.getElementById('unitAlias').value = ""; // Svuota il campo
+            document.getElementById('unitAlias').value = ""; 
         };
 
         window.startBattle = () => { 
-            if(window.roster.length === 0) alert("Nessuna unità schierata, ma accendo i sistemi.");
             document.getElementById('setup').style.display='none'; 
             document.getElementById('battle').style.display='block'; 
         };
 
-        // --- IA VOCALE E CALCOLO DANNI ---
+        // --- IA VOCALE: ESTRAZIONE MODIFICATORI E MATEMATICA ---
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         recognition.lang = 'it-IT';
 
@@ -142,51 +212,98 @@
         recognition.onresult = async (event) => {
             document.getElementById('btnListen').classList.remove('recording');
             const testo = event.results[0][0].transcript.toLowerCase();
-            const consoleDiv = document.getElementById('console');
-            consoleDiv.innerText = `> Hai detto: "${testo}"\n` + consoleDiv.innerText;
-            
             elaboraComando(testo);
         };
 
+        function printLog(msg) {
+            const consoleDiv = document.getElementById('console');
+            consoleDiv.innerHTML = msg + "\n\n" + consoleDiv.innerHTML;
+        }
+
         async function elaboraComando(testo) {
             const match = window.roster.find(u => testo.includes(u.alias.toLowerCase()));
-            const consoleDiv = document.getElementById('console');
+            let logHTML = `> Ordine ricevuto: "<span style="color:#aaa">${testo}</span>"<br>`;
 
             if (match) {
-                let newState = "";
-                let logMsg = "";
+                let mods = [];
+                let base = 0;
+                let totale = 0;
+                let isCalculated = false;
 
-                // 1. GESTIONE DANNI E ARMATURA
-                if (testo.includes("colpito") || testo.includes("danno") || testo.includes("salvezza")) {
-                    logMsg = `\n[ALLERTA] ${match.alias} SOTTO ATTACCO!\n` + 
-                             `>>> Calcolo Difesa: ARM ${match.arm} \n` +
-                             `>>> Skills Attive: ${match.skills}`;
+                // --- CALCOLO TIRO PER COLPRIRE (BS) ---
+                if (testo.includes("spara") || testo.includes("fuoco") || testo.includes("attacca a distanza")) {
+                    logHTML += `<span class="highlight">[CALCOLO ATTACCO - BS]</span> ${match.alias}<br>`;
+                    base = match.bs;
+                    
+                    if (testo.includes("copertura") || testo.includes("riparo")) mods.push({nome: "Copertura Bersaglio", val: -3});
+                    if (testo.includes("mimetismo") || testo.includes("mimetico")) mods.push({nome: "Mimetismo Bersaglio", val: -3});
+                    if (testo.includes("ottima") || testo.includes("buona")) mods.push({nome: "Gittata Ideale", val: 3});
+                    if (testo.includes("lunga") || testo.includes("cattiva")) mods.push({name: "Gittata Lunga", val: -3});
+                    
+                    isCalculated = true;
                 }
                 
-                // 2. GESTIONE STATI
-                else if (testo.includes("morto") || testo.includes("eliminato")) {
+                // --- CALCOLO CORPO A CORPO (CC) ---
+                else if (testo.includes("corpo a corpo") || testo.includes("mischia")) {
+                    logHTML += `<span class="highlight">[CALCOLO MISCHIA - CC]</span> ${match.alias}<br>`;
+                    base = match.cc;
+                    if (match.skills.includes("Martial Arts L2")) mods.push({nome: "Arti Marziali", val: 3});
+                    isCalculated = true;
+                }
+
+                // --- CALCOLO TIRO SALVEZZA (ARM) ---
+                else if (testo.includes("salva") || testo.includes("colpito") || testo.includes("danno") || testo.includes("armatura")) {
+                    logHTML += `<span class="alert">[ALLERTA DIFESA - ARM]</span> ${match.alias}<br>`;
+                    base = match.arm;
+                    
+                    if (testo.includes("copertura") || testo.includes("riparo")) mods.push({nome: "Bonus Copertura", val: 3});
+                    
+                    isCalculated = true;
+                }
+
+                // ESECUZIONE MATEMATICA A SCHERMO
+                if (isCalculated) {
+                    logHTML += `Base: <b>${base}</b><br>`;
+                    let modTotal = 0;
+                    mods.forEach(m => {
+                        modTotal += m.val;
+                        let segno = m.val > 0 ? '+' : '';
+                        let color = m.val > 0 ? '#00ff00' : '#ff3333';
+                        logHTML += `> ${m.nome}: <span style="color:${color}">${segno}${m.val}</span><br>`;
+                    });
+                    
+                    totale = base + modTotal;
+                    let targetWord = testo.includes("salva") || testo.includes("colpito") ? "ARM FINALE" : "TARGET DA OTTENERE (Su D20)";
+                    logHTML += `-----------------------<br>`;
+                    logHTML += `<span class="highlight">>>> ${targetWord}: ${totale} <<<</span><br>`;
+                    logHTML += `<span style="font-size:10px; color:var(--text-dim);">Abilità Note: ${match.skills}</span>`;
+                }
+
+                // --- GESTIONE STATI (VITA/MORTE) ---
+                let newState = "";
+                if (testo.includes("morto") || testo.includes("eliminato")) {
                     newState = "DEAD";
-                    logMsg = `\n[STATUS] ${match.alias} KIA (Ucciso In Azione).`;
+                    logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA (Ucciso in Azione). Modello rimosso.</span>`;
                 } 
                 else if (testo.includes("inconscio") || testo.includes("a terra")) {
                     newState = "UNCONSCIOUS";
-                    logMsg = `\n[STATUS] ${match.alias} Inconscio. Richiesto intervento Medico (WIP bersaglio: ${match.wip}).`;
+                    logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio. Richiesto intervento (WIP ${match.wip}).</span>`;
                 } 
                 else if (testo.includes("attivo") || testo.includes("curato")) {
                     newState = "ACTIVE";
-                    logMsg = `\n[STATUS] ${match.alias} di nuovo Operativo.`;
+                    logHTML += `<br><span class="success">[STATUS] ${match.alias} di nuovo Operativo.</span>`;
                 }
 
-                // Esegue l'aggiornamento
+                // AGGIORNA FIREBASE SE LO STATO CAMBIA
                 if (newState) {
                     await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
                 }
-                if (logMsg) {
-                    consoleDiv.innerText = logMsg + "\n" + consoleDiv.innerText;
-                }
+
             } else {
-                consoleDiv.innerText = "\n[ERRORE] Nessun Alias riconosciuto nel comando.\n" + consoleDiv.innerText;
+                logHTML += `<span class="alert">[ERRORE] Nessun Alias identificato nel database locale.</span>`;
             }
+            
+            printLog(logHTML);
         }
     </script>
 </body>
