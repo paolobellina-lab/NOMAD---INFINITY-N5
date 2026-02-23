@@ -722,3 +722,285 @@ const nomadsDatabase_Part4 = [
         skills: "Booty, CC Attack (-6), Courage, Dodge (+2), Dogged, Impetuous, Mimetism (-3), Natural Born Warrior" 
     }
 ];
+const nomadsDatabase_Part5 = [
+    // --- CATERAN ---
+    {
+        id_profilo: "cateran_t2",
+        nome: "Cateran",
+        arma: "T2 Sniper Rifle / Pistol, AP CC Weapon (PS=7)", 
+        cc: 22, bs: 12, wip: 12, arm: 0, 
+        skills: "Camouflage (1 Use), Climbing Plus, Mimetism (-3), Stealth, Surprise Attack (-3)" 
+    },
+    {
+        id_profilo: "cateran_ap",
+        nome: "Cateran",
+        arma: "AP Sniper Rifle / Pistol, AP CC Weapon (PS=7)", 
+        cc: 22, bs: 12, wip: 12, arm: 0, 
+        skills: "Camouflage (1 Use), Climbing Plus, Mimetism (-3), Stealth, Surprise Attack (-3)" 
+    },
+
+    // --- CSU ---
+    {
+        id_profilo: "csu_breaker",
+        nome: "CSU",
+        arma: "Breaker Rifle, Nanopulser(+1B) / MULTI Pistol, PARA CC Weapon(-6)", 
+        cc: 16, bs: 12, wip: 12, arm: 0, 
+        skills: "MetaChemistry, Sixth Sense" 
+    },
+    {
+        id_profilo: "csu_combi",
+        nome: "CSU",
+        arma: "Combi Rifle, Nanopulser(+1B) / MULTI Pistol, PARA CC Weapon(-6)", 
+        cc: 16, bs: 12, wip: 12, arm: 0, 
+        skills: "MetaChemistry, Sixth Sense" 
+    },
+    {
+        id_profilo: "csu_bsg",
+        nome: "CSU",
+        arma: "Boarding Shotgun, Adhesive Launcher Rifle (+1B) / MULTI Pistol, PARA CC Weapon(-6)", 
+        cc: 16, bs: 12, wip: 12, arm: 0, 
+        skills: "MetaChemistry, Sixth Sense" 
+    },
+
+    // --- MIYAMOTO MUSHASHI ---
+    {
+        id_profilo: "miyamoto",
+        nome: "Miyamoto Mushashi",
+        arma: "Chain Rifle, Tactical Bow, Flash Pulse / Pistol, EXP CC Weapon (PS=4)", 
+        cc: 25, bs: 9, wip: 15, arm: 1, 
+        skills: "CC Attack (AP), Courage, Dodge (+2), Immunity (ARM), Martial Arts L5, NWI, Stealth" 
+    },
+
+    // --- BASHI BAZOUK ---
+    {
+        id_profilo: "bashi_contender",
+        nome: "Bashi Bazouk",
+        arma: "Contender(+1B) / Boarding Pistol(+1B), CC Weapon", 
+        cc: 16, bs: 11, wip: 12, arm: 0, 
+        skills: "Holomask, Holoprojector, Combat Jump, Parachutist, Surprise Attack (-3)" 
+    },
+    {
+        id_profilo: "bashi_t2",
+        nome: "Bashi Bazouk",
+        arma: "T2 Boarding Shotgun / Boarding Pistol(+1B), CC Weapon", 
+        cc: 16, bs: 11, wip: 12, arm: 0, 
+        skills: "Holomask, Holoprojector, Combat Jump, Parachutist, Surprise Attack (-3)" 
+    },
+
+    // --- SEÑOR MASSACRE ---
+    {
+        id_profilo: "massacre_breaker",
+        nome: "Señor Massacre",
+        arma: "Breaker Combi Rifle, Eclipse Grenades, E/M Grenades / Boarding Pistol, Shock CC Weapon (PS=5), E/M CC Weapon (PS=5)", 
+        cc: 24, bs: 12, wip: 13, arm: 2, 
+        skills: "Courage, Dodge (+2), Immunity (Shock), Martial Arts L3, Regeneration, Stealth" 
+    },
+    {
+        id_profilo: "massacre_bsg",
+        nome: "Señor Massacre",
+        arma: "Boarding Shotgun(+1B), E/M Grenades, Eclipse Grenades / Boarding Pistol, Shock CC Weapon (PS=5), E/M CC Weapon (PS=5)", 
+        cc: 24, bs: 12, wip: 13, arm: 2, 
+        skills: "Courage, Dodge (+2), Immunity (Shock), Martial Arts L3, Regeneration, Stealth" 
+    },
+
+    // --- MOTORIZED YOJIMBO ---
+    {
+        id_profilo: "motorized_yojimbo",
+        nome: "Motorized Yojimbo",
+        arma: "Contender(+1B), Nanopulser, Smoke Grenades, Smoke Grenade Launcher, Crazykoala / Pistol, DA CC Weapon (PS=3)", 
+        cc: 24, bs: 12, wip: 13, arm: 1, 
+        skills: "Motorcycle, Courage, Dodge (+2), Immunity (Critical), Martial Arts L4, Mimetism (-3), NWI" 
+    },
+
+    // --- SFORZA ---
+    {
+        id_profilo: "sforza",
+        nome: "Sforza",
+        arma: "Viral Rifle, Adhesive Launcher Rifle(+1B), Nanopulser / Heavy Pistol(+1B), PARA CC Weapon(-9)", 
+        cc: 19, bs: 13, wip: 13, arm: 2, 
+        skills: "Holomask, X Visor, Combat Instinct, Dogged, Immunity (ARM), Stealth" 
+    },
+
+    // --- VALERYA GROMOZ ---
+    {
+        id_profilo: "valerya",
+        nome: "Valerya Gromoz (Hacker)",
+        arma: "Combi Rifle, Zapper, Pitcher / Pistol, CC Weapon", 
+        cc: 15, bs: 11, wip: 14, arm: 1, 
+        skills: "Hacking Device (Total Control +1B)" 
+    },
+
+    // --- AVICENNA ---
+    {
+        id_profilo: "avicenna",
+        nome: "Avicenna",
+        arma: "Combi Rifle, Flash Pulse, Nanopulser / Pistol, CC Weapon", 
+        cc: 16, bs: 11, wip: 15, arm: 3, 
+        skills: "Doctor (+3), Courage, Immunity (ARM), NWI" 
+    },
+
+    // --- KNAUF ---
+    {
+        id_profilo: "knauf",
+        nome: "Knauf",
+        arma: "MULTI Sniper Rifle / AP Heavy Pistol, CC Weapon", 
+        cc: 21, bs: 13, wip: 13, arm: 1, 
+        skills: "MSV L1, BS Attack (+1B), BS Attack (Shock), Courage, Mimetism (-3), Stealth" 
+    },
+
+    // --- AÏDA SWANSON ---
+    {
+        id_profilo: "aida",
+        nome: "Aïda Swanson",
+        arma: "Submachine Gun(+1B), Viral Mine / Viral Pistol, Shock CC Weapon", 
+        cc: 19, bs: 12, wip: 13, arm: 1, 
+        skills: "Booty, Courage, Forward Deployment (+4), Martial Arts L2, Mimetism (-3), Shasvastii, Stealth" 
+    },
+
+    // --- LIBERTO ---
+    {
+        id_profilo: "liberto_smg",
+        nome: "Liberto",
+        arma: "Submachine Gun, Chain-colt / Pistol, CC Weapon", 
+        cc: 16, bs: 11, wip: 12, arm: 0, 
+        skills: "Camouflage (1 Use), Courage, Dodge (+3), Dogged, Forward Deployment (+8)" 
+    },
+    {
+        id_profilo: "liberto_lsg",
+        nome: "Liberto",
+        arma: "Light Shotgun, Shock Mine / Pistol, CC Weapon", 
+        cc: 16, bs: 11, wip: 12, arm: 0, 
+        skills: "Camouflage (1 Use), Courage, Dodge (+3), Dogged, Forward Deployment (+8)" 
+    },
+
+    // --- VALKYRIE ---
+    {
+        id_profilo: "valkyrie_hsg",
+        nome: "Valkyrie",
+        arma: "Heavy Shotgun, Grenades / Heavy Pistol, EXP CC Weapon (PS=5)", 
+        cc: 22, bs: 12, wip: 13, arm: 3, 
+        skills: "Berserk (+3), Dodge (+2), Frenzy, Immunity (Enhanced), Martial Arts L3, NWI" 
+    },
+    {
+        id_profilo: "valkyrie_multi",
+        nome: "Valkyrie",
+        arma: "MULTI Rifle, Grenades / Heavy Pistol, EXP CC Weapon (PS=5)", 
+        cc: 22, bs: 12, wip: 13, arm: 3, 
+        skills: "Berserk (+3), Dodge (+2), Frenzy, Immunity (Enhanced), Martial Arts L3, NWI" 
+    },
+
+    // --- KAPLAN ---
+    {
+        id_profilo: "kaplan_combi",
+        nome: "Kaplan",
+        arma: "Combi Rifle, Adhesive Launcher Rifle, D-Charges / Boarding Pistol, CC Weapon", 
+        cc: 15, bs: 12, wip: 14, arm: 2, 
+        skills: "Combat Instinct, Courage, Immunity (Shock), Mimetism (-3)" 
+    },
+    {
+        id_profilo: "kaplan_spitfire",
+        nome: "Kaplan",
+        arma: "Spitfire / Boarding Pistol, CC Weapon", 
+        cc: 15, bs: 12, wip: 14, arm: 2, 
+        skills: "Combat Instinct, Courage, Immunity (Shock), Mimetism (-3)" 
+    },
+
+    // --- LAXMEE ---
+    {
+        id_profilo: "laxmee",
+        nome: "Laxmee (Hacker)",
+        arma: "Submachine Gun, Pitcher, Cybermine, D-Charges / Pistol, CC Weapon", 
+        cc: 18, bs: 11, wip: 14, arm: 2, 
+        skills: "Hacking Device Plus, Mimetism (-3), Minelayer" 
+    },
+
+    // --- WARDRIVER ---
+    {
+        id_profilo: "wardriver",
+        nome: "Wardriver (Hacker)",
+        arma: "Boarding Shotgun, Flash Pulse, Cybermine / Pistol, CC Weapon", 
+        cc: 13, bs: 11, wip: 13, arm: 0, 
+        skills: "Hacking Device (Zero Pain), Sixth Sense" 
+    },
+
+    // --- HANNIBAL ---
+    {
+        id_profilo: "hannibal_vulkan",
+        nome: "Hannibal",
+        arma: "Vulkan Shotgun, Nanopulser(+1B), Flash Pulse / Breaker Pistol, CC Weapon", 
+        cc: 15, bs: 13, wip: 14, arm: 2, 
+        skills: "BS Attack (+1SD), Counterintelligence, Courage, Dodge (+3), NWI, Tactical Awareness" 
+    },
+
+    // --- WILD BILL ---
+    {
+        id_profilo: "wildbill_contender",
+        nome: "Wild Bill",
+        arma: "Contender / MULTI Pistol(+1B), CC Weapon", 
+        cc: 15, bs: 13, wip: 13, arm: 1, 
+        skills: "BS Attack (SR-1), Courage, Dodge (+3), Marksmanship, NWI" 
+    },
+
+    // --- MIRANDA ASHCROFT ---
+    {
+        id_profilo: "miranda_multi",
+        nome: "Miranda Ashcroft",
+        arma: "MULTI Rifle, PARA Mine / Boarding Pistol, Monofilament CC Weapon", 
+        cc: 19, bs: 12, wip: 13, arm: 1, 
+        skills: "CC Attack (-6), Marksmanship, Mimetism (-6), Stealth" 
+    },
+
+    // --- KRAKOT RENEGADE ---
+    {
+        id_profilo: "krakot_chain",
+        nome: "Krakot Renegade",
+        arma: "Chain Rifle, Chest Mine, Grenades / Heavy Pistol, DA CC Weapon (PS=6)", 
+        cc: 23, bs: 11, wip: 12, arm: 1, 
+        skills: "Berserk (+3), Dodge (+2), Forward Deployment (+4), MetaChemistry, Super-Jump" 
+    },
+
+    // --- CUBE JÄGER ---
+    {
+        id_profilo: "cube_jager",
+        nome: "Cube Jäger",
+        arma: "Submachine Gun, E/Mitter / Pistol, Monofilament CC Weapon", 
+        cc: 16, bs: 13, wip: 14, arm: 1, 
+        skills: "Immunity (Shock), Parachutist, Stealth" 
+    },
+
+    // --- MAJOR LUNAH ---
+    {
+        id_profilo: "lunah",
+        nome: "Major Lunah",
+        arma: "VIRAL Sniper Rifle / Boarding Pistol, CC Weapon", 
+        cc: 16, bs: 11, wip: 13, arm: 1, 
+        skills: "MSV L1, BS Attack (SR-1), Camouflage (1 Use), Mimetism (-3)" 
+    },
+
+    // --- LIANG KAI ---
+    {
+        id_profilo: "liang_kai",
+        nome: "Liang Kai",
+        arma: "Chain Rifle, Light Shotgun, Flash Pulse / Pistol, EXP CC Weapon (PS=4)", 
+        cc: 23, bs: 11, wip: 14, arm: 1, 
+        skills: "Berserk, Dodge (+1), Dodge (+3), Martial Arts L4, Mimetism (-3), NWI, Super-Jump" 
+    },
+
+    // --- SHONA CARANO ---
+    {
+        id_profilo: "shona",
+        nome: "Shona Carano",
+        arma: "Submachine Gun, Nanopulser(+1B), Flash Pulse / Pistol, Shock CC Weapon (PS=6)", 
+        cc: 23, bs: 11, wip: 13, arm: 2, 
+        skills: "Courage, Dodge (+3), Dodge (+2), Frenzy, Martial Arts L4, NWI, Super-Jump" 
+    },
+
+    // --- HAWKWOOD ---
+    {
+        id_profilo: "hawkwood_k1",
+        nome: "Hawkwood",
+        arma: "K1 Sniper Rifle, Nanopulser(+1B) / MULTI Pistol, DA CC Weapon (PS=7)", 
+        cc: 22, bs: 13, wip: 14, arm: 3, 
+        skills: "BS Attack (+1SD), Courage, Martial Arts L1, Mimetism (-3), NWI" 
+    }
+];
