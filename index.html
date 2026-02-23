@@ -6,8 +6,8 @@
     <title>NOMADS TACTICAL TERMINAL</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#00ff41">
-    
+    <meta name="theme-color" content="#000000">
+
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         body { background: #0d0f12; color: #00ff41; font-family: 'Share Tech Mono', monospace; padding: 15px; border: 1px solid #00ff41; min-height: 100vh; }
@@ -23,7 +23,6 @@
 </head>
 <body>
     <h2>-- NOMADS HACKER TOOL --</h2>
-    
     <div id="setup">
         <div class="section">
             <input type="text" id="unitAlias" placeholder="SOPRANNOME (es. BLU)">
@@ -41,13 +40,10 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        // --- REGISTRAZIONE SERVICE WORKER ---
+        // 2. MANCANTE: Registrazione Service Worker per l'installazione
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW registrato!', reg))
+                .then(reg => console.log('SW Registrato!', reg))
                 .catch(err => console.log('Errore SW:', err));
         }
 
@@ -57,22 +53,24 @@
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Schermo sempre acceso attivato');
+                    console.log('Schermo bloccato: SEMPRE ACCESO');
                 }
             } catch (err) {
-                console.error(`Errore WakeLock: ${err.message}`);
+                console.error(`${err.name}, ${err.message}`);
             }
         };
 
-        // --- FORZA SCHERMO INTERO E WAKE LOCK AL TOCCO ---
+        // --- ATTIVAZIONE AL TOCCO ---
         document.addEventListener('click', () => {
             requestWakeLock();
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(e => console.log("Errore Fullscreen"));
+                document.documentElement.requestFullscreen().catch(() => {});
             }
         });
 
-        // --- FIREBASE CONFIG ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
         const firebaseConfig = { /* INCOLLA QUI IL TUO CONFIG FIREBASE */ };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -80,37 +78,20 @@
         let roster = [];
         window.addUnit = async () => {
             const alias = document.getElementById('unitAlias').value.toUpperCase();
-            if(!alias) return alert("Inserisci un soprannome!");
-            
-            const unit = { 
-                alias, 
-                name: document.getElementById('unitName').value, 
-                weapon: document.getElementById('unitWeapon').value, 
-                bs: document.getElementById('unitBS').value, 
-                state: "ACTIVE", 
-                player: "G_NOMADS", 
-                modifiers: [] 
-            };
-            
+            if(!alias) return;
+            const unit = { alias, name: document.getElementById('unitName').value, weapon: document.getElementById('unitWeapon').value, bs: document.getElementById('unitBS').value, state: "ACTIVE", player: "G_NOMADS", modifiers: [] };
             await setDoc(doc(db, "sessione_corrente", alias), unit);
             roster.push(unit);
-            alert("Unità " + alias + " caricata!");
+            alert("Unità caricata!");
         };
 
-        window.startBattle = () => { 
-            document.getElementById('setup').style.display='none'; 
-            document.getElementById('battle').style.display='block'; 
-        };
+        window.startBattle = () => { document.getElementById('setup').style.display='none'; document.getElementById('battle').style.display='block'; };
 
-        // --- RICONOSCIMENTO VOCALE ---
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         recognition.lang = 'it-IT';
-        recognition.continuous = false;
-
         document.getElementById('btnListen').onclick = () => recognition.start();
 
         recognition.onstart = () => document.getElementById('btnListen').classList.add('recording');
-        
         recognition.onresult = async (event) => {
             document.getElementById('btnListen').classList.remove('recording');
             const testo = event.results[0][0].transcript.toLowerCase();
@@ -125,11 +106,7 @@
                 if (testo.includes("morto")) s = "DEAD";
                 if (testo.includes("inconscio")) s = "UNCONSCIOUS";
                 if (testo.includes("attivo")) s = "ACTIVE";
-                
-                if (s) {
-                    await updateDoc(doc(db, "sessione_corrente", match.alias), { state: s });
-                    document.getElementById('console').innerText += "\n[OK] Stato " + s + " inviato.";
-                }
+                if (s) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: s });
             }
         }
     </script>
