@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v7.5</title>
+    <title>NOMADS TACTICAL TERMINAL v8.0</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -27,18 +27,25 @@
         .btn-nomad:hover { background: var(--nomad-orange); color: #000; }
         .btn-status { background: #222; color: var(--nomad-red); border: 1px solid var(--nomad-red); margin-top: 15px; font-size: 18px; }
         .btn-small { padding: 8px; font-size: 16px; margin-top: 5px; clip-path: none; border-radius: 3px; }
+        
         .recording { background: #ff0000 !important; color: white !important; animation: blink 1s infinite; box-shadow: 0 0 20px var(--nomad-orange); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        #console { font-size: 13px; margin-top: 20px; color: var(--text-main); background: #050505; padding: 15px; border: 1px solid var(--nomad-red); border-left: 5px solid var(--nomad-orange); height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
+        
+        #console { font-size: 13px; margin-top: 20px; color: var(--text-main); background: #050505; padding: 15px; border: 1px solid var(--nomad-red); border-left: 5px solid var(--nomad-orange); height: 200px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
         .highlight { color: var(--nomad-orange); font-weight: bold; }
         .alert { color: var(--nomad-red); font-weight: bold; }
         .success { color: #00ff00; font-weight: bold; }
+        
         .roster-list { font-size: 12px; margin-top: 15px; border-top: 1px dashed var(--nomad-red); padding-top: 10px; }
         .roster-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); }
         .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 5px 10px; background: #222; border-radius: 3px; }
-        .rec-btn { color: #fff; background: var(--nomad-orange); cursor: pointer; padding: 5px 10px; border-radius: 3px; margin-right: 5px; font-weight: bold; text-align: center; font-size: 11px;}
         .flex-row { display: flex; gap: 10px; }
-        #dictViewer { font-size: 11px; background: #000; padding: 10px; margin-top: 10px; color: #fff; display: none; border: 1px dashed var(--nomad-orange); }
+
+        /* WIZARD UI */
+        #wizardPanel { background: #111; border: 2px solid var(--nomad-orange); padding: 15px; margin-top: 10px; text-align: center; }
+        #wizStep { font-size: 22px; font-family: 'Teko', sans-serif; color: var(--nomad-orange); font-weight: bold; }
+        #wizDesc { font-size: 12px; color: #aaa; margin-top: 5px; }
+        #wizData { font-size: 14px; color: #fff; margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px; }
     </style>
 </head>
 <body>
@@ -63,25 +70,21 @@
             <select id="profileSelect" disabled><option value="">-- 2. SELEZIONA PROFILO --</option></select>
             <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (Opzionale)">
             <button class="btn-nomad" onclick="addUnitToRoster()">AGGIUNGI</button>
-            
             <div id="localRoster" class="roster-list"><i>Nessuna unità schierata.</i></div>
-            
-            <div style="margin-top: 20px; border-top: 1px solid #444; padding-top: 10px;">
-                <button class="btn-status btn-small" onclick="toggleDictionary()">VEDI MEMORIA VOCALE IA</button>
-                <div id="dictViewer">
-                    <div id="dictContent" style="margin-bottom:10px;"></div>
-                    <button class="btn-nomad btn-small" style="background:var(--nomad-red);" onclick="clearDictionary()">SVUOTA MEMORIA VOCALE</button>
-                </div>
-            </div>
         </div>
-        
         <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
     </div>
 
     <div id="battle" style="display:none;">
-        <button id="btnListen" class="btn-nomad" style="padding: 20px; font-size: 24px;">🎤 ANALISI VOCALE TATTICA</button>
-        <p style="font-size: 10px; color: #aaa; text-align: center;">Es: "Rosso spara in copertura" o "Mobile Brigada colpito"</p>
-        <div id="console"><span class="highlight">[SISTEMA OPERATIVO]:</span> In attesa di ordini.</div>
+        <button id="btnListen" class="btn-nomad" style="padding: 15px; font-size: 22px;">🎤 INIZIA PROTOCOLLO A FASI</button>
+        
+        <div id="wizardPanel">
+            <div id="wizStep">STANDBY</div>
+            <div id="wizDesc">Premi il pulsante per iniziare l'ordine sequenziale.</div>
+            <div id="wizData"></div>
+        </div>
+
+        <div id="console"><span class="highlight">[LOG DI SISTEMA]:</span> Modulo Tattico Online.</div>
         <button class="btn-status btn-small" onclick="location.reload()" style="margin-top: 20px;">TORNA AL SETUP</button>
     </div>
 
@@ -97,17 +100,13 @@
         window.roster = [];
         window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
 
-        // --- INIZIALIZZAZIONE E POPOLAMENTO TENDINE ---
+        // --- SETUP ROSTER E INTERFACCIA ---
         window.onload = () => {
-            if(!window.masterNomadsDatabase) return alert("Errore: File database non trovato!");
-            
+            if(!window.masterNomadsDatabase) return;
             const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
             const groupSelect = document.getElementById('groupSelect');
-            
             gruppiUnici.forEach(nome => {
-                const opt = document.createElement('option');
-                opt.value = nome; opt.textContent = nome;
-                groupSelect.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = nome; opt.textContent = nome; groupSelect.appendChild(opt);
             });
             refreshSavedRostersList();
         };
@@ -115,160 +114,141 @@
         window.updateProfileSelect = () => {
             const groupName = document.getElementById('groupSelect').value;
             const profileSelect = document.getElementById('profileSelect');
-            
-            profileSelect.innerHTML = '';
-            const defaultOpt = document.createElement('option');
-            defaultOpt.value = ""; defaultOpt.textContent = "-- 2. SELEZIONA PROFILO --";
-            profileSelect.appendChild(defaultOpt);
-            
+            profileSelect.innerHTML = '<option value="">-- 2. SELEZIONA PROFILO --</option>';
             profileSelect.disabled = !groupName;
-            
             if (groupName) {
-                const profili = window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName);
-                profili.forEach(unit => {
-                    const opt = document.createElement('option');
-                    opt.value = unit.id_profilo;
+                window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName).forEach(unit => {
                     const arma = unit.arma.split('/')[0].split(',')[0].trim();
-                    opt.textContent = `[${arma}] - BS:${unit.bs} ARM:${unit.arm}`;
+                    const opt = document.createElement('option'); opt.value = unit.id_profilo; opt.textContent = `[${arma}] - BS:${unit.bs} ARM:${unit.arm}`;
                     profileSelect.appendChild(opt);
                 });
             }
         };
 
-        // --- AGGIUNTA E RIMOZIONE TRUPPE ---
         window.addUnitToRoster = () => {
             const idProfilo = document.getElementById('profileSelect').value;
             let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
-            if (!idProfilo) return alert("Devi prima selezionare un profilo dalla tendina 2!");
+            if (!idProfilo) return alert("Seleziona un profilo!");
             
             const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
             if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
-            
-            if (window.roster.some(u => u.alias === aliasInput)) {
-                return alert(`ATTENZIONE: Hai già schierato un'unità chiamata "${aliasInput}".\nAssegna un SOPRANNOME nel campo 3 per distinguerla!`);
-            }
+            if (window.roster.some(u => u.alias === aliasInput)) return alert(`Hai già schierato "${aliasInput}". Aggiungi un soprannome!`);
 
             const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, state: "ACTIVE", player: "G_NOMADS", modifiers: [] };
-            window.roster.push(unit);
-            document.getElementById('unitAlias').value = ""; 
-            renderRoster();
+            window.roster.push(unit); document.getElementById('unitAlias').value = ""; renderRoster();
         };
 
         window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
-
         window.renderRoster = () => {
             const container = document.getElementById('localRoster');
             if(window.roster.length === 0) return container.innerHTML = "<i>Nessuna unità schierata.</i>";
             container.innerHTML = "<div style='color:var(--nomad-orange); margin-bottom:5px;'>UNITÀ PRONTE:</div>";
             window.roster.forEach((u, i) => {
                 const armaCorta = u.weapon.split('/')[0].split(',')[0];
-                container.innerHTML += `
-                    <div class="roster-item">
-                        <div><b>${u.alias}</b> <span style="color:#aaa; font-size:10px;">| [${armaCorta}]</span></div>
-                        <div style="display:flex;">
-                            <div class="rec-btn" onclick="addManualDictionary('${u.alias}')">📝 CORREGGI IA</div>
-                            <div class="del-btn" onclick="removeUnit(${i})">X</div>
-                        </div>
-                    </div>`;
+                container.innerHTML += `<div class="roster-item"><div><b>${u.alias}</b> <span style="color:#aaa; font-size:10px;">| [${armaCorta}]</span></div><div class="del-btn" onclick="removeUnit(${i})">X</div></div>`;
             });
         };
 
-        // --- SISTEMA CORREZIONE MANUALE (GATOR -> GATTO) ---
-        window.addManualDictionary = (alias) => {
-            let wrongWord = prompt(`Cosa ha capito l'IA al posto di ${alias}?\n(Es. se ha capito "gatto spara", scrivi: gatto)`);
-            
-            if (wrongWord && wrongWord.trim() !== "") {
-                wrongWord = wrongWord.toLowerCase().trim();
-                window.customDictionary[wrongWord] = alias.toLowerCase();
-                localStorage.setItem('infinityDictionary_Nomads', JSON.stringify(window.customDictionary));
-                alert(`MEMORIA AGGIORNATA!\nOgni volta che l'IA capirà "${wrongWord}", eseguirà l'ordine per "${alias}".`);
-            }
-        };
-
-        window.toggleDictionary = () => {
-            const viewer = document.getElementById('dictViewer');
-            const content = document.getElementById('dictContent');
-            if (viewer.style.display === 'block') {
-                viewer.style.display = 'none';
-            } else {
-                window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
-                const keys = Object.keys(window.customDictionary);
-                if(keys.length === 0) {
-                    content.innerHTML = "<i>Nessuna correzione salvata.</i>";
-                } else {
-                    content.innerHTML = "<b>Dizionario Personale:</b><br>" + keys.map(k => `- "<b>${k}</b>" ➡️ <b>${window.customDictionary[k]}</b>`).join('<br>');
-                }
-                viewer.style.display = 'block';
-            }
-        };
-
-        window.clearDictionary = () => {
-            if(confirm("Vuoi resettare tutte le correzioni dell'IA?")) {
-                localStorage.removeItem('infinityDictionary_Nomads');
-                window.customDictionary = {};
-                toggleDictionary(); 
-                alert("Memoria azzerata!");
-            }
-        };
-
-        // --- SALVATAGGIO / CARICAMENTO LOCALE ---
         window.saveRoster = () => {
             const name = document.getElementById('saveName').value.trim().toUpperCase();
-            if(!name || window.roster.length === 0) return alert("Inserisci un nome e aggiungi un'unità!");
+            if(!name || window.roster.length === 0) return alert("Inserisci nome e unità!");
             const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
-            savedData[name] = window.roster;
-            localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
-            document.getElementById('saveName').value = "";
-            refreshSavedRostersList();
+            savedData[name] = window.roster; localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+            document.getElementById('saveName').value = ""; refreshSavedRostersList();
         };
-
         window.loadRoster = () => {
             const name = document.getElementById('savedRostersSelect').value;
             if(!name) return;
-            window.roster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || [];
-            renderRoster();
+            window.roster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || []; renderRoster();
         };
-
         window.refreshSavedRostersList = () => {
             const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
             const select = document.getElementById('savedRostersSelect');
-            select.innerHTML = '';
-            const defOpt = document.createElement('option'); defOpt.value = ""; defOpt.textContent = "-- SQUADRE SALVATE --";
-            select.appendChild(defOpt);
-            Object.keys(savedData).forEach(n => {
-                const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
-                select.appendChild(opt);
-            });
+            select.innerHTML = '<option value="">-- SQUADRE SALVATE --</option>';
+            Object.keys(savedData).forEach(n => { const opt = document.createElement('option'); opt.value = n; opt.textContent = n; select.appendChild(opt); });
         };
 
-        // --- ATTIVAZIONE PARTITA E INVIO FIREBASE ---
         window.startBattle = async () => { 
-            if(window.roster.length === 0) return alert("Aggiungi almeno un'unità!");
-            document.getElementById('setup').style.display='none'; 
-            document.getElementById('battle').style.display='block'; 
+            if(window.roster.length === 0) return alert("Aggiungi un'unità!");
+            document.getElementById('setup').style.display='none'; document.getElementById('battle').style.display='block'; 
             for (let unit of window.roster) await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
-            printLog("<span class='success'>[SISTEMA]: Uplink Database stabilito. IA Pronta a ricevere ordini.</span>");
         };
 
-        // --- MOTORE VOCALE IN BATTAGLIA ---
+        // ==========================================
+        // MACCHINA A STATI DEL WIZARD VOCALE
+        // ==========================================
+        let wizState = "IDLE"; 
+        let wizData = { unit: null, action: "", mods: "" };
+
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         recognition.lang = 'it-IT';
         
-        document.getElementById('btnListen').onclick = () => { recognition.start(); };
-        recognition.onstart = () => { document.getElementById('btnListen').classList.add('recording'); };
+        function updateUI(step, desc, dataHtml) {
+            document.getElementById('wizStep').innerText = step;
+            document.getElementById('wizDesc').innerText = desc;
+            document.getElementById('wizData').innerHTML = dataHtml;
+        }
+
+        document.getElementById('btnListen').onclick = () => {
+            if (wizState === "IDLE") {
+                wizState = "UNIT";
+                wizData = { unit: null, action: "", mods: "" };
+                updateUI("1. CHI SI ATTIVA?", "Pronuncia il NOME della truppa (Es. Gator, Alguacil...)", "");
+                recognition.start();
+            } else {
+                // Tasto funziona da Annulla se il wizard è in corso
+                recognition.stop();
+                wizState = "IDLE";
+                updateUI("STANDBY", "Ordine annullato. Premi per ricominciare.", "");
+                document.getElementById('btnListen').classList.remove('recording');
+            }
+        };
+        
+        recognition.onstart = () => document.getElementById('btnListen').classList.add('recording');
         
         recognition.onresult = async (event) => {
             document.getElementById('btnListen').classList.remove('recording');
             let testo = event.results[0][0].transcript.toLowerCase().trim();
 
-            // 1. Sostituzione Dizionario (Dal testo più lungo al più corto per evitare conflitti)
+            // Applica il dizionario per sicurezza
             const chiaviOrdinate = Object.keys(window.customDictionary).sort((a, b) => b.length - a.length);
             chiaviOrdinate.forEach(wrongPhrase => {
-                const correctAlias = window.customDictionary[wrongPhrase];
-                testo = testo.replace(new RegExp(`\\b${wrongPhrase}\\b`, 'g'), correctAlias);
+                testo = testo.replace(new RegExp(`\\b${wrongPhrase}\\b`, 'g'), window.customDictionary[wrongPhrase]);
             });
 
-            elaboraComando(testo);
+            if (wizState === "UNIT") {
+                const match = window.roster.find(u => testo.includes(u.alias.toLowerCase()));
+                if (match) {
+                    wizData.unit = match;
+                    wizState = "ACTION";
+                    updateUI("2. AZIONE?", "Cosa fa? (Spara, Salva, Mischia, Muore, Curato...)", `<span style='color:var(--nomad-orange)'>UNITÀ SELEZIONATA: ${match.alias}</span>`);
+                    setTimeout(() => recognition.start(), 800); // Riapre il microfono da solo
+                } else {
+                    wizState = "IDLE";
+                    updateUI("ERRORE NOME", `Non ho trovato "${testo}" in squadra. Riprova.`, "");
+                }
+            } 
+            else if (wizState === "ACTION") {
+                wizData.action = testo;
+                let dataHtml = `<span style='color:var(--nomad-orange)'>UNITÀ: ${wizData.unit.alias} <br> AZIONE: ${testo.toUpperCase()}</span>`;
+                
+                // Se è un cambio di stato diretto (morto, inconscio), saltiamo i modificatori!
+                if (testo.includes("morto") || testo.includes("eliminato") || testo.includes("inconscio") || testo.includes("a terra") || testo.includes("curato")) {
+                    wizState = "IDLE";
+                    updateUI("STANDBY", "Applicazione stato in corso...", dataHtml);
+                    elaboraOrdineFinale(wizData);
+                } else {
+                    wizState = "MODS";
+                    updateUI("3. VARIABILI E DISTANZA", "Es. Ottima, Copertura, Mimetismo... (oppure dì 'Nessuno')", dataHtml);
+                    setTimeout(() => recognition.start(), 800);
+                }
+            } 
+            else if (wizState === "MODS") {
+                wizData.mods = testo;
+                wizState = "IDLE";
+                updateUI("STANDBY", "Ordine in elaborazione.", `<span style='color:var(--nomad-orange)'>UNITÀ: ${wizData.unit.alias} <br> AZIONE: ${wizData.action.toUpperCase()} <br> VARIABILI: ${testo.toUpperCase()}</span>`);
+                elaboraOrdineFinale(wizData);
+            }
         };
 
         function printLog(msg) {
@@ -276,57 +256,56 @@
             consoleDiv.innerHTML = msg + "\n\n" + consoleDiv.innerHTML;
         }
 
-        async function elaboraComando(testoTrattato) {
-            const match = window.roster.find(u => testoTrattato.includes(u.alias.toLowerCase()));
-            let logHTML = `> Ordine analizzato: "<span style="color:#aaa">${testoTrattato}</span>"<br>`;
+        async function elaboraOrdineFinale(data) {
+            const match = data.unit;
+            const azione = data.action;
+            const variabili = data.mods;
+            let logHTML = `> <span style="color:#aaa">ORDINE: [${match.alias}] - [${azione}] - [${variabili}]</span><br>`;
 
-            if (match) {
-                let mods = [], base = 0, isCalculated = false;
+            let mods = [], base = 0, isCalculated = false;
 
-                // Calcolo Attacco a distanza
-                if (testoTrattato.includes("spara") || testoTrattato.includes("fuoco") || testoTrattato.includes("attacca")) {
-                    logHTML += `<span class="highlight">[ATTACCO - BS]</span> ${match.alias}<br>`;
-                    base = match.bs;
-                    if (testoTrattato.includes("copertura") || testoTrattato.includes("riparo")) mods.push({nome: "Copertura", val: -3});
-                    if (testoTrattato.includes("mimetismo") || testoTrattato.includes("mimetico")) mods.push({nome: "Mimetismo", val: -3});
-                    if (testoTrattato.includes("ottima") || testoTrattato.includes("buona")) mods.push({nome: "Gittata Ideale", val: +3});
-                    if (testoTrattato.includes("lunga") || testoTrattato.includes("cattiva")) mods.push({nome: "Gittata Lunga", val: -3});
-                    isCalculated = true;
-                }
-                // Calcolo Mischia
-                else if (testoTrattato.includes("corpo a corpo") || testoTrattato.includes("mischia")) {
-                    logHTML += `<span class="highlight">[MISCHIA - CC]</span> ${match.alias}<br>`;
-                    base = match.cc;
-                    if (match.skills.includes("Martial Arts")) mods.push({nome: "Arti Marziali", val: +3});
-                    isCalculated = true;
-                }
-                // Calcolo Tiro Salvezza (Danni)
-                else if (testoTrattato.includes("salva") || testoTrattato.includes("colpito") || testoTrattato.includes("armatura")) {
-                    logHTML += `<span class="alert">[DIFESA - ARM]</span> ${match.alias}<br>`;
-                    base = match.arm;
-                    if (testoTrattato.includes("copertura") || testoTrattato.includes("riparo")) mods.push({nome: "Copertura", val: +3});
-                    isCalculated = true;
-                }
-
-                // Esecuzione matematica a schermo
-                if (isCalculated) {
-                    logHTML += `Base: <b>${base}</b><br>`;
-                    let modTotal = 0;
-                    mods.forEach(m => { modTotal += m.val; logHTML += `> ${m.nome}: <span style="color:${m.val > 0 ? '#00ff00' : '#ff3333'}">${m.val > 0 ? '+' : ''}${m.val}</span><br>`; });
-                    logHTML += `-----------------------<br><span class="highlight">>>> OBIETTIVO FINALE: ${base + modTotal} <<<</span><br>`;
-                    logHTML += `<span style="font-size:10px; color:var(--text-dim);">Abilità Base: ${match.skills}</span>`;
-                }
-
-                // Modifica Stato Firebase
-                let newState = "";
-                if (testoTrattato.includes("morto") || testoTrattato.includes("eliminato")) { newState = "DEAD"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA.</span>`; } 
-                else if (testoTrattato.includes("inconscio") || testoTrattato.includes("a terra")) { newState = "UNCONSCIOUS"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio (WIP Medico: ${match.wip}).</span>`; } 
-                else if (testoTrattato.includes("attivo") || testoTrattato.includes("curato")) { newState = "ACTIVE"; logHTML += `<br><span class="success">[STATUS] ${match.alias} Operativo.</span>`; }
-
-                if (newState) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
-            } else {
-                logHTML += `<span class="alert">[ERRORE] Comando ignoto. Se il microfono ha capito male il nome, torna al Setup e usa "CORREGGI IA".</span>`;
+            // Calcolo Attacco a distanza
+            if (azione.includes("spara") || azione.includes("fuoco") || azione.includes("attacca")) {
+                logHTML += `<span class="highlight">[ATTACCO - BS]</span> ${match.alias}<br>`;
+                base = match.bs;
+                if (variabili.includes("copertura") || variabili.includes("riparo")) mods.push({nome: "Copertura Bersaglio", val: -3});
+                if (variabili.includes("mimetismo") || variabili.includes("mimetico")) mods.push({nome: "Mimetismo", val: -3});
+                if (variabili.includes("ottima") || variabili.includes("buona")) mods.push({nome: "Gittata Ideale", val: +3});
+                if (variabili.includes("lunga") || variabili.includes("cattiva")) mods.push({nome: "Gittata Lunga", val: -3});
+                isCalculated = true;
             }
+            // Calcolo Mischia
+            else if (azione.includes("corpo a corpo") || azione.includes("mischia")) {
+                logHTML += `<span class="highlight">[MISCHIA - CC]</span> ${match.alias}<br>`;
+                base = match.cc;
+                if (match.skills.includes("Martial Arts")) mods.push({nome: "Arti Marziali", val: +3});
+                isCalculated = true;
+            }
+            // Calcolo Tiro Salvezza (Danni)
+            else if (azione.includes("salva") || azione.includes("colpito") || azione.includes("armatura")) {
+                logHTML += `<span class="alert">[DIFESA - ARM]</span> ${match.alias}<br>`;
+                base = match.arm;
+                if (variabili.includes("copertura") || variabili.includes("riparo")) mods.push({nome: "Copertura", val: +3});
+                isCalculated = true;
+            }
+
+            // Esecuzione matematica a schermo
+            if (isCalculated) {
+                logHTML += `Base: <b>${base}</b><br>`;
+                let modTotal = 0;
+                mods.forEach(m => { modTotal += m.val; logHTML += `> ${m.nome}: <span style="color:${m.val > 0 ? '#00ff00' : '#ff3333'}">${m.val > 0 ? '+' : ''}${m.val}</span><br>`; });
+                logHTML += `-----------------------<br><span class="highlight">>>> OBIETTIVO FINALE: ${base + modTotal} <<<</span><br>`;
+                logHTML += `<span style="font-size:10px; color:var(--text-dim);">Abilità Base: ${match.skills}</span>`;
+            }
+
+            // Modifica Stato Firebase
+            let newState = "";
+            if (azione.includes("morto") || azione.includes("eliminato")) { newState = "DEAD"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA.</span>`; } 
+            else if (azione.includes("inconscio") || azione.includes("a terra")) { newState = "UNCONSCIOUS"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio (WIP Medico: ${match.wip}).</span>`; } 
+            else if (azione.includes("attivo") || azione.includes("curato")) { newState = "ACTIVE"; logHTML += `<br><span class="success">[STATUS] ${match.alias} Operativo.</span>`; }
+
+            if (newState) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
+            
             printLog(logHTML);
         }
     </script>
