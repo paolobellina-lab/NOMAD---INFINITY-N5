@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v9.0</title>
+    <title>NOMADS TACTICAL TERMINAL v9.5</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -25,16 +25,16 @@
         
         /* BOTTONI STANDARD SETUP */
         .btn-nomad { width: 100%; background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); color: #fff; padding: 15px; margin-top: 5px; cursor: pointer; font-family: 'Teko', sans-serif; font-size: 22px; font-weight: bold; text-transform: uppercase; border: none; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
-        .btn-status { width: 100%; background: #222; color: var(--nomad-red); border: 2px solid var(--nomad-red); padding: 15px; margin-top: 15px; font-family: 'Teko', sans-serif; font-size: 22px; font-weight: bold; }
+        .btn-status { width: 100%; background: #222; color: var(--nomad-red); border: 2px solid var(--nomad-red); padding: 15px; margin-top: 15px; font-family: 'Teko', sans-serif; font-size: 22px; font-weight: bold; cursor: pointer; }
         
         /* BOTTONI ENORMI PER LA BATTAGLIA */
         .grid-buttons { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
-        .huge-btn { flex: 1; min-height: 80px; background: #1a0000; border: 2px solid var(--nomad-red); color: #fff; font-family: 'Teko', sans-serif; font-size: 32px; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: 0.2s; border-radius: 5px; }
+        .huge-btn { flex: 1; min-height: 80px; background: #1a0000; border: 2px solid var(--nomad-red); color: #fff; font-family: 'Teko', sans-serif; font-size: 32px; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: 0.2s; border-radius: 5px; padding: 10px; text-align: center; line-height: 1.1; }
         .huge-btn:active { background: var(--nomad-orange); color: #000; transform: scale(0.98); }
-        .huge-btn span { font-family: 'Share Tech Mono', monospace; font-size: 14px; color: var(--nomad-orange); font-weight: normal; }
+        .huge-btn span { font-family: 'Share Tech Mono', monospace; font-size: 14px; color: var(--nomad-orange); font-weight: normal; margin-top: 5px; }
 
         .flex-row { display: flex; gap: 10px; }
-        .step-container { display: none; flex-direction: column; height: 100%; flex-grow: 1; }
+        .step-container { display: none; flex-direction: column; height: 100%; flex-grow: 1; overflow-y: auto;}
         .active-step { display: flex; }
         
         #battle-header { text-align: center; color: var(--nomad-orange); font-size: 18px; font-weight: bold; margin-bottom: 10px; padding: 10px; background: #222; border: 1px dashed var(--nomad-orange); }
@@ -72,7 +72,7 @@
         </div>
 
         <div id="step-unit" class="step-container">
-            <div class="grid-buttons" id="unit-buttons-container" style="overflow-y:auto;">
+            <div class="grid-buttons" id="unit-buttons-container">
                 </div>
             <button class="btn-status" onclick="goToStep('step-group')">INDIETRO</button>
         </div>
@@ -84,170 +84,17 @@
                 <button class="huge-btn" onclick="selectAction('CORPO A CORPO')">CORPO A CORPO <span>(Mischia)</span></button>
                 <button class="huge-btn" onclick="selectAction('SCHIVATA')">SCHIVATA <span>(Dodge)</span></button>
                 <button class="huge-btn" onclick="selectAction('ABILITÀ')">ABILITÀ <span>(Cura, Hack, Scoprire)</span></button>
+                
+                <button class="huge-btn" style="border-color: #aaa;" onclick="selectAction('GESTIONE STATI')">GESTIONE STATI <span>(Targato, Inconscio, Rimosso...)</span></button>
             </div>
             <button class="btn-status" onclick="goToStep('step-unit')">ANNULLA</button>
         </div>
 
-        <div id="step-weapon" class="step-container">
-            <div class="grid-buttons" id="weapon-buttons-container">
-                </div>
-            <button class="btn-status" onclick="goToStep('step-action')">INDIETRO</button>
-        </div>
-
-        <div id="step-wait-aro" class="step-container">
-            <div class="grid-buttons" style="justify-content: center;">
-                <div style="text-align:center; padding: 20px; border: 2px dashed var(--nomad-orange); color: #fff;">
-                    <h1 style="color:var(--nomad-red); font-size:40px; margin:0;">IN ATTESA DI ARO</h1>
-                    <p>L'Avversario sta dichiarando le reazioni sulla sua app...</p>
-                    <div class="spinner" style="font-size: 50px; margin-top:20px;">⏳</div>
-                </div>
-                <button class="huge-btn" style="background:#004400; border-color:#00ff00;" onclick="goToStep('step-second-half')">PROSEGUI (TEST) <br><span>(L'avversario ha dichiarato)</span></button>
-            </div>
-            <button class="btn-status" onclick="goToStep('step-group')">CANCELLA ORDINE</button>
-        </div>
-
-        <div id="step-second-half" class="step-container">
+        <div id="step-states" class="step-container">
             <div class="grid-buttons">
-                <button class="huge-btn" onclick="goToStep('step-burst')">ATTACCO BS <span>(Seconda Metà)</span></button>
-                <button class="huge-btn" onclick="goToStep('step-burst')">SCHIVATA <span>(Dodge)</span></button>
-                <button class="huge-btn" onclick="goToStep('step-group')">SOLO MOVIMENTO <span>(Fine Ordine)</span></button>
-            </div>
-            <button class="btn-status" onclick="goToStep('step-group')">ABORTISCI</button>
-        </div>
-
-        <div id="step-burst" class="step-container">
-            <div style="color:#fff; text-align:center; font-size:20px;">SUDDIVISIONE DADI CONTRO BERSAGLI</div>
-            <div id="burst-container" style="margin-top:20px;">
-                <p style="color:#aaa; text-align:center;">Lavori in corso per il calcolo matematico...</p>
-            </div>
-            <button class="btn-status" onclick="goToStep('step-group')">FINE ATTIVAZIONE</button>
-        </div>
-
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        window.roster = [];
-        window.currentOrder = { unit: null, action: "", weapon: "", mods: [] };
-
-        // --- SETUP ROSTER ---
-        window.onload = () => {
-            if(!window.masterNomadsDatabase) return;
-            const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
-            const groupSelect = document.getElementById('groupSelect');
-            gruppiUnici.forEach(nome => groupSelect.innerHTML += `<option value="${nome}">${nome}</option>`);
-        };
-
-        window.updateProfileSelect = () => {
-            const groupName = document.getElementById('groupSelect').value;
-            const profileSelect = document.getElementById('profileSelect');
-            profileSelect.innerHTML = '<option value="">-- 2. SELEZIONA PROFILO --</option>';
-            profileSelect.disabled = !groupName;
-            if (groupName) {
-                window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName).forEach(unit => {
-                    const arma = unit.arma.split('/')[0].split(',')[0].trim();
-                    profileSelect.innerHTML += `<option value="${unit.id_profilo}">[${arma}] - BS:${unit.bs}</option>`;
-                });
-            }
-        };
-
-        window.addUnitToRoster = () => {
-            const idProfilo = document.getElementById('profileSelect').value;
-            const cGroup = document.getElementById('combatGroup').value;
-            let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
-            if (!idProfilo) return alert("Seleziona un profilo!");
-            
-            const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
-            if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
-            
-            const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, combatGroup: parseInt(cGroup), state: "ACTIVE", player: "G_NOMADS" };
-            window.roster.push(unit); document.getElementById('unitAlias').value = ""; renderRoster();
-        };
-
-        window.renderRoster = () => {
-            const container = document.getElementById('localRoster');
-            container.innerHTML = "<b>UNITÀ SCHIERATE:</b><br>";
-            window.roster.forEach(u => container.innerHTML += `[G${u.combatGroup}] <b>${u.alias}</b> (${u.name})<br>`);
-        };
-
-        window.startBattle = async () => { 
-            if(window.roster.length === 0) return alert("Schiera almeno un'unità!");
-            document.getElementById('setup').style.display='none'; 
-            document.getElementById('battle').style.display='flex'; 
-            for (let unit of window.roster) await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
-        };
-
-        // --- MACCHINA A STATI UI BATTAGLIA ---
-        window.goToStep = (stepId, param = null) => {
-            // Nascondi tutti
-            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active-step'));
-            // Mostra il bersaglio
-            document.getElementById(stepId).classList.add('active-step');
-
-            const header = document.getElementById('battle-header');
-
-            if (stepId === 'step-group') header.innerText = "SELEZIONA GRUPPO DI COMBATTIMENTO";
-            
-            if (stepId === 'step-unit') {
-                header.innerText = `UNITÀ - GRUPPO ${param}`;
-                const container = document.getElementById('unit-buttons-container');
-                container.innerHTML = "";
+                <button class="huge-btn" style="background:#003300; border-color:#00ff00;" onclick="applyState('ACTIVE')">ATTIVO / RIPRISTINATO <span>(Rimuove malus/stati)</span></button>
                 
-                const unitsInGroup = window.roster.filter(u => u.combatGroup === param && u.state === "ACTIVE");
-                if(unitsInGroup.length === 0) container.innerHTML = "<p style='color:red; text-align:center;'>Nessuna unità attiva in questo gruppo.</p>";
+                <button class="huge-btn" style="background:#330000; border-color:#ff0000;" onclick="applyState('DEAD')">MORTO / RIMOSSO <span>(Rimuove la truppa)</span></button>
+                <button class="huge-btn" style="background:#331a00; border-color:#ffaa00;" onclick="applyState('UNCONSCIOUS')">INCONSCIO <span>(A terra, curabile)</span></button>
                 
-                unitsInGroup.forEach(u => {
-                    container.innerHTML += `<button class="huge-btn" onclick="selectUnit('${u.alias}')">${u.alias} <br><span>(${u.name})</span></button>`;
-                });
-            }
-        };
-
-        window.selectUnit = (alias) => {
-            window.currentOrder.unit = window.roster.find(u => u.alias === alias);
-            document.getElementById('battle-header').innerText = `ORDINE PER: ${alias}`;
-            goToStep('step-action');
-        };
-
-        window.selectAction = (action) => {
-            window.currentOrder.action = action;
-            if (action === 'ATTACCO BS') {
-                // Genera i bottoni per le armi di questa unità
-                document.getElementById('battle-header').innerText = "SELEZIONA ARMA";
-                const container = document.getElementById('weapon-buttons-container');
-                container.innerHTML = "";
                 
-                // Splitta le armi dalla stringa (es: "Combi Rifle / Pistol, CC Weapon")
-                const allWeapons = window.currentOrder.unit.weapon.replace('/', ',').split(',');
-                allWeapons.forEach(w => {
-                    const wClean = w.trim();
-                    container.innerHTML += `<button class="huge-btn" onclick="declareAttack('${wClean}')">${wClean}</button>`;
-                });
-                goToStep('step-weapon');
-            } else if (action === 'MOVIMENTO') {
-                // Se mi muovo come prima metà dell'ordine, vado subito in attesa di ARO
-                document.getElementById('battle-header').innerText = "MOVIMENTO - IN ATTESA ARO";
-                goToStep('step-wait-aro');
-            } else {
-                alert("Funzione in sviluppo!");
-            }
-        };
-
-        window.declareAttack = async (weaponName) => {
-            window.currentOrder.weapon = weaponName;
-            document.getElementById('battle-header').innerText = "ATTACCO DICHIARATO - IN ATTESA ARO";
-            
-            // QUI IN FUTURO SCRIVEREMO SU FIREBASE:
-            // await setDoc(doc(db, "tavolo", "ordine_corrente"), { actType: "ATTACCO BS", weapon: weaponName, unit: window.currentOrder.unit.alias });
-            
-            goToStep('step-wait-aro');
-        };
-
-    </script>
-</body>
-</html>
