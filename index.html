@@ -3,51 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v5.0</title>
+    <title>NOMADS TACTICAL TERMINAL v5.1</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
 
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@500;700&display=swap" rel="stylesheet">
-    
     <script src="nomads_db.js"></script>
 
     <style>
         :root {
-            --bg-color: #0b0c10;
-            --panel-bg: #1f1f1f;
-            --nomad-red: #cc0000;
-            --nomad-darkred: #8b0000;
-            --nomad-orange: #ff6600;
-            --text-main: #f0f0f0;
-            --text-dim: #aaaaaa;
+            --bg-color: #0b0c10; --panel-bg: #1f1f1f; --nomad-red: #cc0000; 
+            --nomad-darkred: #8b0000; --nomad-orange: #ff6600; 
+            --text-main: #f0f0f0; --text-dim: #aaaaaa;
         }
-
         body { background: var(--bg-color); color: var(--text-main); font-family: 'Share Tech Mono', monospace; padding: 15px; border: 2px solid var(--nomad-red); min-height: 100vh; box-sizing: border-box; margin: 0; }
         h2 { font-family: 'Teko', sans-serif; font-size: 28px; color: #fff; text-shadow: 2px 2px 0px var(--nomad-red); text-align: center; text-transform: uppercase; border-bottom: 2px solid var(--nomad-red); padding-bottom: 10px; margin-top: 0; }
         .section { background: var(--panel-bg); border-left: 4px solid var(--nomad-red); padding: 15px; margin-bottom: 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
-        
-        input, select { background: #000; color: var(--text-main); border: 1px solid var(--nomad-red); width: 100%; padding: 10px; margin: 5px 0; font-family: inherit; font-size: 14px; box-sizing: border-box; }
+        input, select { background: #000; color: var(--text-main); border: 1px solid var(--nomad-red); width: 100%; padding: 10px; margin: 5px 0; font-size: 14px; box-sizing: border-box; }
         input:focus, select:focus { border-color: var(--nomad-orange); outline: none; }
-        
-        button { width: 100%; padding: 12px; margin-top: 5px; cursor: pointer; font-family: 'Teko', sans-serif; font-size: 20px; letter-spacing: 1px; font-weight: bold; text-transform: uppercase; border: none; transition: 0.3s; }
+        button { width: 100%; padding: 12px; margin-top: 5px; cursor: pointer; font-family: 'Teko', sans-serif; font-size: 20px; font-weight: bold; text-transform: uppercase; border: none; transition: 0.3s; }
         .btn-nomad { background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); color: #fff; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
         .btn-nomad:hover { background: var(--nomad-orange); color: #000; }
         .btn-status { background: #222; color: var(--nomad-red); border: 1px solid var(--nomad-red); margin-top: 15px; font-size: 18px; }
         .btn-small { padding: 8px; font-size: 16px; margin-top: 5px; clip-path: none; border-radius: 3px; }
-        
         .recording { background: #ff0000 !important; color: white !important; animation: blink 1s infinite; box-shadow: 0 0 20px var(--nomad-orange); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        
         #console { font-size: 13px; margin-top: 20px; color: var(--text-main); background: #050505; padding: 15px; border: 1px solid var(--nomad-red); border-left: 5px solid var(--nomad-orange); height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
         .highlight { color: var(--nomad-orange); font-weight: bold; }
         .alert { color: var(--nomad-red); font-weight: bold; }
         .success { color: #00ff00; font-weight: bold; }
-        
         .roster-list { font-size: 12px; margin-top: 15px; border-top: 1px dashed var(--nomad-red); padding-top: 10px; }
         .roster-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); }
         .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 0 5px; }
-        
         .flex-row { display: flex; gap: 10px; }
     </style>
 </head>
@@ -58,9 +46,7 @@
         <div class="section">
             <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">ARCHIVIO SQUADRE</h3>
             <div class="flex-row">
-                <select id="savedRostersSelect" style="flex: 2;">
-                    <option value="">-- SQUADRE SALVATE --</option>
-                </select>
+                <select id="savedRostersSelect" style="flex: 2;"><option value="">-- SQUADRE SALVATE --</option></select>
                 <button class="btn-nomad btn-small" style="flex: 1;" onclick="loadRoster()">CARICA</button>
             </div>
             <div class="flex-row">
@@ -71,30 +57,21 @@
 
         <div class="section">
             <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
+            <select id="groupSelect" onchange="updateProfileSelect()"><option value="">-- 1. SELEZIONA TRUPPA --</option></select>
+            <select id="profileSelect" disabled><option value="">-- 2. SELEZIONA PROFILO --</option></select>
             
-            <select id="groupSelect" onchange="updateProfileSelect()">
-                <option value="">-- 1. SELEZIONA TRUPPA --</option>
-            </select>
-            
-            <select id="profileSelect" disabled>
-                <option value="">-- 2. SELEZIONA PROFILO --</option>
-            </select>
-            
-            <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (es. ROSSO)">
+            <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (Opzionale)">
             
             <button class="btn-nomad" onclick="addUnitToRoster()">AGGIUNGI</button>
             
-            <div id="localRoster" class="roster-list">
-                <i>Nessuna unità schierata.</i>
-            </div>
+            <div id="localRoster" class="roster-list"><i>Nessuna unità schierata.</i></div>
         </div>
-        
         <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
     </div>
 
     <div id="battle" style="display:none;">
         <button id="btnListen" class="btn-nomad" style="padding: 20px; font-size: 24px;">🎤 ANALISI VOCALE TATTICA</button>
-        <p style="font-size: 10px; color: #aaa; text-align: center;">Es: "Rosso spara in copertura a distanza ottima" oppure "Rosso salva in copertura"</p>
+        <p style="font-size: 10px; color: #aaa; text-align: center;">Es: "Alguacil spara in copertura" o "Mobile Brigada colpito"</p>
         <div id="console"><span class="highlight">[SISTEMA OPERATIVO]:</span> In attesa di ordini.</div>
     </div>
 
@@ -102,66 +79,52 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // --- FIREBASE CONFIG (Inserisci i tuoi dati) ---
-        const firebaseConfig = { 
-            apiKey: "IL_TUO_API_KEY",
-            projectId: "IL_TUO_PROGETTO",
-        };
+        // FIREBASE CONFIG - Inserisci i tuoi dati!
+        const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        window.roster = []; // Roster locale corrente
+        window.roster = [];
 
-        // --- INIZIALIZZAZIONE ---
         window.onload = () => {
-            if(!window.masterNomadsDatabase) return alert("Errore: Database non trovato!");
-            
-            // 1. Popola la prima tendina (Nomi univoci)
+            if(!window.masterNomadsDatabase) return;
             const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome))].sort();
             const groupSelect = document.getElementById('groupSelect');
-            gruppiUnici.forEach(nome => {
-                const opt = document.createElement('option');
-                opt.value = nome;
-                opt.textContent = nome;
-                groupSelect.appendChild(opt);
-            });
-
-            // 2. Carica i nomi delle squadre salvate
+            gruppiUnici.forEach(nome => groupSelect.innerHTML += `<option value="${nome}">${nome}</option>`);
             refreshSavedRostersList();
         };
 
-        // --- AGGIORNA LA SECONDA TENDINA ---
         window.updateProfileSelect = () => {
             const groupName = document.getElementById('groupSelect').value;
             const profileSelect = document.getElementById('profileSelect');
             profileSelect.innerHTML = '<option value="">-- 2. SELEZIONA PROFILO --</option>';
-            
-            if (!groupName) {
-                profileSelect.disabled = true;
-                return;
+            profileSelect.disabled = !groupName;
+            if (groupName) {
+                window.masterNomadsDatabase.filter(u => u.nome === groupName).forEach(unit => {
+                    const arma = unit.arma.split('/')[0].split(',')[0].trim();
+                    profileSelect.innerHTML += `<option value="${unit.id_profilo}">[${arma}] - BS:${unit.bs} ARM:${unit.arm}</option>`;
+                });
             }
-            
-            profileSelect.disabled = false;
-            const profili = window.masterNomadsDatabase.filter(u => u.nome === groupName);
-            
-            profili.forEach(unit => {
-                const opt = document.createElement('option');
-                opt.value = unit.id_profilo;
-                const arma = unit.arma.split('/')[0].split(',')[0].trim(); // Prende solo l'arma primaria
-                opt.textContent = `[${arma}] - BS:${unit.bs} CC:${unit.cc} ARM:${unit.arm}`;
-                profileSelect.appendChild(opt);
-            });
         };
 
-        // --- AGGIUNGI UNITÀ AL ROSTER LOCALE ---
         window.addUnitToRoster = () => {
             const idProfilo = document.getElementById('profileSelect').value;
-            const aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
+            let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
 
-            if (!idProfilo || !aliasInput) return alert("Seleziona un profilo e assegnagli un Soprannome!");
-            if (window.roster.some(u => u.alias === aliasInput)) return alert("Soprannome già in uso!");
-
+            if (!idProfilo) return alert("Devi prima selezionare un profilo!");
+            
             const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
+            
+            // SE IL SOPRANNOME È VUOTO, USA IL NOME DELLA TRUPPA
+            if (!aliasInput) {
+                aliasInput = dbUnit.nome.toUpperCase();
+            }
+
+            // Controllo duplicati
+            if (window.roster.some(u => u.alias === aliasInput)) {
+                return alert(`Il nome "${aliasInput}" è già schierato. Se vuoi due unità identiche, devi assegnare almeno un soprannome al secondo!`);
+            }
+
             const unit = { 
                 alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, 
                 bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills,
@@ -173,89 +136,68 @@
             renderRoster();
         };
 
-        // --- RIMUOVI UNITÀ DAL ROSTER LOCALE ---
-        window.removeUnit = (index) => {
-            window.roster.splice(index, 1);
-            renderRoster();
-        };
+        window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
 
-        // --- MOSTRA IL ROSTER A SCHERMO ---
         window.renderRoster = () => {
             const container = document.getElementById('localRoster');
-            if(window.roster.length === 0) {
-                container.innerHTML = "<i>Nessuna unità schierata.</i>";
-                return;
-            }
-            
+            if(window.roster.length === 0) return container.innerHTML = "<i>Nessuna unità schierata.</i>";
             container.innerHTML = "<div style='color:var(--nomad-orange); margin-bottom:5px;'>UNITÀ PRONTE:</div>";
             window.roster.forEach((u, i) => {
                 const armaCorta = u.weapon.split('/')[0].split(',')[0];
-                container.innerHTML += `
-                    <div class="roster-item">
-                        <div><b>${u.alias}</b> <span style="color:#aaa; font-size:10px;">| ${u.name} [${armaCorta}]</span></div>
-                        <div class="del-btn" onclick="removeUnit(${i})">X</div>
-                    </div>
-                `;
+                container.innerHTML += `<div class="roster-item"><div><b>${u.alias}</b> <span style="color:#aaa; font-size:10px;">| [${armaCorta}]</span></div><div class="del-btn" onclick="removeUnit(${i})">X</div></div>`;
             });
         };
 
-        // --- SALVATAGGIO IN MEMORIA LOCALE (Browser) ---
         window.saveRoster = () => {
             const name = document.getElementById('saveName').value.trim().toUpperCase();
-            if(!name || window.roster.length === 0) return alert("Inserisci un nome e aggiungi almeno un'unità!");
-            
+            if(!name || window.roster.length === 0) return alert("Inserisci un nome e aggiungi un'unità!");
             const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
             savedData[name] = window.roster;
             localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
-            
-            alert(`Squadra "${name}" salvata con successo!`);
             document.getElementById('saveName').value = "";
             refreshSavedRostersList();
         };
 
-        // --- CARICAMENTO DALLA MEMORIA LOCALE ---
         window.loadRoster = () => {
             const name = document.getElementById('savedRostersSelect').value;
             if(!name) return;
-            
-            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
-            if(savedData[name]) {
-                window.roster = savedData[name];
-                renderRoster();
-            }
+            window.roster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || [];
+            renderRoster();
         };
 
         window.refreshSavedRostersList = () => {
             const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
             const select = document.getElementById('savedRostersSelect');
             select.innerHTML = '<option value="">-- SQUADRE SALVATE --</option>';
-            Object.keys(savedData).forEach(nomeSquadra => {
-                select.innerHTML += `<option value="${nomeSquadra}">${nomeSquadra}</option>`;
-            });
+            Object.keys(savedData).forEach(n => select.innerHTML += `<option value="${n}">${n}</option>`);
         };
 
-        // --- INIZIO BATTAGLIA E INVIO A FIREBASE ---
         window.startBattle = async () => { 
-            if(window.roster.length === 0) return alert("Aggiungi almeno un'unità alla squadra!");
-            
+            if(window.roster.length === 0) return alert("Aggiungi un'unità!");
             document.getElementById('setup').style.display='none'; 
             document.getElementById('battle').style.display='block'; 
-            
-            // Carica tutte le unità su Firebase in un colpo solo
-            for (let unit of window.roster) {
-                await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
-            }
-            printLog("<span class='success'>[SISTEMA]: Uplink stabilito. Squadra inviata alla Dashboard PC. IA Pronta.</span>");
+            for (let unit of window.roster) await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
+            printLog("<span class='success'>[SISTEMA]: Uplink stabilito. IA Pronta.</span>");
         };
 
-        // --- IA VOCALE (Matematica invariata) ---
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         recognition.lang = 'it-IT';
         document.getElementById('btnListen').onclick = () => recognition.start();
         recognition.onstart = () => document.getElementById('btnListen').classList.add('recording');
+        
         recognition.onresult = async (event) => {
             document.getElementById('btnListen').classList.remove('recording');
-            elaboraComando(event.results[0][0].transcript.toLowerCase());
+            let testo = event.results[0][0].transcript.toLowerCase();
+            
+            // CORRETTORE VOCALE PER TERMINI SPANGLISH DI INFINITY
+            testo = testo.replace("alguacile", "alguacil")
+                         .replace("acqua cil", "alguacil")
+                         .replace("szalamandra", "szalamandra")
+                         .replace("salamandra", "szalamandra")
+                         .replace("kriza", "kriza borac")
+                         .replace("criza", "kriza borac");
+
+            elaboraComando(testo);
         };
 
         function printLog(msg) {
@@ -307,7 +249,7 @@
 
                 if (newState) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
             } else {
-                logHTML += `<span class="alert">[ERRORE] Nessun Alias identificato.</span>`;
+                logHTML += `<span class="alert">[ERRORE] Comando annullato. Nessuna unità identificata.</span>`;
             }
             printLog(logHTML);
         }
