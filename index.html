@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v10.5</title>
+    <title>NOMADS TACTICAL TERMINAL v11.0</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -28,7 +28,7 @@
         .btn-status { width: 100%; background: #222; color: var(--nomad-red); border: 2px solid var(--nomad-red); padding: 15px; margin-top: 15px; font-family: 'Teko', sans-serif; font-size: 22px; font-weight: bold; cursor: pointer; }
         .btn-small { padding: 10px; font-size: 18px; margin-top: 5px; clip-path: none; border-radius: 3px; }
         
-        /* BOTTONI ENORMI PER LA BATTAGLIA */
+        /* BOTTONI ENORMI PER LA BATTAGLIA (FAT FINGER DESIGN) */
         .grid-buttons { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto; padding-bottom: 10px;}
         .huge-btn { flex: 1; min-height: 80px; background: #1a0000; border: 2px solid var(--nomad-red); color: #fff; font-family: 'Teko', sans-serif; font-size: 32px; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: 0.2s; border-radius: 5px; padding: 10px; text-align: center; line-height: 1.1; }
         .huge-btn:active { background: var(--nomad-orange); color: #000; transform: scale(0.98); }
@@ -41,13 +41,14 @@
         #battle-header { text-align: center; color: var(--nomad-orange); font-size: 18px; font-weight: bold; margin-bottom: 10px; padding: 10px; background: #222; border: 1px dashed var(--nomad-orange); }
         .roster-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); font-size: 12px; }
         .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 5px 10px; background: #222; border-radius: 3px; }
+        
+        #calc-result { margin-top:15px; font-size:16px; border:2px solid #00ff00; background:#001a00; padding:15px; display:none; box-shadow: 0 0 15px rgba(0,255,0,0.2); }
     </style>
 </head>
 <body>
     <h2>-- TUNGUSKA DATANET --</h2>
     
     <div id="setup">
-        
         <div class="section">
             <h3 style="margin-top:0; color: var(--nomad-orange);">ARCHIVIO SQUADRE</h3>
             <div class="flex-row">
@@ -94,8 +95,7 @@
         </div>
 
         <div id="step-unit" class="step-container">
-            <div class="grid-buttons" id="unit-buttons-container">
-                </div>
+            <div class="grid-buttons" id="unit-buttons-container"></div>
             <button class="btn-status" onclick="goToStep('step-group')">INDIETRO</button>
         </div>
 
@@ -104,7 +104,7 @@
                 <button class="huge-btn" onclick="selectAction('MOVIMENTO')">MOVIMENTO <span>(Innesca ARO)</span></button>
                 <button class="huge-btn" onclick="selectAction('ATTACCO BS')">ATTACCO BS <span>(Fuoco a Distanza)</span></button>
                 <button class="huge-btn" onclick="selectAction('CORPO A CORPO')">CORPO A CORPO <span>(Mischia)</span></button>
-                <button class="huge-btn" onclick="selectAction('SCHIVATA')">SCHIVATA <span>(Dodge)</span></button>
+                <button class="huge-btn" style="border-color:#00ffff;" onclick="selectAction('TIRO SALVEZZA')">TIRO SALVEZZA <span>(Difesa Danni - ARM)</span></button>
                 <button class="huge-btn" style="border-color: #aaa;" onclick="selectAction('GESTIONE STATI')">GESTIONE STATI <span>(Targato, Inconscio, Rimosso...)</span></button>
             </div>
             <button class="btn-status" onclick="goToStep('step-unit')">ANNULLA</button>
@@ -112,7 +112,7 @@
 
         <div id="step-states" class="step-container">
             <div class="grid-buttons">
-                <button class="huge-btn" style="background:#003300; border-color:#00ff00;" onclick="applyState('ACTIVE')">ATTIVO / RIPRISTINATO <span>(Rimuove malus/stati)</span></button>
+                <button class="huge-btn" style="background:#003300; border-color:#00ff00;" onclick="applyState('ACTIVE')">ATTIVO / CURATO <span>(Rimuove malus/stati)</span></button>
                 <button class="huge-btn" style="background:#330000; border-color:#ff0000;" onclick="applyState('DEAD')">MORTO / RIMOSSO <span>(Rimuove la truppa)</span></button>
                 <button class="huge-btn" style="background:#331a00; border-color:#ffaa00;" onclick="applyState('UNCONSCIOUS')">INCONSCIO <span>(A terra, curabile)</span></button>
                 <button class="huge-btn" style="border-color:#00d2ff;" onclick="applyState('TARGETED')">TARGATO <span>(Targeted)</span></button>
@@ -122,8 +122,7 @@
         </div>
 
         <div id="step-weapon" class="step-container">
-            <div class="grid-buttons" id="weapon-buttons-container">
-                </div>
+            <div class="grid-buttons" id="weapon-buttons-container"></div>
             <button class="btn-status" onclick="goToStep('step-action')">INDIETRO</button>
         </div>
 
@@ -131,29 +130,32 @@
             <div class="grid-buttons" style="justify-content: center;">
                 <div style="text-align:center; padding: 20px; border: 2px dashed var(--nomad-orange); color: #fff;">
                     <h1 style="color:var(--nomad-red); font-size:40px; margin:0;">IN ATTESA DI ARO</h1>
-                    <p>L'Avversario sta dichiarando le reazioni sulla sua app...</p>
+                    <p>L'Avversario sta dichiarando le reazioni...</p>
                     <div class="spinner" style="font-size: 50px; margin-top:20px;">⏳</div>
                 </div>
-                <button class="huge-btn" style="background:#004400; border-color:#00ff00;" onclick="goToStep('step-second-half')">PROSEGUI (TEST) <br><span>(L'avversario ha dichiarato)</span></button>
+                <button class="huge-btn" style="background:#004400; border-color:#00ff00;" onclick="goToStep('step-second-half')">PROSEGUI <br><span>(ARO Completato)</span></button>
             </div>
-            <button class="btn-status" onclick="goToStep('step-group')">CANCELLA ORDINE</button>
+            <button class="btn-status" onclick="goToStep('step-group')">ANNULLA ORDINE</button>
         </div>
 
         <div id="step-second-half" class="step-container">
             <div class="grid-buttons">
-                <button class="huge-btn" onclick="goToStep('step-burst')">ATTACCO BS <span>(Seconda Metà)</span></button>
-                <button class="huge-btn" onclick="goToStep('step-burst')">SCHIVATA <span>(Dodge)</span></button>
-                <button class="huge-btn" onclick="goToStep('step-group')">SOLO MOVIMENTO <span>(Fine Ordine)</span></button>
+                <button class="huge-btn" onclick="goToModifiers('ATTACCO BS')">ATTACCO BS <span>(Seconda Metà)</span></button>
+                <button class="huge-btn" onclick="goToModifiers('SCHIVATA')">SCHIVATA <span>(Dodge)</span></button>
+                <button class="huge-btn" style="border-color: #aaa;" onclick="goToStep('step-group')">SOLO MOVIMENTO <span>(Fine Attivazione)</span></button>
             </div>
             <button class="btn-status" onclick="goToStep('step-group')">ABORTISCI</button>
         </div>
 
-        <div id="step-burst" class="step-container">
-            <div style="color:#fff; text-align:center; font-size:20px;">SUDDIVISIONE DADI CONTRO BERSAGLI</div>
-            <div id="burst-container" style="margin-top:20px;">
-                <p style="color:#aaa; text-align:center;">Lavori in corso per il calcolo matematico...</p>
-            </div>
-            <button class="btn-status" onclick="goToStep('step-group')">FINE ATTIVAZIONE</button>
+        <div id="step-modifiers" class="step-container">
+            <div class="grid-buttons" id="mods-container">
+                </div>
+            
+            <button class="huge-btn" style="background:var(--nomad-orange); color:#000; margin-top:15px; min-height:60px;" onclick="executeCalculation()">ESEGUI CALCOLO MATEMATICO</button>
+            
+            <div id="calc-result"></div>
+            
+            <button class="btn-status" style="margin-top:20px;" onclick="goToStep('step-group')">FINE ORDINE (TORNA AL MENU)</button>
         </div>
 
     </div>
@@ -162,52 +164,35 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // INSERISCI QUI I DATI DEL TUO DATABASE FIREBASE
-        const firebaseConfig = { 
-            apiKey: "IL_TUO_API", 
-            projectId: "IL_TUO_PROGETTO" 
-        };
+        // CONFIGURAZIONE FIREBASE
+        const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         window.roster = [];
-        window.currentOrder = { unit: null, action: "", weapon: "", mods: [] };
+        window.currentOrder = { unit: null, action: "", weapon: "" };
+        window.selectedMods = {}; // Contenitore variabili matematiche attive
 
-        // --- SETUP ROSTER: METODO CORAZZATO DOM NATIVO ---
+        // --- SETUP ROSTER DOM NATIVO ---
         window.onload = () => {
             if(!window.masterNomadsDatabase) return alert("Errore: Database non caricato!");
-            
             const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
             const groupSelect = document.getElementById('groupSelect');
-            
             gruppiUnici.forEach(nome => {
-                const opt = document.createElement('option');
-                opt.value = nome;
-                opt.textContent = nome;
-                groupSelect.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = nome; opt.textContent = nome; groupSelect.appendChild(opt);
             });
-            
             refreshSavedRostersList(); 
         };
 
         window.updateProfileSelect = () => {
             const groupName = document.getElementById('groupSelect').value;
             const profileSelect = document.getElementById('profileSelect');
-            
-            // Svuota e resetta la tendina in modo sicuro
             profileSelect.innerHTML = '';
-            const defaultOpt = document.createElement('option');
-            defaultOpt.value = "";
-            defaultOpt.textContent = "-- 2. SELEZIONA PROFILO --";
-            profileSelect.appendChild(defaultOpt);
-            
+            const defaultOpt = document.createElement('option'); defaultOpt.value = ""; defaultOpt.textContent = "-- 2. SELEZIONA PROFILO --"; profileSelect.appendChild(defaultOpt);
             profileSelect.disabled = !groupName;
-            
             if (groupName) {
-                const profili = window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName);
-                profili.forEach(unit => {
-                    const opt = document.createElement('option');
-                    opt.value = unit.id_profilo;
+                window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName).forEach(unit => {
+                    const opt = document.createElement('option'); opt.value = unit.id_profilo;
                     const arma = unit.arma.split('/')[0].split(',')[0].trim();
                     opt.textContent = `[${arma}] - BS:${unit.bs} ARM:${unit.arm}`;
                     profileSelect.appendChild(opt);
@@ -220,76 +205,49 @@
             const cGroup = document.getElementById('combatGroup').value;
             let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
             if (!idProfilo) return alert("Seleziona prima un profilo dalla tendina 2!");
-            
             const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
             if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
-            
-            if (window.roster.some(u => u.alias === aliasInput)) {
-                return alert(`Hai già schierato un'unità chiamata "${aliasInput}". Aggiungi un SOPRANNOME per distinguerla!`);
-            }
+            if (window.roster.some(u => u.alias === aliasInput)) return alert(`Nome già schierato! Assegna un SOPRANNOME per distinguerla.`);
             
             const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, combatGroup: parseInt(cGroup), state: "ACTIVE", player: "G_NOMADS" };
-            window.roster.push(unit); 
-            document.getElementById('unitAlias').value = ""; 
-            renderRoster();
+            window.roster.push(unit); document.getElementById('unitAlias').value = ""; renderRoster();
         };
 
         window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
 
         window.renderRoster = () => {
             const container = document.getElementById('localRoster');
-            if(window.roster.length === 0) {
-                container.innerHTML = "<i>Nessuna unità schierata.</i>";
-                return;
-            }
+            if(window.roster.length === 0) return container.innerHTML = "<i>Nessuna unità schierata.</i>";
             container.innerHTML = "<b style='color:var(--nomad-orange);'>UNITÀ PRONTE:</b><br>";
             window.roster.forEach((u, i) => {
                 const armaCorta = u.weapon.split('/')[0].split(',')[0];
-                container.innerHTML += `
-                    <div class="roster-item">
-                        <div><b style="color:#00ff00;">[G${u.combatGroup}]</b> <b>${u.alias}</b> <span style="color:#aaa;">| ${armaCorta}</span></div>
-                        <div class="del-btn" onclick="removeUnit(${i})">X</div>
-                    </div>`;
+                container.innerHTML += `<div class="roster-item"><div><b style="color:#00ff00;">[G${u.combatGroup}]</b> <b>${u.alias}</b> <span style="color:#aaa;">| ${armaCorta}</span></div><div class="del-btn" onclick="removeUnit(${i})">X</div></div>`;
             });
         };
 
         // --- GESTIONE ARCHIVIO SQUADRE ---
         window.saveRoster = () => {
             const name = document.getElementById('saveName').value.trim().toUpperCase();
-            if(!name || window.roster.length === 0) return alert("Inserisci un nome valido e aggiungi almeno un'unità alla lista!");
-            
+            if(!name || window.roster.length === 0) return alert("Inserisci nome valido e aggiungi unità!");
             const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
-            savedData[name] = window.roster;
-            localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
-            
-            document.getElementById('saveName').value = "";
-            refreshSavedRostersList();
-            alert(`Squadra "${name}" salvata con successo!`);
+            savedData[name] = window.roster; localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+            document.getElementById('saveName').value = ""; refreshSavedRostersList(); alert("Squadra salvata!");
         };
 
         window.loadRoster = () => {
             const name = document.getElementById('savedRostersSelect').value;
             if(!name) return;
-            
             const loadedRoster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || [];
-            
-            window.roster = loadedRoster.map(u => ({
-                ...u,
-                combatGroup: u.combatGroup || 1,
-                state: u.state || "ACTIVE"
-            }));
-            
+            window.roster = loadedRoster.map(u => ({ ...u, combatGroup: u.combatGroup || 1, state: u.state || "ACTIVE" }));
             renderRoster();
         };
 
         window.deleteRoster = () => {
             const name = document.getElementById('savedRostersSelect').value;
-            if(!name) return alert("Seleziona una squadra dalla tendina prima di eliminarla.");
-            
-            if(confirm(`Sei sicuro di voler eliminare la squadra salvata "${name}"?`)) {
+            if(!name) return;
+            if(confirm(`Eliminare squadra "${name}"?`)) {
                 const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
-                delete savedData[name];
-                localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+                delete savedData[name]; localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
                 refreshSavedRostersList();
             }
         };
@@ -298,19 +256,14 @@
             const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
             const select = document.getElementById('savedRostersSelect');
             select.innerHTML = '';
-            const defOpt = document.createElement('option'); defOpt.value = ""; defOpt.textContent = "-- SQUADRE SALVATE --";
-            select.appendChild(defOpt);
-            Object.keys(savedData).forEach(n => {
-                const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
-                select.appendChild(opt);
-            });
+            const defOpt = document.createElement('option'); defOpt.value = ""; defOpt.textContent = "-- SQUADRE SALVATE --"; select.appendChild(defOpt);
+            Object.keys(savedData).forEach(n => { const opt = document.createElement('option'); opt.value = n; opt.textContent = n; select.appendChild(opt); });
         };
 
         // --- AVVIO BATTAGLIA ---
         window.startBattle = async () => { 
             if(window.roster.length === 0) return alert("Schiera almeno un'unità!");
-            document.getElementById('setup').style.display='none'; 
-            document.getElementById('battle').style.display='flex'; 
+            document.getElementById('setup').style.display='none'; document.getElementById('battle').style.display='flex'; 
             for (let unit of window.roster) await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
         };
 
@@ -318,7 +271,6 @@
         window.goToStep = (stepId, param = null) => {
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active-step'));
             document.getElementById(stepId).classList.add('active-step');
-
             const header = document.getElementById('battle-header');
 
             if (stepId === 'step-group') header.innerText = "SELEZIONA GRUPPO DI COMBATTIMENTO";
@@ -327,10 +279,8 @@
                 header.innerText = `UNITÀ - GRUPPO ${param}`;
                 const container = document.getElementById('unit-buttons-container');
                 container.innerHTML = "";
-                
                 const unitsInGroup = window.roster.filter(u => u.combatGroup === param);
-                if(unitsInGroup.length === 0) container.innerHTML = "<p style='color:red; text-align:center;'>Nessuna unità in questo gruppo.</p>";
-                
+                if(unitsInGroup.length === 0) container.innerHTML = "<p style='color:red; text-align:center;'>Nessuna unità.</p>";
                 unitsInGroup.forEach(u => {
                     let btnColor = u.state === 'DEAD' ? '#330000' : (u.state === 'UNCONSCIOUS' ? '#331a00' : '#1a0000');
                     let statusLabel = u.state !== 'ACTIVE' ? `[${u.state}]` : '';
@@ -347,16 +297,12 @@
 
         window.selectAction = (action) => {
             window.currentOrder.action = action;
-            
-            if (action === 'GESTIONE STATI') {
-                document.getElementById('battle-header').innerText = `AGGIORNA STATO: ${window.currentOrder.unit.alias}`;
-                goToStep('step-states');
-            } 
+            if (action === 'GESTIONE STATI') { document.getElementById('battle-header').innerText = `STATO DI: ${window.currentOrder.unit.alias}`; goToStep('step-states'); } 
+            else if (action === 'TIRO SALVEZZA') { goToModifiers('TIRO SALVEZZA'); } // Vai diretto al calcolo
             else if (action === 'ATTACCO BS') {
                 document.getElementById('battle-header').innerText = "SELEZIONA ARMA";
                 const container = document.getElementById('weapon-buttons-container');
                 container.innerHTML = "";
-                
                 const allWeapons = window.currentOrder.unit.weapon.replace('/', ',').split(',');
                 allWeapons.forEach(w => {
                     const wClean = w.trim();
@@ -364,13 +310,10 @@
                 });
                 goToStep('step-weapon');
             } 
-            else if (action === 'MOVIMENTO') {
-                document.getElementById('battle-header').innerText = "MOVIMENTO - IN ATTESA ARO";
+            else if (action === 'CORPO A CORPO' || action === 'MOVIMENTO') {
+                document.getElementById('battle-header').innerText = "DICHIARAZIONE - IN ATTESA ARO";
                 goToStep('step-wait-aro');
             } 
-            else {
-                alert("Funzione in sviluppo!");
-            }
         };
 
         window.applyState = async (newState) => {
@@ -383,8 +326,104 @@
 
         window.declareAttack = async (weaponName) => {
             window.currentOrder.weapon = weaponName;
-            document.getElementById('battle-header').innerText = "ATTACCO DICHIARATO - IN ATTESA ARO";
+            document.getElementById('battle-header').innerText = "ATTACCO BS - IN ATTESA ARO";
             goToStep('step-wait-aro');
+        };
+
+        // --- SISTEMA DI CALCOLO MATEMATICO (MODIFICATORI DINAMICI) ---
+        window.goToModifiers = (finalAction) => {
+            if(finalAction) window.currentOrder.action = finalAction; // Aggiorna se dalla seconda metà scelgono di sparare
+            
+            document.getElementById('battle-header').innerText = "SELEZIONA MODIFICATORI TATTICI";
+            window.selectedMods = {}; // Resetta la matematica
+            document.getElementById('calc-result').style.display = 'none';
+            
+            const container = document.getElementById('mods-container');
+            container.innerHTML = "";
+            const action = window.currentOrder.action;
+            let availableMods = [];
+            
+            if (action.includes('ATTACCO BS')) {
+                availableMods = [
+                    { id: "opt", name: "GITTATA OTTIMA", val: 3 },
+                    { id: "lng", name: "GITTATA LUNGA", val: -3 },
+                    { id: "cov", name: "BERSAGLIO IN COPERTURA", val: -3 },
+                    { id: "mim", name: "MIMETISMO BERSAGLIO", val: -3 }
+                ];
+            } else if (action.includes('CORPO A CORPO')) {
+                availableMods = [
+                    { id: "ma", name: "ARTI MARZIALI", val: 3 }
+                ];
+            } else if (action.includes('TIRO SALVEZZA')) {
+                availableMods = [
+                    { id: "cov_arm", name: "BONUS COPERTURA (+3 ARM)", val: 3 }
+                ];
+            }
+            
+            if(availableMods.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color:#aaa; margin:20px;'>Nessun Modificatore per questa Azione.</p>";
+            } else {
+                availableMods.forEach(m => {
+                    // Pre-selezione automatica (es. se ha la skill Martial Arts si attiva da solo)
+                    let preSelected = false;
+                    if(m.id === "ma" && window.currentOrder.unit.skills.includes("Martial Arts")) {
+                        preSelected = true;
+                        window.selectedMods[m.id] = { name: m.name, val: m.val };
+                    }
+                    
+                    let btnColor = preSelected ? 'var(--nomad-orange)' : '#1a0000';
+                    let textColor = preSelected ? '#000' : '#fff';
+                    
+                    container.innerHTML += `<button id="btn-mod-${m.id}" class="huge-btn" style="background:${btnColor}; color:${textColor}; min-height:60px; font-size:20px; flex:none;" onclick="toggleMod('${m.id}', '${m.name}', ${m.val})">${m.name} (${m.val > 0 ? '+'+m.val : m.val})</button>`;
+                });
+            }
+            goToStep('step-modifiers');
+        };
+
+        window.toggleMod = (id, name, val) => {
+            const btn = document.getElementById(`btn-mod-${id}`);
+            if (window.selectedMods[id]) {
+                delete window.selectedMods[id];
+                btn.style.background = '#1a0000'; btn.style.color = '#fff';
+            } else {
+                window.selectedMods[id] = { name, val };
+                btn.style.background = 'var(--nomad-orange)'; btn.style.color = '#000';
+            }
+        };
+
+        window.executeCalculation = () => {
+            const order = window.currentOrder;
+            let base = 0; let attrName = "";
+
+            if (order.action.includes('ATTACCO BS')) { base = order.unit.bs; attrName = "BS"; }
+            else if (order.action.includes('CORPO A CORPO')) { base = order.unit.cc; attrName = "CC"; }
+            else if (order.action.includes('TIRO SALVEZZA')) { base = order.unit.arm; attrName = "ARM"; }
+            else { base = 10; attrName = "STAT"; }
+
+            let totalMod = 0; let modLog = "";
+            for (let key in window.selectedMods) {
+                let m = window.selectedMods[key];
+                totalMod += m.val;
+                modLog += `> ${m.name}: <span style="color:${m.val > 0 ? '#00ff00' : '#ff3333'}; font-weight:bold;">${m.val > 0 ? '+' : ''}${m.val}</span><br>`;
+            }
+
+            let target = base + totalMod;
+            let wpnLog = order.weapon && order.action.includes('ATTACCO BS') ? `<b style="color:var(--nomad-orange)">ARMA:</b> ${order.weapon}<br>` : "";
+
+            let resHtml = `<div style="color:#fff; line-height:1.6;">
+                           <b>UNITÀ:</b> ${order.unit.alias}<br>
+                           <b>AZIONE:</b> ${order.action}<br>
+                           ${wpnLog}
+                           <br><b>VALORE BASE (${attrName}):</b> ${base}<br>
+                           ${modLog}
+                           <hr style="border-color:var(--nomad-orange);">
+                           <div style="font-size:28px; color:#00ff00; font-weight:bold; text-align:center;">>>> OBIETTIVO: ${target} <<<</div>
+                           <div style="font-size:10px; color:#aaa; text-align:center; margin-top:5px;">Skill note: ${order.unit.skills}</div>
+                           </div>`;
+
+            const resBox = document.getElementById('calc-result');
+            resBox.innerHTML = resHtml;
+            resBox.style.display = 'block';
         };
 
     </script>
