@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v5.1</title>
+    <title>NOMADS TACTICAL TERMINAL v6.0</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -37,6 +37,9 @@
         .roster-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); }
         .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 0 5px; }
         .flex-row { display: flex; gap: 10px; }
+        
+        /* Stile Pannello Apprendimento IA */
+        #learningPanel { background: #330000; border: 1px solid var(--nomad-orange); padding: 15px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -59,11 +62,8 @@
             <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
             <select id="groupSelect" onchange="updateProfileSelect()"><option value="">-- 1. SELEZIONA TRUPPA --</option></select>
             <select id="profileSelect" disabled><option value="">-- 2. SELEZIONA PROFILO --</option></select>
-            
             <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (Opzionale)">
-            
             <button class="btn-nomad" onclick="addUnitToRoster()">AGGIUNGI</button>
-            
             <div id="localRoster" class="roster-list"><i>Nessuna unità schierata.</i></div>
         </div>
         <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
@@ -72,6 +72,17 @@
     <div id="battle" style="display:none;">
         <button id="btnListen" class="btn-nomad" style="padding: 20px; font-size: 24px;">🎤 ANALISI VOCALE TATTICA</button>
         <p style="font-size: 10px; color: #aaa; text-align: center;">Es: "Alguacil spara in copertura" o "Mobile Brigada colpito"</p>
+        
+        <div id="learningPanel">
+            <div style="color: var(--nomad-orange); font-weight: bold; margin-bottom: 5px;">⚠️ ALIAS NON RICONOSCIUTO</div>
+            <div id="learningText" style="font-size: 12px; margin-bottom: 10px;"></div>
+            <select id="learningSelect"><option value="">-- SELEZIONA A CHI TI RIFERIVI --</option></select>
+            <div class="flex-row">
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="saveLearnedWord()">INSEGNA ALL'IA</button>
+                <button class="btn-status btn-small" style="flex: 1;" onclick="document.getElementById('learningPanel').style.display='none'">IGNORA</button>
+            </div>
+        </div>
+
         <div id="console"><span class="highlight">[SISTEMA OPERATIVO]:</span> In attesa di ordini.</div>
     </div>
 
@@ -79,12 +90,14 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // FIREBASE CONFIG - Inserisci i tuoi dati!
         const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         window.roster = [];
+        // Dizionario dinamico salvato nel browser
+        window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
+        window.lastUnknownText = ""; // Salva l'ultimo comando non capito
 
         window.onload = () => {
             if(!window.masterNomadsDatabase) return;
@@ -110,27 +123,13 @@
         window.addUnitToRoster = () => {
             const idProfilo = document.getElementById('profileSelect').value;
             let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
-
             if (!idProfilo) return alert("Devi prima selezionare un profilo!");
             
             const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
-            
-            // SE IL SOPRANNOME È VUOTO, USA IL NOME DELLA TRUPPA
-            if (!aliasInput) {
-                aliasInput = dbUnit.nome.toUpperCase();
-            }
+            if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase();
+            if (window.roster.some(u => u.alias === aliasInput)) return alert(`Nome già in uso! Assegna un soprannome.`);
 
-            // Controllo duplicati
-            if (window.roster.some(u => u.alias === aliasInput)) {
-                return alert(`Il nome "${aliasInput}" è già schierato. Se vuoi due unità identiche, devi assegnare almeno un soprannome al secondo!`);
-            }
-
-            const unit = { 
-                alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, 
-                bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills,
-                state: "ACTIVE", player: "G_NOMADS", modifiers: [] 
-            };
-            
+            const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, state: "ACTIVE", player: "G_NOMADS", modifiers: [] };
             window.roster.push(unit);
             document.getElementById('unitAlias').value = ""; 
             renderRoster();
@@ -148,6 +147,7 @@
             });
         };
 
+        // SALVATAGGIO ROSTER
         window.saveRoster = () => {
             const name = document.getElementById('saveName').value.trim().toUpperCase();
             if(!name || window.roster.length === 0) return alert("Inserisci un nome e aggiungi un'unità!");
@@ -176,8 +176,30 @@
             if(window.roster.length === 0) return alert("Aggiungi un'unità!");
             document.getElementById('setup').style.display='none'; 
             document.getElementById('battle').style.display='block'; 
+            
+            // Popola il menu di apprendimento con le truppe in gioco
+            const learnSelect = document.getElementById('learningSelect');
+            learnSelect.innerHTML = '<option value="">-- SELEZIONA A CHI TI RIFERIVI --</option>';
+            window.roster.forEach(u => learnSelect.innerHTML += `<option value="${u.alias}">${u.alias}</option>`);
+
             for (let unit of window.roster) await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
             printLog("<span class='success'>[SISTEMA]: Uplink stabilito. IA Pronta.</span>");
+        };
+
+        // --- SISTEMA APPRENDIMENTO VOCALE ---
+        window.saveLearnedWord = () => {
+            const targetAlias = document.getElementById('learningSelect').value;
+            if (!targetAlias) return alert("Seleziona una truppa!");
+            
+            // Salva la frase non capita (o la prima parte) legandola all'Alias
+            // Estraiamo la prima parola della frase non capita come probabile colpevole
+            const wrongWord = window.lastUnknownText.split(" ")[0].toLowerCase();
+            
+            window.customDictionary[wrongWord] = targetAlias.toLowerCase();
+            localStorage.setItem('infinityDictionary_Nomads', JSON.stringify(window.customDictionary));
+            
+            document.getElementById('learningPanel').style.display = 'none';
+            printLog(`<span class="success">[IA AGGIORNATA]: D'ora in poi tradurrò "${wrongWord}" come "${targetAlias}". Riprova il comando!</span>`);
         };
 
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
@@ -189,13 +211,11 @@
             document.getElementById('btnListen').classList.remove('recording');
             let testo = event.results[0][0].transcript.toLowerCase();
             
-            // CORRETTORE VOCALE PER TERMINI SPANGLISH DI INFINITY
-            testo = testo.replace("alguacile", "alguacil")
-                         .replace("acqua cil", "alguacil")
-                         .replace("szalamandra", "szalamandra")
-                         .replace("salamandra", "szalamandra")
-                         .replace("kriza", "kriza borac")
-                         .replace("criza", "kriza borac");
+            // 1. Applica il dizionario personalizzato dell'utente
+            Object.keys(window.customDictionary).forEach(wrong => {
+                const correct = window.customDictionary[wrong];
+                testo = testo.replace(new RegExp(`\\b${wrong}\\b`, 'g'), correct);
+            });
 
             elaboraComando(testo);
         };
@@ -205,32 +225,36 @@
             consoleDiv.innerHTML = msg + "\n\n" + consoleDiv.innerHTML;
         }
 
-        async function elaboraComando(testo) {
-            const match = window.roster.find(u => testo.includes(u.alias.toLowerCase()));
-            let logHTML = `> Ordine: "<span style="color:#aaa">${testo}</span>"<br>`;
+        async function elaboraComando(testoOriginale) {
+            // Cerca il match esatto dopo la traduzione
+            const match = window.roster.find(u => testoOriginale.includes(u.alias.toLowerCase()));
+            let logHTML = `> Ordine: "<span style="color:#aaa">${testoOriginale}</span>"<br>`;
 
             if (match) {
+                // Nasconde il pannello di apprendimento se era aperto
+                document.getElementById('learningPanel').style.display = 'none';
+                
                 let mods = [], base = 0, totale = 0, isCalculated = false;
 
-                if (testo.includes("spara") || testo.includes("fuoco")) {
+                if (testoOriginale.includes("spara") || testoOriginale.includes("fuoco")) {
                     logHTML += `<span class="highlight">[ATTACCO - BS]</span> ${match.alias}<br>`;
                     base = match.bs;
-                    if (testo.includes("copertura") || testo.includes("riparo")) mods.push({nome: "Copertura Bersaglio", val: -3});
-                    if (testo.includes("mimetismo") || testo.includes("mimetico")) mods.push({nome: "Mimetismo", val: -3});
-                    if (testo.includes("ottima") || testo.includes("buona")) mods.push({nome: "Gittata Ideale", val: 3});
-                    if (testo.includes("lunga") || testo.includes("cattiva")) mods.push({nome: "Gittata Lunga", val: -3});
+                    if (testoOriginale.includes("copertura") || testoOriginale.includes("riparo")) mods.push({nome: "Copertura Bersaglio", val: -3});
+                    if (testoOriginale.includes("mimetismo") || testoOriginale.includes("mimetico")) mods.push({nome: "Mimetismo", val: -3});
+                    if (testoOriginale.includes("ottima") || testoOriginale.includes("buona")) mods.push({nome: "Gittata Ideale", val: 3});
+                    if (testoOriginale.includes("lunga") || testoOriginale.includes("cattiva")) mods.push({nome: "Gittata Lunga", val: -3});
                     isCalculated = true;
                 }
-                else if (testo.includes("corpo a corpo") || testo.includes("mischia")) {
+                else if (testoOriginale.includes("corpo a corpo") || testoOriginale.includes("mischia")) {
                     logHTML += `<span class="highlight">[MISCHIA - CC]</span> ${match.alias}<br>`;
                     base = match.cc;
                     if (match.skills.includes("Martial Arts")) mods.push({nome: "Arti Marziali", val: +3});
                     isCalculated = true;
                 }
-                else if (testo.includes("salva") || testo.includes("colpito") || testo.includes("armatura")) {
+                else if (testoOriginale.includes("salva") || testoOriginale.includes("colpito") || testoOriginale.includes("armatura")) {
                     logHTML += `<span class="alert">[DIFESA - ARM]</span> ${match.alias}<br>`;
                     base = match.arm;
-                    if (testo.includes("copertura") || testo.includes("riparo")) mods.push({nome: "Copertura", val: +3});
+                    if (testoOriginale.includes("copertura") || testoOriginale.includes("riparo")) mods.push({nome: "Copertura", val: +3});
                     isCalculated = true;
                 }
 
@@ -239,17 +263,20 @@
                     let modTotal = 0;
                     mods.forEach(m => { modTotal += m.val; logHTML += `> ${m.nome}: <span style="color:${m.val > 0 ? '#00ff00' : '#ff3333'}">${m.val > 0 ? '+' : ''}${m.val}</span><br>`; });
                     logHTML += `-----------------------<br><span class="highlight">>>> OBIETTIVO: ${base + modTotal} <<<</span><br>`;
-                    logHTML += `<span style="font-size:10px; color:var(--text-dim);">Abilità: ${match.skills}</span>`;
                 }
 
                 let newState = "";
-                if (testo.includes("morto") || testo.includes("eliminato")) { newState = "DEAD"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA.</span>`; } 
-                else if (testo.includes("inconscio") || testo.includes("a terra")) { newState = "UNCONSCIOUS"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio (WIP Medico: ${match.wip}).</span>`; } 
-                else if (testo.includes("attivo") || testo.includes("curato")) { newState = "ACTIVE"; logHTML += `<br><span class="success">[STATUS] ${match.alias} Operativo.</span>`; }
+                if (testoOriginale.includes("morto") || testoOriginale.includes("eliminato")) { newState = "DEAD"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA.</span>`; } 
+                else if (testoOriginale.includes("inconscio") || testoOriginale.includes("a terra")) { newState = "UNCONSCIOUS"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio.</span>`; } 
+                else if (testoOriginale.includes("attivo") || testoOriginale.includes("curato")) { newState = "ACTIVE"; logHTML += `<br><span class="success">[STATUS] ${match.alias} Operativo.</span>`; }
 
                 if (newState) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
             } else {
-                logHTML += `<span class="alert">[ERRORE] Comando annullato. Nessuna unità identificata.</span>`;
+                // SE NON TROVA MATCH, ATTIVA IL PANNELLO DI APPRENDIMENTO
+                logHTML += `<span class="alert">[ERRORE] Nome non trovato in squadra.</span>`;
+                window.lastUnknownText = testoOriginale; // Salva la frase non capita
+                document.getElementById('learningText').innerText = `Il sistema ha capito: "${testoOriginale}"`;
+                document.getElementById('learningPanel').style.display = 'block';
             }
             printLog(logHTML);
         }
