@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v4.0</title>
+    <title>NOMADS TACTICAL TERMINAL v5.0</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -13,7 +13,6 @@
     <script src="nomads_db.js"></script>
 
     <style>
-        /* NUOVO TEMA NOMADS: Rosso, Grigio, Arancione e Nero */
         :root {
             --bg-color: #0b0c10;
             --panel-bg: #1f1f1f;
@@ -24,90 +23,32 @@
             --text-dim: #aaaaaa;
         }
 
-        body { 
-            background: var(--bg-color); 
-            color: var(--text-main); 
-            font-family: 'Share Tech Mono', monospace; 
-            padding: 15px; 
-            border: 2px solid var(--nomad-red); 
-            min-height: 100vh; 
-            box-sizing: border-box; 
-            margin: 0; 
-        }
-        h2 { 
-            font-family: 'Teko', sans-serif;
-            font-size: 28px;
-            color: #fff;
-            text-shadow: 2px 2px 0px var(--nomad-red); 
-            text-align: center; 
-            text-transform: uppercase; 
-            border-bottom: 2px solid var(--nomad-red); 
-            padding-bottom: 10px; 
-            margin-top: 0;
-        }
-        .section { 
-            background: var(--panel-bg); 
-            border-left: 4px solid var(--nomad-red); 
-            padding: 15px; 
-            margin-bottom: 20px; 
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-        }
-        input, select { 
-            background: #000; 
-            color: var(--text-main); 
-            border: 1px solid var(--nomad-red); 
-            width: 100%; 
-            padding: 12px; 
-            margin: 8px 0; 
-            font-family: inherit; 
-            font-size: 14px; 
-            box-sizing: border-box; 
-        }
+        body { background: var(--bg-color); color: var(--text-main); font-family: 'Share Tech Mono', monospace; padding: 15px; border: 2px solid var(--nomad-red); min-height: 100vh; box-sizing: border-box; margin: 0; }
+        h2 { font-family: 'Teko', sans-serif; font-size: 28px; color: #fff; text-shadow: 2px 2px 0px var(--nomad-red); text-align: center; text-transform: uppercase; border-bottom: 2px solid var(--nomad-red); padding-bottom: 10px; margin-top: 0; }
+        .section { background: var(--panel-bg); border-left: 4px solid var(--nomad-red); padding: 15px; margin-bottom: 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        
+        input, select { background: #000; color: var(--text-main); border: 1px solid var(--nomad-red); width: 100%; padding: 10px; margin: 5px 0; font-family: inherit; font-size: 14px; box-sizing: border-box; }
         input:focus, select:focus { border-color: var(--nomad-orange); outline: none; }
         
-        button { 
-            width: 100%; 
-            padding: 15px; 
-            margin-top: 10px; 
-            cursor: pointer; 
-            font-family: 'Teko', sans-serif; 
-            font-size: 22px; 
-            letter-spacing: 1px;
-            font-weight: bold; 
-            text-transform: uppercase; 
-            border: none; 
-            transition: 0.3s;
-        }
-        .btn-nomad { 
-            background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); 
-            color: #fff; 
-            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); 
-        }
+        button { width: 100%; padding: 12px; margin-top: 5px; cursor: pointer; font-family: 'Teko', sans-serif; font-size: 20px; letter-spacing: 1px; font-weight: bold; text-transform: uppercase; border: none; transition: 0.3s; }
+        .btn-nomad { background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); color: #fff; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
         .btn-nomad:hover { background: var(--nomad-orange); color: #000; }
-        
-        .btn-status { background: #222; color: var(--nomad-red); border: 1px solid var(--nomad-red); margin-top: 10px; font-size: 18px; }
+        .btn-status { background: #222; color: var(--nomad-red); border: 1px solid var(--nomad-red); margin-top: 15px; font-size: 18px; }
+        .btn-small { padding: 8px; font-size: 16px; margin-top: 5px; clip-path: none; border-radius: 3px; }
         
         .recording { background: #ff0000 !important; color: white !important; animation: blink 1s infinite; box-shadow: 0 0 20px var(--nomad-orange); }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
-        #console { 
-            font-size: 13px; 
-            margin-top: 20px; 
-            color: var(--text-main); 
-            background: #050505; 
-            padding: 15px; 
-            border: 1px solid var(--nomad-red); 
-            border-left: 5px solid var(--nomad-orange);
-            height: 250px; 
-            overflow-y: auto; 
-            white-space: pre-wrap; 
-            line-height: 1.4;
-        }
+        #console { font-size: 13px; margin-top: 20px; color: var(--text-main); background: #050505; padding: 15px; border: 1px solid var(--nomad-red); border-left: 5px solid var(--nomad-orange); height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
         .highlight { color: var(--nomad-orange); font-weight: bold; }
         .alert { color: var(--nomad-red); font-weight: bold; }
         .success { color: #00ff00; font-weight: bold; }
         
-        .roster-list { font-size: 12px; margin-top: 10px; border-top: 1px dashed var(--nomad-red); padding-top: 10px; color: var(--text-dim); }
+        .roster-list { font-size: 12px; margin-top: 15px; border-top: 1px dashed var(--nomad-red); padding-top: 10px; }
+        .roster-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); }
+        .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 0 5px; }
+        
+        .flex-row { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
@@ -115,73 +56,110 @@
     
     <div id="setup">
         <div class="section">
+            <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">ARCHIVIO SQUADRE</h3>
+            <div class="flex-row">
+                <select id="savedRostersSelect" style="flex: 2;">
+                    <option value="">-- SQUADRE SALVATE --</option>
+                </select>
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="loadRoster()">CARICA</button>
+            </div>
+            <div class="flex-row">
+                <input type="text" id="saveName" placeholder="NOME NUOVA SQUADRA" style="flex: 2;">
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="saveRoster()">SALVA</button>
+            </div>
+        </div>
+
+        <div class="section">
             <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
             
-            <select id="dbSelect">
-                <option value="">-- SELEZIONA PROFILO DAL DATABASE --</option>
+            <select id="groupSelect" onchange="updateProfileSelect()">
+                <option value="">-- 1. SELEZIONA TRUPPA --</option>
             </select>
             
-            <input type="text" id="unitAlias" placeholder="ASSEGNA SOPRANNOME (es. ROSSO)">
+            <select id="profileSelect" disabled>
+                <option value="">-- 2. SELEZIONA PROFILO --</option>
+            </select>
             
-            <button class="btn-nomad" onclick="addUnitFromDB()">AGGIUNGI ALLA SQUADRA</button>
+            <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (es. ROSSO)">
             
-            <div id="localRoster" class="roster-list">Unità in attesa: 0</div>
+            <button class="btn-nomad" onclick="addUnitToRoster()">AGGIUNGI</button>
+            
+            <div id="localRoster" class="roster-list">
+                <i>Nessuna unità schierata.</i>
+            </div>
         </div>
-        <button class="btn-status" onclick="startBattle()">INIZIA PARTITA (ATTIVA IA)</button>
+        
+        <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
     </div>
 
     <div id="battle" style="display:none;">
-        <button id="btnListen" class="btn-nomad">🎤 ANALISI VOCALE TATTICA</button>
+        <button id="btnListen" class="btn-nomad" style="padding: 20px; font-size: 24px;">🎤 ANALISI VOCALE TATTICA</button>
         <p style="font-size: 10px; color: #aaa; text-align: center;">Es: "Rosso spara in copertura a distanza ottima" oppure "Rosso salva in copertura"</p>
-        <div id="console"><span class="highlight">[SISTEMA OPERATIVO]:</span> Microfono in standby... In attesa di ordini.</div>
+        <div id="console"><span class="highlight">[SISTEMA OPERATIVO]:</span> In attesa di ordini.</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
-        
-        let wakeLock = null;
-        document.addEventListener('click', async () => {
-            if ('wakeLock' in navigator && !wakeLock) wakeLock = await navigator.wakeLock.request('screen');
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
-        });
-
         // --- FIREBASE CONFIG (Inserisci i tuoi dati) ---
         const firebaseConfig = { 
             apiKey: "IL_TUO_API_KEY",
             projectId: "IL_TUO_PROGETTO",
-            // ...
         };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- POPOLAMENTO MENU DAL DATABASE ---
+        window.roster = []; // Roster locale corrente
+
+        // --- INIZIALIZZAZIONE ---
         window.onload = () => {
-            const select = document.getElementById('dbSelect');
-            if(window.masterNomadsDatabase) {
-                window.masterNomadsDatabase.sort((a, b) => a.nome.localeCompare(b.nome));
-                window.masterNomadsDatabase.forEach(unit => {
-                    const option = document.createElement('option');
-                    option.value = unit.id_profilo;
-                    const armaPrincipale = unit.arma.split('/')[0].split(',')[0].trim();
-                    option.textContent = `${unit.nome} [${armaPrincipale}]`;
-                    select.appendChild(option);
-                });
-            } else {
-                alert("Errore: Master Database (nomads_db.js) non trovato!");
-            }
+            if(!window.masterNomadsDatabase) return alert("Errore: Database non trovato!");
+            
+            // 1. Popola la prima tendina (Nomi univoci)
+            const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome))].sort();
+            const groupSelect = document.getElementById('groupSelect');
+            gruppiUnici.forEach(nome => {
+                const opt = document.createElement('option');
+                opt.value = nome;
+                opt.textContent = nome;
+                groupSelect.appendChild(opt);
+            });
+
+            // 2. Carica i nomi delle squadre salvate
+            refreshSavedRostersList();
         };
 
-        window.roster = [];
-        
-        window.addUnitFromDB = async () => {
-            const select = document.getElementById('dbSelect');
-            const aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
-            const idProfilo = select.value;
+        // --- AGGIORNA LA SECONDA TENDINA ---
+        window.updateProfileSelect = () => {
+            const groupName = document.getElementById('groupSelect').value;
+            const profileSelect = document.getElementById('profileSelect');
+            profileSelect.innerHTML = '<option value="">-- 2. SELEZIONA PROFILO --</option>';
+            
+            if (!groupName) {
+                profileSelect.disabled = true;
+                return;
+            }
+            
+            profileSelect.disabled = false;
+            const profili = window.masterNomadsDatabase.filter(u => u.nome === groupName);
+            
+            profili.forEach(unit => {
+                const opt = document.createElement('option');
+                opt.value = unit.id_profilo;
+                const arma = unit.arma.split('/')[0].split(',')[0].trim(); // Prende solo l'arma primaria
+                opt.textContent = `[${arma}] - BS:${unit.bs} CC:${unit.cc} ARM:${unit.arm}`;
+                profileSelect.appendChild(opt);
+            });
+        };
 
-            if (!idProfilo || !aliasInput) return alert("Seleziona una truppa e assegnagli un Soprannome!");
+        // --- AGGIUNGI UNITÀ AL ROSTER LOCALE ---
+        window.addUnitToRoster = () => {
+            const idProfilo = document.getElementById('profileSelect').value;
+            const aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
+
+            if (!idProfilo || !aliasInput) return alert("Seleziona un profilo e assegnagli un Soprannome!");
+            if (window.roster.some(u => u.alias === aliasInput)) return alert("Soprannome già in uso!");
 
             const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
             const unit = { 
@@ -190,29 +168,94 @@
                 state: "ACTIVE", player: "G_NOMADS", modifiers: [] 
             };
             
-            await setDoc(doc(db, "sessione_corrente", aliasInput), unit);
             window.roster.push(unit);
-            
-            document.getElementById('localRoster').innerText = `Unità caricate: ${window.roster.map(u => u.alias).join(', ')}`;
             document.getElementById('unitAlias').value = ""; 
+            renderRoster();
         };
 
-        window.startBattle = () => { 
+        // --- RIMUOVI UNITÀ DAL ROSTER LOCALE ---
+        window.removeUnit = (index) => {
+            window.roster.splice(index, 1);
+            renderRoster();
+        };
+
+        // --- MOSTRA IL ROSTER A SCHERMO ---
+        window.renderRoster = () => {
+            const container = document.getElementById('localRoster');
+            if(window.roster.length === 0) {
+                container.innerHTML = "<i>Nessuna unità schierata.</i>";
+                return;
+            }
+            
+            container.innerHTML = "<div style='color:var(--nomad-orange); margin-bottom:5px;'>UNITÀ PRONTE:</div>";
+            window.roster.forEach((u, i) => {
+                const armaCorta = u.weapon.split('/')[0].split(',')[0];
+                container.innerHTML += `
+                    <div class="roster-item">
+                        <div><b>${u.alias}</b> <span style="color:#aaa; font-size:10px;">| ${u.name} [${armaCorta}]</span></div>
+                        <div class="del-btn" onclick="removeUnit(${i})">X</div>
+                    </div>
+                `;
+            });
+        };
+
+        // --- SALVATAGGIO IN MEMORIA LOCALE (Browser) ---
+        window.saveRoster = () => {
+            const name = document.getElementById('saveName').value.trim().toUpperCase();
+            if(!name || window.roster.length === 0) return alert("Inserisci un nome e aggiungi almeno un'unità!");
+            
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            savedData[name] = window.roster;
+            localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+            
+            alert(`Squadra "${name}" salvata con successo!`);
+            document.getElementById('saveName').value = "";
+            refreshSavedRostersList();
+        };
+
+        // --- CARICAMENTO DALLA MEMORIA LOCALE ---
+        window.loadRoster = () => {
+            const name = document.getElementById('savedRostersSelect').value;
+            if(!name) return;
+            
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            if(savedData[name]) {
+                window.roster = savedData[name];
+                renderRoster();
+            }
+        };
+
+        window.refreshSavedRostersList = () => {
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            const select = document.getElementById('savedRostersSelect');
+            select.innerHTML = '<option value="">-- SQUADRE SALVATE --</option>';
+            Object.keys(savedData).forEach(nomeSquadra => {
+                select.innerHTML += `<option value="${nomeSquadra}">${nomeSquadra}</option>`;
+            });
+        };
+
+        // --- INIZIO BATTAGLIA E INVIO A FIREBASE ---
+        window.startBattle = async () => { 
+            if(window.roster.length === 0) return alert("Aggiungi almeno un'unità alla squadra!");
+            
             document.getElementById('setup').style.display='none'; 
             document.getElementById('battle').style.display='block'; 
+            
+            // Carica tutte le unità su Firebase in un colpo solo
+            for (let unit of window.roster) {
+                await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
+            }
+            printLog("<span class='success'>[SISTEMA]: Uplink stabilito. Squadra inviata alla Dashboard PC. IA Pronta.</span>");
         };
 
-        // --- IA VOCALE: ESTRAZIONE MODIFICATORI E MATEMATICA ---
+        // --- IA VOCALE (Matematica invariata) ---
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         recognition.lang = 'it-IT';
-
         document.getElementById('btnListen').onclick = () => recognition.start();
         recognition.onstart = () => document.getElementById('btnListen').classList.add('recording');
-        
         recognition.onresult = async (event) => {
             document.getElementById('btnListen').classList.remove('recording');
-            const testo = event.results[0][0].transcript.toLowerCase();
-            elaboraComando(testo);
+            elaboraComando(event.results[0][0].transcript.toLowerCase());
         };
 
         function printLog(msg) {
@@ -222,87 +265,50 @@
 
         async function elaboraComando(testo) {
             const match = window.roster.find(u => testo.includes(u.alias.toLowerCase()));
-            let logHTML = `> Ordine ricevuto: "<span style="color:#aaa">${testo}</span>"<br>`;
+            let logHTML = `> Ordine: "<span style="color:#aaa">${testo}</span>"<br>`;
 
             if (match) {
-                let mods = [];
-                let base = 0;
-                let totale = 0;
-                let isCalculated = false;
+                let mods = [], base = 0, totale = 0, isCalculated = false;
 
-                // --- CALCOLO TIRO PER COLPRIRE (BS) ---
-                if (testo.includes("spara") || testo.includes("fuoco") || testo.includes("attacca a distanza")) {
-                    logHTML += `<span class="highlight">[CALCOLO ATTACCO - BS]</span> ${match.alias}<br>`;
+                if (testo.includes("spara") || testo.includes("fuoco")) {
+                    logHTML += `<span class="highlight">[ATTACCO - BS]</span> ${match.alias}<br>`;
                     base = match.bs;
-                    
                     if (testo.includes("copertura") || testo.includes("riparo")) mods.push({nome: "Copertura Bersaglio", val: -3});
-                    if (testo.includes("mimetismo") || testo.includes("mimetico")) mods.push({nome: "Mimetismo Bersaglio", val: -3});
+                    if (testo.includes("mimetismo") || testo.includes("mimetico")) mods.push({nome: "Mimetismo", val: -3});
                     if (testo.includes("ottima") || testo.includes("buona")) mods.push({nome: "Gittata Ideale", val: 3});
-                    if (testo.includes("lunga") || testo.includes("cattiva")) mods.push({name: "Gittata Lunga", val: -3});
-                    
+                    if (testo.includes("lunga") || testo.includes("cattiva")) mods.push({nome: "Gittata Lunga", val: -3});
                     isCalculated = true;
                 }
-                
-                // --- CALCOLO CORPO A CORPO (CC) ---
                 else if (testo.includes("corpo a corpo") || testo.includes("mischia")) {
-                    logHTML += `<span class="highlight">[CALCOLO MISCHIA - CC]</span> ${match.alias}<br>`;
+                    logHTML += `<span class="highlight">[MISCHIA - CC]</span> ${match.alias}<br>`;
                     base = match.cc;
-                    if (match.skills.includes("Martial Arts L2")) mods.push({nome: "Arti Marziali", val: 3});
+                    if (match.skills.includes("Martial Arts")) mods.push({nome: "Arti Marziali", val: +3});
                     isCalculated = true;
                 }
-
-                // --- CALCOLO TIRO SALVEZZA (ARM) ---
-                else if (testo.includes("salva") || testo.includes("colpito") || testo.includes("danno") || testo.includes("armatura")) {
-                    logHTML += `<span class="alert">[ALLERTA DIFESA - ARM]</span> ${match.alias}<br>`;
+                else if (testo.includes("salva") || testo.includes("colpito") || testo.includes("armatura")) {
+                    logHTML += `<span class="alert">[DIFESA - ARM]</span> ${match.alias}<br>`;
                     base = match.arm;
-                    
-                    if (testo.includes("copertura") || testo.includes("riparo")) mods.push({nome: "Bonus Copertura", val: 3});
-                    
+                    if (testo.includes("copertura") || testo.includes("riparo")) mods.push({nome: "Copertura", val: +3});
                     isCalculated = true;
                 }
 
-                // ESECUZIONE MATEMATICA A SCHERMO
                 if (isCalculated) {
                     logHTML += `Base: <b>${base}</b><br>`;
                     let modTotal = 0;
-                    mods.forEach(m => {
-                        modTotal += m.val;
-                        let segno = m.val > 0 ? '+' : '';
-                        let color = m.val > 0 ? '#00ff00' : '#ff3333';
-                        logHTML += `> ${m.nome}: <span style="color:${color}">${segno}${m.val}</span><br>`;
-                    });
-                    
-                    totale = base + modTotal;
-                    let targetWord = testo.includes("salva") || testo.includes("colpito") ? "ARM FINALE" : "TARGET DA OTTENERE (Su D20)";
-                    logHTML += `-----------------------<br>`;
-                    logHTML += `<span class="highlight">>>> ${targetWord}: ${totale} <<<</span><br>`;
-                    logHTML += `<span style="font-size:10px; color:var(--text-dim);">Abilità Note: ${match.skills}</span>`;
+                    mods.forEach(m => { modTotal += m.val; logHTML += `> ${m.nome}: <span style="color:${m.val > 0 ? '#00ff00' : '#ff3333'}">${m.val > 0 ? '+' : ''}${m.val}</span><br>`; });
+                    logHTML += `-----------------------<br><span class="highlight">>>> OBIETTIVO: ${base + modTotal} <<<</span><br>`;
+                    logHTML += `<span style="font-size:10px; color:var(--text-dim);">Abilità: ${match.skills}</span>`;
                 }
 
-                // --- GESTIONE STATI (VITA/MORTE) ---
                 let newState = "";
-                if (testo.includes("morto") || testo.includes("eliminato")) {
-                    newState = "DEAD";
-                    logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA (Ucciso in Azione). Modello rimosso.</span>`;
-                } 
-                else if (testo.includes("inconscio") || testo.includes("a terra")) {
-                    newState = "UNCONSCIOUS";
-                    logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio. Richiesto intervento (WIP ${match.wip}).</span>`;
-                } 
-                else if (testo.includes("attivo") || testo.includes("curato")) {
-                    newState = "ACTIVE";
-                    logHTML += `<br><span class="success">[STATUS] ${match.alias} di nuovo Operativo.</span>`;
-                }
+                if (testo.includes("morto") || testo.includes("eliminato")) { newState = "DEAD"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA.</span>`; } 
+                else if (testo.includes("inconscio") || testo.includes("a terra")) { newState = "UNCONSCIOUS"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio (WIP Medico: ${match.wip}).</span>`; } 
+                else if (testo.includes("attivo") || testo.includes("curato")) { newState = "ACTIVE"; logHTML += `<br><span class="success">[STATUS] ${match.alias} Operativo.</span>`; }
 
-                // AGGIORNA FIREBASE SE LO STATO CAMBIA
-                if (newState) {
-                    await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
-                }
-
+                if (newState) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
             } else {
-                logHTML += `<span class="alert">[ERRORE] Nessun Alias identificato nel database locale.</span>`;
+                logHTML += `<span class="alert">[ERRORE] Nessun Alias identificato.</span>`;
             }
-            
             printLog(logHTML);
         }
     </script>
