@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v8.0</title>
+    <title>NOMADS TACTICAL TERMINAL v9.0</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -17,35 +17,27 @@
             --nomad-darkred: #8b0000; --nomad-orange: #ff6600; 
             --text-main: #f0f0f0; --text-dim: #aaaaaa;
         }
-        body { background: var(--bg-color); color: var(--text-main); font-family: 'Share Tech Mono', monospace; padding: 15px; border: 2px solid var(--nomad-red); min-height: 100vh; box-sizing: border-box; margin: 0; }
-        h2 { font-family: 'Teko', sans-serif; font-size: 28px; color: #fff; text-shadow: 2px 2px 0px var(--nomad-red); text-align: center; text-transform: uppercase; border-bottom: 2px solid var(--nomad-red); padding-bottom: 10px; margin-top: 0; }
-        .section { background: var(--panel-bg); border-left: 4px solid var(--nomad-red); padding: 15px; margin-bottom: 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
-        input, select { background: #000; color: var(--text-main); border: 1px solid var(--nomad-red); width: 100%; padding: 10px; margin: 5px 0; font-size: 14px; box-sizing: border-box; }
-        input:focus, select:focus { border-color: var(--nomad-orange); outline: none; }
-        button { width: 100%; padding: 12px; margin-top: 5px; cursor: pointer; font-family: 'Teko', sans-serif; font-size: 20px; font-weight: bold; text-transform: uppercase; border: none; transition: 0.3s; }
-        .btn-nomad { background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); color: #fff; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
-        .btn-nomad:hover { background: var(--nomad-orange); color: #000; }
-        .btn-status { background: #222; color: var(--nomad-red); border: 1px solid var(--nomad-red); margin-top: 15px; font-size: 18px; }
-        .btn-small { padding: 8px; font-size: 16px; margin-top: 5px; clip-path: none; border-radius: 3px; }
+        body { background: var(--bg-color); color: var(--text-main); font-family: 'Share Tech Mono', monospace; padding: 10px; border: 2px solid var(--nomad-red); min-height: 100vh; box-sizing: border-box; margin: 0; display: flex; flex-direction: column; }
+        h2 { font-family: 'Teko', sans-serif; font-size: 28px; color: #fff; text-shadow: 2px 2px 0px var(--nomad-red); text-align: center; text-transform: uppercase; border-bottom: 2px solid var(--nomad-red); padding-bottom: 5px; margin-top: 0; margin-bottom: 15px;}
         
-        .recording { background: #ff0000 !important; color: white !important; animation: blink 1s infinite; box-shadow: 0 0 20px var(--nomad-orange); }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .section { background: var(--panel-bg); border-left: 4px solid var(--nomad-red); padding: 10px; margin-bottom: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        input, select { background: #000; color: var(--text-main); border: 1px solid var(--nomad-red); width: 100%; padding: 15px; margin: 5px 0; font-size: 16px; box-sizing: border-box; }
         
-        #console { font-size: 13px; margin-top: 20px; color: var(--text-main); background: #050505; padding: 15px; border: 1px solid var(--nomad-red); border-left: 5px solid var(--nomad-orange); height: 200px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
-        .highlight { color: var(--nomad-orange); font-weight: bold; }
-        .alert { color: var(--nomad-red); font-weight: bold; }
-        .success { color: #00ff00; font-weight: bold; }
+        /* BOTTONI STANDARD SETUP */
+        .btn-nomad { width: 100%; background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); color: #fff; padding: 15px; margin-top: 5px; cursor: pointer; font-family: 'Teko', sans-serif; font-size: 22px; font-weight: bold; text-transform: uppercase; border: none; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
+        .btn-status { width: 100%; background: #222; color: var(--nomad-red); border: 2px solid var(--nomad-red); padding: 15px; margin-top: 15px; font-family: 'Teko', sans-serif; font-size: 22px; font-weight: bold; }
         
-        .roster-list { font-size: 12px; margin-top: 15px; border-top: 1px dashed var(--nomad-red); padding-top: 10px; }
-        .roster-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); }
-        .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 5px 10px; background: #222; border-radius: 3px; }
-        .flex-row { display: flex; gap: 10px; }
+        /* BOTTONI ENORMI PER LA BATTAGLIA */
+        .grid-buttons { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .huge-btn { flex: 1; min-height: 80px; background: #1a0000; border: 2px solid var(--nomad-red); color: #fff; font-family: 'Teko', sans-serif; font-size: 32px; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: 0.2s; border-radius: 5px; }
+        .huge-btn:active { background: var(--nomad-orange); color: #000; transform: scale(0.98); }
+        .huge-btn span { font-family: 'Share Tech Mono', monospace; font-size: 14px; color: var(--nomad-orange); font-weight: normal; }
 
-        /* WIZARD UI */
-        #wizardPanel { background: #111; border: 2px solid var(--nomad-orange); padding: 15px; margin-top: 10px; text-align: center; }
-        #wizStep { font-size: 22px; font-family: 'Teko', sans-serif; color: var(--nomad-orange); font-weight: bold; }
-        #wizDesc { font-size: 12px; color: #aaa; margin-top: 5px; }
-        #wizData { font-size: 14px; color: #fff; margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px; }
+        .flex-row { display: flex; gap: 10px; }
+        .step-container { display: none; flex-direction: column; height: 100%; flex-grow: 1; }
+        .active-step { display: flex; }
+        
+        #battle-header { text-align: center; color: var(--nomad-orange); font-size: 18px; font-weight: bold; margin-bottom: 10px; padding: 10px; background: #222; border: 1px dashed var(--nomad-orange); }
     </style>
 </head>
 <body>
@@ -53,62 +45,103 @@
     
     <div id="setup">
         <div class="section">
-            <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">ARCHIVIO SQUADRE</h3>
+            <h3 style="margin-top:0; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
             <div class="flex-row">
-                <select id="savedRostersSelect" style="flex: 2;"><option value="">-- SQUADRE SALVATE --</option></select>
-                <button class="btn-nomad btn-small" style="flex: 1;" onclick="loadRoster()">CARICA</button>
+                <select id="groupSelect" style="flex:2;" onchange="updateProfileSelect()"><option value="">-- 1. TRUPPA --</option></select>
+                <select id="combatGroup" style="flex:1;">
+                    <option value="1">GRUPPO 1</option>
+                    <option value="2">GRUPPO 2</option>
+                </select>
             </div>
-            <div class="flex-row">
-                <input type="text" id="saveName" placeholder="NOME NUOVA SQUADRA" style="flex: 2;">
-                <button class="btn-nomad btn-small" style="flex: 1;" onclick="saveRoster()">SALVA</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
-            <select id="groupSelect" onchange="updateProfileSelect()"><option value="">-- 1. SELEZIONA TRUPPA --</option></select>
             <select id="profileSelect" disabled><option value="">-- 2. SELEZIONA PROFILO --</option></select>
             <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (Opzionale)">
-            <button class="btn-nomad" onclick="addUnitToRoster()">AGGIUNGI</button>
-            <div id="localRoster" class="roster-list"><i>Nessuna unità schierata.</i></div>
+            <button class="btn-nomad" onclick="addUnitToRoster()">SCHIERA UNITÀ</button>
+            <div id="localRoster" style="margin-top:10px; font-size:12px; border-top:1px dashed red; padding-top:10px;"></div>
         </div>
-        <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
+        <button class="btn-status" onclick="startBattle()">INIZIA PARTITA</button>
     </div>
 
-    <div id="battle" style="display:none;">
-        <button id="btnListen" class="btn-nomad" style="padding: 15px; font-size: 22px;">🎤 INIZIA PROTOCOLLO A FASI</button>
-        
-        <div id="wizardPanel">
-            <div id="wizStep">STANDBY</div>
-            <div id="wizDesc">Premi il pulsante per iniziare l'ordine sequenziale.</div>
-            <div id="wizData"></div>
+    <div id="battle" style="display:none; flex-grow: 1; flex-direction: column;">
+        <div id="battle-header">SELEZIONA GRUPPO DI COMBATTIMENTO</div>
+
+        <div id="step-group" class="step-container active-step">
+            <div class="grid-buttons">
+                <button class="huge-btn" onclick="goToStep('step-unit', 1)">GRUPPO 1 <br><span>(Ordini Principali)</span></button>
+                <button class="huge-btn" onclick="goToStep('step-unit', 2)">GRUPPO 2 <br><span>(Ordini Secondari)</span></button>
+            </div>
         </div>
 
-        <div id="console"><span class="highlight">[LOG DI SISTEMA]:</span> Modulo Tattico Online.</div>
-        <button class="btn-status btn-small" onclick="location.reload()" style="margin-top: 20px;">TORNA AL SETUP</button>
+        <div id="step-unit" class="step-container">
+            <div class="grid-buttons" id="unit-buttons-container" style="overflow-y:auto;">
+                </div>
+            <button class="btn-status" onclick="goToStep('step-group')">INDIETRO</button>
+        </div>
+
+        <div id="step-action" class="step-container">
+            <div class="grid-buttons">
+                <button class="huge-btn" onclick="selectAction('MOVIMENTO')">MOVIMENTO <span>(Innesca ARO)</span></button>
+                <button class="huge-btn" onclick="selectAction('ATTACCO BS')">ATTACCO BS <span>(Fuoco a Distanza)</span></button>
+                <button class="huge-btn" onclick="selectAction('CORPO A CORPO')">CORPO A CORPO <span>(Mischia)</span></button>
+                <button class="huge-btn" onclick="selectAction('SCHIVATA')">SCHIVATA <span>(Dodge)</span></button>
+                <button class="huge-btn" onclick="selectAction('ABILITÀ')">ABILITÀ <span>(Cura, Hack, Scoprire)</span></button>
+            </div>
+            <button class="btn-status" onclick="goToStep('step-unit')">ANNULLA</button>
+        </div>
+
+        <div id="step-weapon" class="step-container">
+            <div class="grid-buttons" id="weapon-buttons-container">
+                </div>
+            <button class="btn-status" onclick="goToStep('step-action')">INDIETRO</button>
+        </div>
+
+        <div id="step-wait-aro" class="step-container">
+            <div class="grid-buttons" style="justify-content: center;">
+                <div style="text-align:center; padding: 20px; border: 2px dashed var(--nomad-orange); color: #fff;">
+                    <h1 style="color:var(--nomad-red); font-size:40px; margin:0;">IN ATTESA DI ARO</h1>
+                    <p>L'Avversario sta dichiarando le reazioni sulla sua app...</p>
+                    <div class="spinner" style="font-size: 50px; margin-top:20px;">⏳</div>
+                </div>
+                <button class="huge-btn" style="background:#004400; border-color:#00ff00;" onclick="goToStep('step-second-half')">PROSEGUI (TEST) <br><span>(L'avversario ha dichiarato)</span></button>
+            </div>
+            <button class="btn-status" onclick="goToStep('step-group')">CANCELLA ORDINE</button>
+        </div>
+
+        <div id="step-second-half" class="step-container">
+            <div class="grid-buttons">
+                <button class="huge-btn" onclick="goToStep('step-burst')">ATTACCO BS <span>(Seconda Metà)</span></button>
+                <button class="huge-btn" onclick="goToStep('step-burst')">SCHIVATA <span>(Dodge)</span></button>
+                <button class="huge-btn" onclick="goToStep('step-group')">SOLO MOVIMENTO <span>(Fine Ordine)</span></button>
+            </div>
+            <button class="btn-status" onclick="goToStep('step-group')">ABORTISCI</button>
+        </div>
+
+        <div id="step-burst" class="step-container">
+            <div style="color:#fff; text-align:center; font-size:20px;">SUDDIVISIONE DADI CONTRO BERSAGLI</div>
+            <div id="burst-container" style="margin-top:20px;">
+                <p style="color:#aaa; text-align:center;">Lavori in corso per il calcolo matematico...</p>
+            </div>
+            <button class="btn-status" onclick="goToStep('step-group')">FINE ATTIVAZIONE</button>
+        </div>
+
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // FIREBASE CONFIG - Inserisci i tuoi dati!
         const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         window.roster = [];
-        window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
+        window.currentOrder = { unit: null, action: "", weapon: "", mods: [] };
 
-        // --- SETUP ROSTER E INTERFACCIA ---
+        // --- SETUP ROSTER ---
         window.onload = () => {
             if(!window.masterNomadsDatabase) return;
             const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
             const groupSelect = document.getElementById('groupSelect');
-            gruppiUnici.forEach(nome => {
-                const opt = document.createElement('option'); opt.value = nome; opt.textContent = nome; groupSelect.appendChild(opt);
-            });
-            refreshSavedRostersList();
+            gruppiUnici.forEach(nome => groupSelect.innerHTML += `<option value="${nome}">${nome}</option>`);
         };
 
         window.updateProfileSelect = () => {
@@ -119,195 +152,102 @@
             if (groupName) {
                 window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName).forEach(unit => {
                     const arma = unit.arma.split('/')[0].split(',')[0].trim();
-                    const opt = document.createElement('option'); opt.value = unit.id_profilo; opt.textContent = `[${arma}] - BS:${unit.bs} ARM:${unit.arm}`;
-                    profileSelect.appendChild(opt);
+                    profileSelect.innerHTML += `<option value="${unit.id_profilo}">[${arma}] - BS:${unit.bs}</option>`;
                 });
             }
         };
 
         window.addUnitToRoster = () => {
             const idProfilo = document.getElementById('profileSelect').value;
+            const cGroup = document.getElementById('combatGroup').value;
             let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
             if (!idProfilo) return alert("Seleziona un profilo!");
             
             const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
             if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
-            if (window.roster.some(u => u.alias === aliasInput)) return alert(`Hai già schierato "${aliasInput}". Aggiungi un soprannome!`);
-
-            const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, state: "ACTIVE", player: "G_NOMADS", modifiers: [] };
+            
+            const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, combatGroup: parseInt(cGroup), state: "ACTIVE", player: "G_NOMADS" };
             window.roster.push(unit); document.getElementById('unitAlias').value = ""; renderRoster();
         };
 
-        window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
         window.renderRoster = () => {
             const container = document.getElementById('localRoster');
-            if(window.roster.length === 0) return container.innerHTML = "<i>Nessuna unità schierata.</i>";
-            container.innerHTML = "<div style='color:var(--nomad-orange); margin-bottom:5px;'>UNITÀ PRONTE:</div>";
-            window.roster.forEach((u, i) => {
-                const armaCorta = u.weapon.split('/')[0].split(',')[0];
-                container.innerHTML += `<div class="roster-item"><div><b>${u.alias}</b> <span style="color:#aaa; font-size:10px;">| [${armaCorta}]</span></div><div class="del-btn" onclick="removeUnit(${i})">X</div></div>`;
-            });
-        };
-
-        window.saveRoster = () => {
-            const name = document.getElementById('saveName').value.trim().toUpperCase();
-            if(!name || window.roster.length === 0) return alert("Inserisci nome e unità!");
-            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
-            savedData[name] = window.roster; localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
-            document.getElementById('saveName').value = ""; refreshSavedRostersList();
-        };
-        window.loadRoster = () => {
-            const name = document.getElementById('savedRostersSelect').value;
-            if(!name) return;
-            window.roster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || []; renderRoster();
-        };
-        window.refreshSavedRostersList = () => {
-            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
-            const select = document.getElementById('savedRostersSelect');
-            select.innerHTML = '<option value="">-- SQUADRE SALVATE --</option>';
-            Object.keys(savedData).forEach(n => { const opt = document.createElement('option'); opt.value = n; opt.textContent = n; select.appendChild(opt); });
+            container.innerHTML = "<b>UNITÀ SCHIERATE:</b><br>";
+            window.roster.forEach(u => container.innerHTML += `[G${u.combatGroup}] <b>${u.alias}</b> (${u.name})<br>`);
         };
 
         window.startBattle = async () => { 
-            if(window.roster.length === 0) return alert("Aggiungi un'unità!");
-            document.getElementById('setup').style.display='none'; document.getElementById('battle').style.display='block'; 
+            if(window.roster.length === 0) return alert("Schiera almeno un'unità!");
+            document.getElementById('setup').style.display='none'; 
+            document.getElementById('battle').style.display='flex'; 
             for (let unit of window.roster) await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
         };
 
-        // ==========================================
-        // MACCHINA A STATI DEL WIZARD VOCALE
-        // ==========================================
-        let wizState = "IDLE"; 
-        let wizData = { unit: null, action: "", mods: "" };
+        // --- MACCHINA A STATI UI BATTAGLIA ---
+        window.goToStep = (stepId, param = null) => {
+            // Nascondi tutti
+            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active-step'));
+            // Mostra il bersaglio
+            document.getElementById(stepId).classList.add('active-step');
 
-        const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
-        recognition.lang = 'it-IT';
-        
-        function updateUI(step, desc, dataHtml) {
-            document.getElementById('wizStep').innerText = step;
-            document.getElementById('wizDesc').innerText = desc;
-            document.getElementById('wizData').innerHTML = dataHtml;
-        }
+            const header = document.getElementById('battle-header');
 
-        document.getElementById('btnListen').onclick = () => {
-            if (wizState === "IDLE") {
-                wizState = "UNIT";
-                wizData = { unit: null, action: "", mods: "" };
-                updateUI("1. CHI SI ATTIVA?", "Pronuncia il NOME della truppa (Es. Gator, Alguacil...)", "");
-                recognition.start();
-            } else {
-                // Tasto funziona da Annulla se il wizard è in corso
-                recognition.stop();
-                wizState = "IDLE";
-                updateUI("STANDBY", "Ordine annullato. Premi per ricominciare.", "");
-                document.getElementById('btnListen').classList.remove('recording');
-            }
-        };
-        
-        recognition.onstart = () => document.getElementById('btnListen').classList.add('recording');
-        
-        recognition.onresult = async (event) => {
-            document.getElementById('btnListen').classList.remove('recording');
-            let testo = event.results[0][0].transcript.toLowerCase().trim();
-
-            // Applica il dizionario per sicurezza
-            const chiaviOrdinate = Object.keys(window.customDictionary).sort((a, b) => b.length - a.length);
-            chiaviOrdinate.forEach(wrongPhrase => {
-                testo = testo.replace(new RegExp(`\\b${wrongPhrase}\\b`, 'g'), window.customDictionary[wrongPhrase]);
-            });
-
-            if (wizState === "UNIT") {
-                const match = window.roster.find(u => testo.includes(u.alias.toLowerCase()));
-                if (match) {
-                    wizData.unit = match;
-                    wizState = "ACTION";
-                    updateUI("2. AZIONE?", "Cosa fa? (Spara, Salva, Mischia, Muore, Curato...)", `<span style='color:var(--nomad-orange)'>UNITÀ SELEZIONATA: ${match.alias}</span>`);
-                    setTimeout(() => recognition.start(), 800); // Riapre il microfono da solo
-                } else {
-                    wizState = "IDLE";
-                    updateUI("ERRORE NOME", `Non ho trovato "${testo}" in squadra. Riprova.`, "");
-                }
-            } 
-            else if (wizState === "ACTION") {
-                wizData.action = testo;
-                let dataHtml = `<span style='color:var(--nomad-orange)'>UNITÀ: ${wizData.unit.alias} <br> AZIONE: ${testo.toUpperCase()}</span>`;
-                
-                // Se è un cambio di stato diretto (morto, inconscio), saltiamo i modificatori!
-                if (testo.includes("morto") || testo.includes("eliminato") || testo.includes("inconscio") || testo.includes("a terra") || testo.includes("curato")) {
-                    wizState = "IDLE";
-                    updateUI("STANDBY", "Applicazione stato in corso...", dataHtml);
-                    elaboraOrdineFinale(wizData);
-                } else {
-                    wizState = "MODS";
-                    updateUI("3. VARIABILI E DISTANZA", "Es. Ottima, Copertura, Mimetismo... (oppure dì 'Nessuno')", dataHtml);
-                    setTimeout(() => recognition.start(), 800);
-                }
-            } 
-            else if (wizState === "MODS") {
-                wizData.mods = testo;
-                wizState = "IDLE";
-                updateUI("STANDBY", "Ordine in elaborazione.", `<span style='color:var(--nomad-orange)'>UNITÀ: ${wizData.unit.alias} <br> AZIONE: ${wizData.action.toUpperCase()} <br> VARIABILI: ${testo.toUpperCase()}</span>`);
-                elaboraOrdineFinale(wizData);
-            }
-        };
-
-        function printLog(msg) {
-            const consoleDiv = document.getElementById('console');
-            consoleDiv.innerHTML = msg + "\n\n" + consoleDiv.innerHTML;
-        }
-
-        async function elaboraOrdineFinale(data) {
-            const match = data.unit;
-            const azione = data.action;
-            const variabili = data.mods;
-            let logHTML = `> <span style="color:#aaa">ORDINE: [${match.alias}] - [${azione}] - [${variabili}]</span><br>`;
-
-            let mods = [], base = 0, isCalculated = false;
-
-            // Calcolo Attacco a distanza
-            if (azione.includes("spara") || azione.includes("fuoco") || azione.includes("attacca")) {
-                logHTML += `<span class="highlight">[ATTACCO - BS]</span> ${match.alias}<br>`;
-                base = match.bs;
-                if (variabili.includes("copertura") || variabili.includes("riparo")) mods.push({nome: "Copertura Bersaglio", val: -3});
-                if (variabili.includes("mimetismo") || variabili.includes("mimetico")) mods.push({nome: "Mimetismo", val: -3});
-                if (variabili.includes("ottima") || variabili.includes("buona")) mods.push({nome: "Gittata Ideale", val: +3});
-                if (variabili.includes("lunga") || variabili.includes("cattiva")) mods.push({nome: "Gittata Lunga", val: -3});
-                isCalculated = true;
-            }
-            // Calcolo Mischia
-            else if (azione.includes("corpo a corpo") || azione.includes("mischia")) {
-                logHTML += `<span class="highlight">[MISCHIA - CC]</span> ${match.alias}<br>`;
-                base = match.cc;
-                if (match.skills.includes("Martial Arts")) mods.push({nome: "Arti Marziali", val: +3});
-                isCalculated = true;
-            }
-            // Calcolo Tiro Salvezza (Danni)
-            else if (azione.includes("salva") || azione.includes("colpito") || azione.includes("armatura")) {
-                logHTML += `<span class="alert">[DIFESA - ARM]</span> ${match.alias}<br>`;
-                base = match.arm;
-                if (variabili.includes("copertura") || variabili.includes("riparo")) mods.push({nome: "Copertura", val: +3});
-                isCalculated = true;
-            }
-
-            // Esecuzione matematica a schermo
-            if (isCalculated) {
-                logHTML += `Base: <b>${base}</b><br>`;
-                let modTotal = 0;
-                mods.forEach(m => { modTotal += m.val; logHTML += `> ${m.nome}: <span style="color:${m.val > 0 ? '#00ff00' : '#ff3333'}">${m.val > 0 ? '+' : ''}${m.val}</span><br>`; });
-                logHTML += `-----------------------<br><span class="highlight">>>> OBIETTIVO FINALE: ${base + modTotal} <<<</span><br>`;
-                logHTML += `<span style="font-size:10px; color:var(--text-dim);">Abilità Base: ${match.skills}</span>`;
-            }
-
-            // Modifica Stato Firebase
-            let newState = "";
-            if (azione.includes("morto") || azione.includes("eliminato")) { newState = "DEAD"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA.</span>`; } 
-            else if (azione.includes("inconscio") || azione.includes("a terra")) { newState = "UNCONSCIOUS"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio (WIP Medico: ${match.wip}).</span>`; } 
-            else if (azione.includes("attivo") || azione.includes("curato")) { newState = "ACTIVE"; logHTML += `<br><span class="success">[STATUS] ${match.alias} Operativo.</span>`; }
-
-            if (newState) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
+            if (stepId === 'step-group') header.innerText = "SELEZIONA GRUPPO DI COMBATTIMENTO";
             
-            printLog(logHTML);
-        }
+            if (stepId === 'step-unit') {
+                header.innerText = `UNITÀ - GRUPPO ${param}`;
+                const container = document.getElementById('unit-buttons-container');
+                container.innerHTML = "";
+                
+                const unitsInGroup = window.roster.filter(u => u.combatGroup === param && u.state === "ACTIVE");
+                if(unitsInGroup.length === 0) container.innerHTML = "<p style='color:red; text-align:center;'>Nessuna unità attiva in questo gruppo.</p>";
+                
+                unitsInGroup.forEach(u => {
+                    container.innerHTML += `<button class="huge-btn" onclick="selectUnit('${u.alias}')">${u.alias} <br><span>(${u.name})</span></button>`;
+                });
+            }
+        };
+
+        window.selectUnit = (alias) => {
+            window.currentOrder.unit = window.roster.find(u => u.alias === alias);
+            document.getElementById('battle-header').innerText = `ORDINE PER: ${alias}`;
+            goToStep('step-action');
+        };
+
+        window.selectAction = (action) => {
+            window.currentOrder.action = action;
+            if (action === 'ATTACCO BS') {
+                // Genera i bottoni per le armi di questa unità
+                document.getElementById('battle-header').innerText = "SELEZIONA ARMA";
+                const container = document.getElementById('weapon-buttons-container');
+                container.innerHTML = "";
+                
+                // Splitta le armi dalla stringa (es: "Combi Rifle / Pistol, CC Weapon")
+                const allWeapons = window.currentOrder.unit.weapon.replace('/', ',').split(',');
+                allWeapons.forEach(w => {
+                    const wClean = w.trim();
+                    container.innerHTML += `<button class="huge-btn" onclick="declareAttack('${wClean}')">${wClean}</button>`;
+                });
+                goToStep('step-weapon');
+            } else if (action === 'MOVIMENTO') {
+                // Se mi muovo come prima metà dell'ordine, vado subito in attesa di ARO
+                document.getElementById('battle-header').innerText = "MOVIMENTO - IN ATTESA ARO";
+                goToStep('step-wait-aro');
+            } else {
+                alert("Funzione in sviluppo!");
+            }
+        };
+
+        window.declareAttack = async (weaponName) => {
+            window.currentOrder.weapon = weaponName;
+            document.getElementById('battle-header').innerText = "ATTACCO DICHIARATO - IN ATTESA ARO";
+            
+            // QUI IN FUTURO SCRIVEREMO SU FIREBASE:
+            // await setDoc(doc(db, "tavolo", "ordine_corrente"), { actType: "ATTACCO BS", weapon: weaponName, unit: window.currentOrder.unit.alias });
+            
+            goToStep('step-wait-aro');
+        };
+
     </script>
 </body>
 </html>
