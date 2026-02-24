@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v6.5</title>
+    <title>NOMADS TACTICAL TERMINAL v7.0</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -36,8 +36,9 @@
         .roster-list { font-size: 12px; margin-top: 15px; border-top: 1px dashed var(--nomad-red); padding-top: 10px; }
         .roster-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); }
         .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 5px 10px; background: #222; border-radius: 3px; }
-        .rec-btn { color: #fff; background: var(--nomad-orange); cursor: pointer; padding: 5px 10px; border-radius: 3px; margin-right: 5px; font-weight: bold; }
+        .rec-btn { color: #fff; background: var(--nomad-orange); cursor: pointer; padding: 5px 10px; border-radius: 3px; margin-right: 5px; font-weight: bold; text-align: center;}
         .flex-row { display: flex; gap: 10px; }
+        #dictViewer { font-size: 11px; background: #000; padding: 10px; margin-top: 10px; color: #fff; display: none; border: 1px dashed var(--nomad-orange); }
     </style>
 </head>
 <body>
@@ -64,7 +65,16 @@
             <button class="btn-nomad" onclick="addUnitToRoster()">AGGIUNGI</button>
             
             <div id="localRoster" class="roster-list"><i>Nessuna unità schierata.</i></div>
+            
+            <div style="margin-top: 20px; border-top: 1px solid #444; padding-top: 10px;">
+                <button class="btn-status btn-small" onclick="toggleDictionary()">VEDI MEMORIA VOCALE</button>
+                <div id="dictViewer">
+                    <div id="dictContent" style="margin-bottom:10px;"></div>
+                    <button class="btn-nomad btn-small" style="background:var(--nomad-red);" onclick="clearDictionary()">SVUOTA MEMORIA VOCALE</button>
+                </div>
+            </div>
         </div>
+        
         <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
     </div>
 
@@ -85,7 +95,7 @@
 
         window.roster = [];
         window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
-        window.isLearningFor = ""; // Variabile per tracciare se stiamo registrando una pronuncia
+        window.isLearningFor = ""; 
 
         window.onload = () => {
             if(!window.masterNomadsDatabase) return;
@@ -125,7 +135,6 @@
 
         window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
 
-        // --- RENDER ROSTER CON TASTO REGISTRA ---
         window.renderRoster = () => {
             const container = document.getElementById('localRoster');
             if(window.roster.length === 0) return container.innerHTML = "<i>Nessuna unità schierata.</i>";
@@ -136,13 +145,41 @@
                     <div class="roster-item">
                         <div><b>${u.alias}</b> <span style="color:#aaa; font-size:10px;">| [${armaCorta}]</span></div>
                         <div style="display:flex;">
-                            <div class="rec-btn" onclick="startLearning('${u.alias}')">🎙️ VOCE</div>
+                            <div class="rec-btn" onclick="startLearning('${u.alias}')">🎙️ REGISTRA<br>VARIANTE</div>
                             <div class="del-btn" onclick="removeUnit(${i})">X</div>
                         </div>
                     </div>`;
             });
         };
 
+        // --- GESTIONE VOCABOLARIO ---
+        window.toggleDictionary = () => {
+            const viewer = document.getElementById('dictViewer');
+            const content = document.getElementById('dictContent');
+            if (viewer.style.display === 'block') {
+                viewer.style.display = 'none';
+            } else {
+                window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
+                const keys = Object.keys(window.customDictionary);
+                if(keys.length === 0) {
+                    content.innerHTML = "<i>Nessuna parola registrata. L'IA è vuota.</i>";
+                } else {
+                    content.innerHTML = "<b>Memoria Traduzioni:</b><br>" + keys.map(k => `- Se sente "<b>${k}</b>" ➡️ Cerca "<b>${window.customDictionary[k]}</b>"`).join('<br>');
+                }
+                viewer.style.display = 'block';
+            }
+        };
+
+        window.clearDictionary = () => {
+            if(confirm("Vuoi cancellare tutte le registrazioni vocali personalizzate?")) {
+                localStorage.removeItem('infinityDictionary_Nomads');
+                window.customDictionary = {};
+                toggleDictionary(); // Aggiorna la vista
+                alert("Memoria vocale resettata!");
+            }
+        };
+
+        // --- SALVATAGGIO SQUADRE ---
         window.saveRoster = () => {
             const name = document.getElementById('saveName').value.trim().toUpperCase();
             if(!name || window.roster.length === 0) return alert("Inserisci un nome e aggiungi un'unità!");
@@ -175,10 +212,10 @@
             printLog("<span class='success'>[SISTEMA]: Uplink stabilito. IA Pronta.</span>");
         };
 
-        // --- SISTEMA DI APPRENDIMENTO ATTIVATO DAL PULSANTE ---
+        // --- SISTEMA DI REGISTRAZIONE VOCALE MULTIPLA ---
         window.startLearning = (alias) => {
             window.isLearningFor = alias;
-            alert(`SISTEMA IN ASCOLTO.\nPremi OK e pronuncia a voce alta il nome per: ${alias}`);
+            alert(`SISTEMA IN ASCOLTO.\nPremi OK e pronuncia una nuova variante vocale per: ${alias}`);
             recognition.start();
         };
 
@@ -186,7 +223,7 @@
         recognition.lang = 'it-IT';
         
         document.getElementById('btnListen').onclick = () => {
-            window.isLearningFor = ""; // Assicura che in partita non stiamo registrando
+            window.isLearningFor = ""; 
             recognition.start();
         };
         
@@ -198,22 +235,20 @@
             document.getElementById('btnListen').classList.remove('recording');
             let testo = event.results[0][0].transcript.toLowerCase().trim();
 
-            // CASO A: STIAMO REGISTRANDO UNA PRONUNCIA
             if (window.isLearningFor !== "") {
                 window.customDictionary[testo] = window.isLearningFor.toLowerCase();
                 localStorage.setItem('infinityDictionary_Nomads', JSON.stringify(window.customDictionary));
-                alert(`VOCABOLARIO AGGIORNATO!\n\nHai detto: "${testo}"\nDa ora l'IA lo tradurrà come: "${window.isLearningFor}".`);
-                window.isLearningFor = ""; // Resetta lo stato
+                alert(`VARIANTE AGGIUNTA!\n\nHai detto: "${testo}"\nTraduzione: "${window.isLearningFor}".\n(Puoi registrarne altre se vuoi!)`);
+                window.isLearningFor = ""; 
                 return;
             }
             
-            // CASO B: SIAMO IN PARTITA (Normale Ordine Vocale)
-            
-            // Applica il dizionario personale per tradurre le storpiature
-            Object.keys(window.customDictionary).forEach(wrongPhrase => {
+            // --- SOSTITUZIONE INTELLIGENTE (Dal più lungo al più corto) ---
+            const chiaviOrdinate = Object.keys(window.customDictionary).sort((a, b) => b.length - a.length);
+            chiaviOrdinate.forEach(wrongPhrase => {
                 const correctAlias = window.customDictionary[wrongPhrase];
-                // Sostituisce l'intera frase storta con l'alias corretto
-                testo = testo.replace(new RegExp(wrongPhrase, 'g'), correctAlias);
+                // RegExp sicura per catturare la frase esatta
+                testo = testo.replace(new RegExp(`\\b${wrongPhrase}\\b`, 'g'), correctAlias);
             });
 
             elaboraComando(testo);
@@ -268,7 +303,7 @@
 
                 if (newState) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
             } else {
-                logHTML += `<span class="alert">[ERRORE] Comando annullato. Assicurati di aver registrato la voce per questa truppa.</span>`;
+                logHTML += `<span class="alert">[ERRORE] Comando non associato a nessuna unità. Controlla il nome!</span>`;
             }
             printLog(logHTML);
         }
