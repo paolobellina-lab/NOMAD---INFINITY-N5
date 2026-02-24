@@ -1,4 +1,161 @@
-        // --- RENDER ROSTER CON TASTO CORREZIONE MANUALE ---
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOMADS TACTICAL TERMINAL v7.5</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#A60000">
+
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@500;700&display=swap" rel="stylesheet">
+    <script src="nomads_db.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0b0c10; --panel-bg: #1f1f1f; --nomad-red: #cc0000; 
+            --nomad-darkred: #8b0000; --nomad-orange: #ff6600; 
+            --text-main: #f0f0f0; --text-dim: #aaaaaa;
+        }
+        body { background: var(--bg-color); color: var(--text-main); font-family: 'Share Tech Mono', monospace; padding: 15px; border: 2px solid var(--nomad-red); min-height: 100vh; box-sizing: border-box; margin: 0; }
+        h2 { font-family: 'Teko', sans-serif; font-size: 28px; color: #fff; text-shadow: 2px 2px 0px var(--nomad-red); text-align: center; text-transform: uppercase; border-bottom: 2px solid var(--nomad-red); padding-bottom: 10px; margin-top: 0; }
+        .section { background: var(--panel-bg); border-left: 4px solid var(--nomad-red); padding: 15px; margin-bottom: 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        input, select { background: #000; color: var(--text-main); border: 1px solid var(--nomad-red); width: 100%; padding: 10px; margin: 5px 0; font-size: 14px; box-sizing: border-box; }
+        input:focus, select:focus { border-color: var(--nomad-orange); outline: none; }
+        button { width: 100%; padding: 12px; margin-top: 5px; cursor: pointer; font-family: 'Teko', sans-serif; font-size: 20px; font-weight: bold; text-transform: uppercase; border: none; transition: 0.3s; }
+        .btn-nomad { background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); color: #fff; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
+        .btn-nomad:hover { background: var(--nomad-orange); color: #000; }
+        .btn-status { background: #222; color: var(--nomad-red); border: 1px solid var(--nomad-red); margin-top: 15px; font-size: 18px; }
+        .btn-small { padding: 8px; font-size: 16px; margin-top: 5px; clip-path: none; border-radius: 3px; }
+        .recording { background: #ff0000 !important; color: white !important; animation: blink 1s infinite; box-shadow: 0 0 20px var(--nomad-orange); }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        #console { font-size: 13px; margin-top: 20px; color: var(--text-main); background: #050505; padding: 15px; border: 1px solid var(--nomad-red); border-left: 5px solid var(--nomad-orange); height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
+        .highlight { color: var(--nomad-orange); font-weight: bold; }
+        .alert { color: var(--nomad-red); font-weight: bold; }
+        .success { color: #00ff00; font-weight: bold; }
+        .roster-list { font-size: 12px; margin-top: 15px; border-top: 1px dashed var(--nomad-red); padding-top: 10px; }
+        .roster-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); }
+        .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 5px 10px; background: #222; border-radius: 3px; }
+        .rec-btn { color: #fff; background: var(--nomad-orange); cursor: pointer; padding: 5px 10px; border-radius: 3px; margin-right: 5px; font-weight: bold; text-align: center; font-size: 11px;}
+        .flex-row { display: flex; gap: 10px; }
+        #dictViewer { font-size: 11px; background: #000; padding: 10px; margin-top: 10px; color: #fff; display: none; border: 1px dashed var(--nomad-orange); }
+    </style>
+</head>
+<body>
+    <h2>-- TUNGUSKA DATANET --</h2>
+    
+    <div id="setup">
+        <div class="section">
+            <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">ARCHIVIO SQUADRE</h3>
+            <div class="flex-row">
+                <select id="savedRostersSelect" style="flex: 2;"><option value="">-- SQUADRE SALVATE --</option></select>
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="loadRoster()">CARICA</button>
+            </div>
+            <div class="flex-row">
+                <input type="text" id="saveName" placeholder="NOME NUOVA SQUADRA" style="flex: 2;">
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="saveRoster()">SALVA</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
+            <select id="groupSelect" onchange="updateProfileSelect()"><option value="">-- 1. SELEZIONA TRUPPA --</option></select>
+            <select id="profileSelect" disabled><option value="">-- 2. SELEZIONA PROFILO --</option></select>
+            <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (Opzionale)">
+            <button class="btn-nomad" onclick="addUnitToRoster()">AGGIUNGI</button>
+            
+            <div id="localRoster" class="roster-list"><i>Nessuna unità schierata.</i></div>
+            
+            <div style="margin-top: 20px; border-top: 1px solid #444; padding-top: 10px;">
+                <button class="btn-status btn-small" onclick="toggleDictionary()">VEDI MEMORIA VOCALE IA</button>
+                <div id="dictViewer">
+                    <div id="dictContent" style="margin-bottom:10px;"></div>
+                    <button class="btn-nomad btn-small" style="background:var(--nomad-red);" onclick="clearDictionary()">SVUOTA MEMORIA VOCALE</button>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
+    </div>
+
+    <div id="battle" style="display:none;">
+        <button id="btnListen" class="btn-nomad" style="padding: 20px; font-size: 24px;">🎤 ANALISI VOCALE TATTICA</button>
+        <p style="font-size: 10px; color: #aaa; text-align: center;">Es: "Rosso spara in copertura" o "Mobile Brigada colpito"</p>
+        <div id="console"><span class="highlight">[SISTEMA OPERATIVO]:</span> In attesa di ordini.</div>
+        <button class="btn-status btn-small" onclick="location.reload()" style="margin-top: 20px;">TORNA AL SETUP</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // FIREBASE CONFIG - Inserisci i tuoi dati!
+        const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.roster = [];
+        window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
+
+        // --- INIZIALIZZAZIONE E POPOLAMENTO TENDINE ---
+        window.onload = () => {
+            if(!window.masterNomadsDatabase) return alert("Errore: File database non trovato!");
+            
+            const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
+            const groupSelect = document.getElementById('groupSelect');
+            
+            gruppiUnici.forEach(nome => {
+                const opt = document.createElement('option');
+                opt.value = nome; opt.textContent = nome;
+                groupSelect.appendChild(opt);
+            });
+            refreshSavedRostersList();
+        };
+
+        window.updateProfileSelect = () => {
+            const groupName = document.getElementById('groupSelect').value;
+            const profileSelect = document.getElementById('profileSelect');
+            
+            profileSelect.innerHTML = '';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = ""; defaultOpt.textContent = "-- 2. SELEZIONA PROFILO --";
+            profileSelect.appendChild(defaultOpt);
+            
+            profileSelect.disabled = !groupName;
+            
+            if (groupName) {
+                const profili = window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName);
+                profili.forEach(unit => {
+                    const opt = document.createElement('option');
+                    opt.value = unit.id_profilo;
+                    const arma = unit.arma.split('/')[0].split(',')[0].trim();
+                    opt.textContent = `[${arma}] - BS:${unit.bs} ARM:${unit.arm}`;
+                    profileSelect.appendChild(opt);
+                });
+            }
+        };
+
+        // --- AGGIUNTA E RIMOZIONE TRUPPE ---
+        window.addUnitToRoster = () => {
+            const idProfilo = document.getElementById('profileSelect').value;
+            let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
+            if (!idProfilo) return alert("Devi prima selezionare un profilo dalla tendina 2!");
+            
+            const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
+            if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
+            
+            if (window.roster.some(u => u.alias === aliasInput)) {
+                return alert(`ATTENZIONE: Hai già schierato un'unità chiamata "${aliasInput}".\nAssegna un SOPRANNOME nel campo 3 per distinguerla!`);
+            }
+
+            const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, state: "ACTIVE", player: "G_NOMADS", modifiers: [] };
+            window.roster.push(unit);
+            document.getElementById('unitAlias').value = ""; 
+            renderRoster();
+        };
+
+        window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
+
         window.renderRoster = () => {
             const container = document.getElementById('localRoster');
             if(window.roster.length === 0) return container.innerHTML = "<i>Nessuna unità schierata.</i>";
@@ -16,47 +173,162 @@
             });
         };
 
-        // --- SISTEMA DI INSERIMENTO MANUALE NEL VOCABOLARIO ---
+        // --- SISTEMA CORREZIONE MANUALE (GATOR -> GATTO) ---
         window.addManualDictionary = (alias) => {
-            // Chiede all'utente di digitare la parola sbagliata
-            let wrongWord = prompt(`L'IA capisce male il nome di ${alias} in battaglia?\n\nGuarda la console, controlla cosa capisce l'IA (es. "gatto" o "acqua cile") e scrivilo qui sotto:`);
+            let wrongWord = prompt(`Cosa ha capito l'IA al posto di ${alias}?\n(Es. se ha capito "gatto spara", scrivi: gatto)`);
             
             if (wrongWord && wrongWord.trim() !== "") {
                 wrongWord = wrongWord.toLowerCase().trim();
-                
-                // Salva nel dizionario
                 window.customDictionary[wrongWord] = alias.toLowerCase();
                 localStorage.setItem('infinityDictionary_Nomads', JSON.stringify(window.customDictionary));
-                
-                alert(`VOCABOLARIO AGGIORNATO!\n\nDa ora in poi, ogni volta che l'IA capirà "${wrongWord}", lo tradurrà istantaneamente in "${alias}".`);
+                alert(`MEMORIA AGGIORNATA!\nOgni volta che l'IA capirà "${wrongWord}", eseguirà l'ordine per "${alias}".`);
             }
         };
 
-        // Rimuoviamo la vecchia funzione window.startLearning e le modifiche a btnListen 
-        // L'evento onresult del riconoscimento vocale ora è pulito e dedicato solo alla battaglia:
-        
+        window.toggleDictionary = () => {
+            const viewer = document.getElementById('dictViewer');
+            const content = document.getElementById('dictContent');
+            if (viewer.style.display === 'block') {
+                viewer.style.display = 'none';
+            } else {
+                window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
+                const keys = Object.keys(window.customDictionary);
+                if(keys.length === 0) {
+                    content.innerHTML = "<i>Nessuna correzione salvata.</i>";
+                } else {
+                    content.innerHTML = "<b>Dizionario Personale:</b><br>" + keys.map(k => `- "<b>${k}</b>" ➡️ <b>${window.customDictionary[k]}</b>`).join('<br>');
+                }
+                viewer.style.display = 'block';
+            }
+        };
+
+        window.clearDictionary = () => {
+            if(confirm("Vuoi resettare tutte le correzioni dell'IA?")) {
+                localStorage.removeItem('infinityDictionary_Nomads');
+                window.customDictionary = {};
+                toggleDictionary(); 
+                alert("Memoria azzerata!");
+            }
+        };
+
+        // --- SALVATAGGIO / CARICAMENTO LOCALE ---
+        window.saveRoster = () => {
+            const name = document.getElementById('saveName').value.trim().toUpperCase();
+            if(!name || window.roster.length === 0) return alert("Inserisci un nome e aggiungi un'unità!");
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            savedData[name] = window.roster;
+            localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+            document.getElementById('saveName').value = "";
+            refreshSavedRostersList();
+        };
+
+        window.loadRoster = () => {
+            const name = document.getElementById('savedRostersSelect').value;
+            if(!name) return;
+            window.roster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || [];
+            renderRoster();
+        };
+
+        window.refreshSavedRostersList = () => {
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            const select = document.getElementById('savedRostersSelect');
+            select.innerHTML = '';
+            const defOpt = document.createElement('option'); defOpt.value = ""; defOpt.textContent = "-- SQUADRE SALVATE --";
+            select.appendChild(defOpt);
+            Object.keys(savedData).forEach(n => {
+                const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
+                select.appendChild(opt);
+            });
+        };
+
+        // --- ATTIVAZIONE PARTITA E INVIO FIREBASE ---
+        window.startBattle = async () => { 
+            if(window.roster.length === 0) return alert("Aggiungi almeno un'unità!");
+            document.getElementById('setup').style.display='none'; 
+            document.getElementById('battle').style.display='block'; 
+            for (let unit of window.roster) await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
+            printLog("<span class='success'>[SISTEMA]: Uplink Database stabilito. IA Pronta a ricevere ordini.</span>");
+        };
+
+        // --- MOTORE VOCALE IN BATTAGLIA ---
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         recognition.lang = 'it-IT';
         
-        document.getElementById('btnListen').onclick = () => {
-            recognition.start();
-        };
-        
-        recognition.onstart = () => {
-            document.getElementById('btnListen').classList.add('recording');
-        };
+        document.getElementById('btnListen').onclick = () => { recognition.start(); };
+        recognition.onstart = () => { document.getElementById('btnListen').classList.add('recording'); };
         
         recognition.onresult = async (event) => {
             document.getElementById('btnListen').classList.remove('recording');
             let testo = event.results[0][0].transcript.toLowerCase().trim();
-            
-            // --- SOSTITUZIONE INTELLIGENTE (Dal più lungo al più corto) ---
+
+            // 1. Sostituzione Dizionario (Dal testo più lungo al più corto per evitare conflitti)
             const chiaviOrdinate = Object.keys(window.customDictionary).sort((a, b) => b.length - a.length);
             chiaviOrdinate.forEach(wrongPhrase => {
                 const correctAlias = window.customDictionary[wrongPhrase];
-                // Sostituisce la parola sbagliata con l'alias corretto
                 testo = testo.replace(new RegExp(`\\b${wrongPhrase}\\b`, 'g'), correctAlias);
             });
 
             elaboraComando(testo);
         };
+
+        function printLog(msg) {
+            const consoleDiv = document.getElementById('console');
+            consoleDiv.innerHTML = msg + "\n\n" + consoleDiv.innerHTML;
+        }
+
+        async function elaboraComando(testoTrattato) {
+            const match = window.roster.find(u => testoTrattato.includes(u.alias.toLowerCase()));
+            let logHTML = `> Ordine analizzato: "<span style="color:#aaa">${testoTrattato}</span>"<br>`;
+
+            if (match) {
+                let mods = [], base = 0, isCalculated = false;
+
+                // Calcolo Attacco a distanza
+                if (testoTrattato.includes("spara") || testoTrattato.includes("fuoco") || testoTrattato.includes("attacca")) {
+                    logHTML += `<span class="highlight">[ATTACCO - BS]</span> ${match.alias}<br>`;
+                    base = match.bs;
+                    if (testoTrattato.includes("copertura") || testoTrattato.includes("riparo")) mods.push({nome: "Copertura", val: -3});
+                    if (testoTrattato.includes("mimetismo") || testoTrattato.includes("mimetico")) mods.push({nome: "Mimetismo", val: -3});
+                    if (testoTrattato.includes("ottima") || testoTrattato.includes("buona")) mods.push({nome: "Gittata Ideale", val: +3});
+                    if (testoTrattato.includes("lunga") || testoTrattato.includes("cattiva")) mods.push({nome: "Gittata Lunga", val: -3});
+                    isCalculated = true;
+                }
+                // Calcolo Mischia
+                else if (testoTrattato.includes("corpo a corpo") || testoTrattato.includes("mischia")) {
+                    logHTML += `<span class="highlight">[MISCHIA - CC]</span> ${match.alias}<br>`;
+                    base = match.cc;
+                    if (match.skills.includes("Martial Arts")) mods.push({nome: "Arti Marziali", val: +3});
+                    isCalculated = true;
+                }
+                // Calcolo Tiro Salvezza (Danni)
+                else if (testoTrattato.includes("salva") || testoTrattato.includes("colpito") || testoTrattato.includes("armatura")) {
+                    logHTML += `<span class="alert">[DIFESA - ARM]</span> ${match.alias}<br>`;
+                    base = match.arm;
+                    if (testoTrattato.includes("copertura") || testoTrattato.includes("riparo")) mods.push({nome: "Copertura", val: +3});
+                    isCalculated = true;
+                }
+
+                // Esecuzione matematica a schermo
+                if (isCalculated) {
+                    logHTML += `Base: <b>${base}</b><br>`;
+                    let modTotal = 0;
+                    mods.forEach(m => { modTotal += m.val; logHTML += `> ${m.nome}: <span style="color:${m.val > 0 ? '#00ff00' : '#ff3333'}">${m.val > 0 ? '+' : ''}${m.val}</span><br>`; });
+                    logHTML += `-----------------------<br><span class="highlight">>>> OBIETTIVO FINALE: ${base + modTotal} <<<</span><br>`;
+                    logHTML += `<span style="font-size:10px; color:var(--text-dim);">Abilità Base: ${match.skills}</span>`;
+                }
+
+                // Modifica Stato Firebase
+                let newState = "";
+                if (testoTrattato.includes("morto") || testoTrattato.includes("eliminato")) { newState = "DEAD"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA.</span>`; } 
+                else if (testoTrattato.includes("inconscio") || testoTrattato.includes("a terra")) { newState = "UNCONSCIOUS"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio (WIP Medico: ${match.wip}).</span>`; } 
+                else if (testoTrattato.includes("attivo") || testoTrattato.includes("curato")) { newState = "ACTIVE"; logHTML += `<br><span class="success">[STATUS] ${match.alias} Operativo.</span>`; }
+
+                if (newState) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
+            } else {
+                logHTML += `<span class="alert">[ERRORE] Comando ignoto. Se il microfono ha capito male il nome, torna al Setup e usa "CORREGGI IA".</span>`;
+            }
+            printLog(logHTML);
+        }
+    </script>
+</body>
+</html>
