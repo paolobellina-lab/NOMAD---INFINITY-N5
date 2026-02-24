@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v6.0</title>
+    <title>NOMADS TACTICAL TERMINAL v6.5</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -34,12 +34,10 @@
         .alert { color: var(--nomad-red); font-weight: bold; }
         .success { color: #00ff00; font-weight: bold; }
         .roster-list { font-size: 12px; margin-top: 15px; border-top: 1px dashed var(--nomad-red); padding-top: 10px; }
-        .roster-item { display: flex; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); }
-        .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 0 5px; }
+        .roster-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); }
+        .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 5px 10px; background: #222; border-radius: 3px; }
+        .rec-btn { color: #fff; background: var(--nomad-orange); cursor: pointer; padding: 5px 10px; border-radius: 3px; margin-right: 5px; font-weight: bold; }
         .flex-row { display: flex; gap: 10px; }
-        
-        /* Stile Pannello Apprendimento IA */
-        #learningPanel { background: #330000; border: 1px solid var(--nomad-orange); padding: 15px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -64,6 +62,7 @@
             <select id="profileSelect" disabled><option value="">-- 2. SELEZIONA PROFILO --</option></select>
             <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (Opzionale)">
             <button class="btn-nomad" onclick="addUnitToRoster()">AGGIUNGI</button>
+            
             <div id="localRoster" class="roster-list"><i>Nessuna unità schierata.</i></div>
         </div>
         <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
@@ -71,18 +70,7 @@
 
     <div id="battle" style="display:none;">
         <button id="btnListen" class="btn-nomad" style="padding: 20px; font-size: 24px;">🎤 ANALISI VOCALE TATTICA</button>
-        <p style="font-size: 10px; color: #aaa; text-align: center;">Es: "Alguacil spara in copertura" o "Mobile Brigada colpito"</p>
-        
-        <div id="learningPanel">
-            <div style="color: var(--nomad-orange); font-weight: bold; margin-bottom: 5px;">⚠️ ALIAS NON RICONOSCIUTO</div>
-            <div id="learningText" style="font-size: 12px; margin-bottom: 10px;"></div>
-            <select id="learningSelect"><option value="">-- SELEZIONA A CHI TI RIFERIVI --</option></select>
-            <div class="flex-row">
-                <button class="btn-nomad btn-small" style="flex: 1;" onclick="saveLearnedWord()">INSEGNA ALL'IA</button>
-                <button class="btn-status btn-small" style="flex: 1;" onclick="document.getElementById('learningPanel').style.display='none'">IGNORA</button>
-            </div>
-        </div>
-
+        <p style="font-size: 10px; color: #aaa; text-align: center;">Es: "Rosso spara in copertura" o "Mobile Brigada colpito"</p>
         <div id="console"><span class="highlight">[SISTEMA OPERATIVO]:</span> In attesa di ordini.</div>
     </div>
 
@@ -90,14 +78,14 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // FIREBASE CONFIG - Inserisci i tuoi dati!
         const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         window.roster = [];
-        // Dizionario dinamico salvato nel browser
         window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
-        window.lastUnknownText = ""; // Salva l'ultimo comando non capito
+        window.isLearningFor = ""; // Variabile per tracciare se stiamo registrando una pronuncia
 
         window.onload = () => {
             if(!window.masterNomadsDatabase) return;
@@ -137,17 +125,24 @@
 
         window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
 
+        // --- RENDER ROSTER CON TASTO REGISTRA ---
         window.renderRoster = () => {
             const container = document.getElementById('localRoster');
             if(window.roster.length === 0) return container.innerHTML = "<i>Nessuna unità schierata.</i>";
             container.innerHTML = "<div style='color:var(--nomad-orange); margin-bottom:5px;'>UNITÀ PRONTE:</div>";
             window.roster.forEach((u, i) => {
                 const armaCorta = u.weapon.split('/')[0].split(',')[0];
-                container.innerHTML += `<div class="roster-item"><div><b>${u.alias}</b> <span style="color:#aaa; font-size:10px;">| [${armaCorta}]</span></div><div class="del-btn" onclick="removeUnit(${i})">X</div></div>`;
+                container.innerHTML += `
+                    <div class="roster-item">
+                        <div><b>${u.alias}</b> <span style="color:#aaa; font-size:10px;">| [${armaCorta}]</span></div>
+                        <div style="display:flex;">
+                            <div class="rec-btn" onclick="startLearning('${u.alias}')">🎙️ VOCE</div>
+                            <div class="del-btn" onclick="removeUnit(${i})">X</div>
+                        </div>
+                    </div>`;
             });
         };
 
-        // SALVATAGGIO ROSTER
         window.saveRoster = () => {
             const name = document.getElementById('saveName').value.trim().toUpperCase();
             if(!name || window.roster.length === 0) return alert("Inserisci un nome e aggiungi un'unità!");
@@ -176,45 +171,49 @@
             if(window.roster.length === 0) return alert("Aggiungi un'unità!");
             document.getElementById('setup').style.display='none'; 
             document.getElementById('battle').style.display='block'; 
-            
-            // Popola il menu di apprendimento con le truppe in gioco
-            const learnSelect = document.getElementById('learningSelect');
-            learnSelect.innerHTML = '<option value="">-- SELEZIONA A CHI TI RIFERIVI --</option>';
-            window.roster.forEach(u => learnSelect.innerHTML += `<option value="${u.alias}">${u.alias}</option>`);
-
             for (let unit of window.roster) await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
             printLog("<span class='success'>[SISTEMA]: Uplink stabilito. IA Pronta.</span>");
         };
 
-        // --- SISTEMA APPRENDIMENTO VOCALE ---
-        window.saveLearnedWord = () => {
-            const targetAlias = document.getElementById('learningSelect').value;
-            if (!targetAlias) return alert("Seleziona una truppa!");
-            
-            // Salva la frase non capita (o la prima parte) legandola all'Alias
-            // Estraiamo la prima parola della frase non capita come probabile colpevole
-            const wrongWord = window.lastUnknownText.split(" ")[0].toLowerCase();
-            
-            window.customDictionary[wrongWord] = targetAlias.toLowerCase();
-            localStorage.setItem('infinityDictionary_Nomads', JSON.stringify(window.customDictionary));
-            
-            document.getElementById('learningPanel').style.display = 'none';
-            printLog(`<span class="success">[IA AGGIORNATA]: D'ora in poi tradurrò "${wrongWord}" come "${targetAlias}". Riprova il comando!</span>`);
+        // --- SISTEMA DI APPRENDIMENTO ATTIVATO DAL PULSANTE ---
+        window.startLearning = (alias) => {
+            window.isLearningFor = alias;
+            alert(`SISTEMA IN ASCOLTO.\nPremi OK e pronuncia a voce alta il nome per: ${alias}`);
+            recognition.start();
         };
 
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         recognition.lang = 'it-IT';
-        document.getElementById('btnListen').onclick = () => recognition.start();
-        recognition.onstart = () => document.getElementById('btnListen').classList.add('recording');
+        
+        document.getElementById('btnListen').onclick = () => {
+            window.isLearningFor = ""; // Assicura che in partita non stiamo registrando
+            recognition.start();
+        };
+        
+        recognition.onstart = () => {
+            if (!window.isLearningFor) document.getElementById('btnListen').classList.add('recording');
+        };
         
         recognition.onresult = async (event) => {
             document.getElementById('btnListen').classList.remove('recording');
-            let testo = event.results[0][0].transcript.toLowerCase();
+            let testo = event.results[0][0].transcript.toLowerCase().trim();
+
+            // CASO A: STIAMO REGISTRANDO UNA PRONUNCIA
+            if (window.isLearningFor !== "") {
+                window.customDictionary[testo] = window.isLearningFor.toLowerCase();
+                localStorage.setItem('infinityDictionary_Nomads', JSON.stringify(window.customDictionary));
+                alert(`VOCABOLARIO AGGIORNATO!\n\nHai detto: "${testo}"\nDa ora l'IA lo tradurrà come: "${window.isLearningFor}".`);
+                window.isLearningFor = ""; // Resetta lo stato
+                return;
+            }
             
-            // 1. Applica il dizionario personalizzato dell'utente
-            Object.keys(window.customDictionary).forEach(wrong => {
-                const correct = window.customDictionary[wrong];
-                testo = testo.replace(new RegExp(`\\b${wrong}\\b`, 'g'), correct);
+            // CASO B: SIAMO IN PARTITA (Normale Ordine Vocale)
+            
+            // Applica il dizionario personale per tradurre le storpiature
+            Object.keys(window.customDictionary).forEach(wrongPhrase => {
+                const correctAlias = window.customDictionary[wrongPhrase];
+                // Sostituisce l'intera frase storta con l'alias corretto
+                testo = testo.replace(new RegExp(wrongPhrase, 'g'), correctAlias);
             });
 
             elaboraComando(testo);
@@ -225,36 +224,32 @@
             consoleDiv.innerHTML = msg + "\n\n" + consoleDiv.innerHTML;
         }
 
-        async function elaboraComando(testoOriginale) {
-            // Cerca il match esatto dopo la traduzione
-            const match = window.roster.find(u => testoOriginale.includes(u.alias.toLowerCase()));
-            let logHTML = `> Ordine: "<span style="color:#aaa">${testoOriginale}</span>"<br>`;
+        async function elaboraComando(testoTrattato) {
+            const match = window.roster.find(u => testoTrattato.includes(u.alias.toLowerCase()));
+            let logHTML = `> Ordine analizzato: "<span style="color:#aaa">${testoTrattato}</span>"<br>`;
 
             if (match) {
-                // Nasconde il pannello di apprendimento se era aperto
-                document.getElementById('learningPanel').style.display = 'none';
-                
                 let mods = [], base = 0, totale = 0, isCalculated = false;
 
-                if (testoOriginale.includes("spara") || testoOriginale.includes("fuoco")) {
+                if (testoTrattato.includes("spara") || testoTrattato.includes("fuoco")) {
                     logHTML += `<span class="highlight">[ATTACCO - BS]</span> ${match.alias}<br>`;
                     base = match.bs;
-                    if (testoOriginale.includes("copertura") || testoOriginale.includes("riparo")) mods.push({nome: "Copertura Bersaglio", val: -3});
-                    if (testoOriginale.includes("mimetismo") || testoOriginale.includes("mimetico")) mods.push({nome: "Mimetismo", val: -3});
-                    if (testoOriginale.includes("ottima") || testoOriginale.includes("buona")) mods.push({nome: "Gittata Ideale", val: 3});
-                    if (testoOriginale.includes("lunga") || testoOriginale.includes("cattiva")) mods.push({nome: "Gittata Lunga", val: -3});
+                    if (testoTrattato.includes("copertura") || testoTrattato.includes("riparo")) mods.push({nome: "Copertura Bersaglio", val: -3});
+                    if (testoTrattato.includes("mimetismo") || testoTrattato.includes("mimetico")) mods.push({nome: "Mimetismo", val: -3});
+                    if (testoTrattato.includes("ottima") || testoTrattato.includes("buona")) mods.push({nome: "Gittata Ideale", val: 3});
+                    if (testoTrattato.includes("lunga") || testoTrattato.includes("cattiva")) mods.push({nome: "Gittata Lunga", val: -3});
                     isCalculated = true;
                 }
-                else if (testoOriginale.includes("corpo a corpo") || testoOriginale.includes("mischia")) {
+                else if (testoTrattato.includes("corpo a corpo") || testoTrattato.includes("mischia")) {
                     logHTML += `<span class="highlight">[MISCHIA - CC]</span> ${match.alias}<br>`;
                     base = match.cc;
                     if (match.skills.includes("Martial Arts")) mods.push({nome: "Arti Marziali", val: +3});
                     isCalculated = true;
                 }
-                else if (testoOriginale.includes("salva") || testoOriginale.includes("colpito") || testoOriginale.includes("armatura")) {
+                else if (testoTrattato.includes("salva") || testoTrattato.includes("colpito") || testoTrattato.includes("armatura")) {
                     logHTML += `<span class="alert">[DIFESA - ARM]</span> ${match.alias}<br>`;
                     base = match.arm;
-                    if (testoOriginale.includes("copertura") || testoOriginale.includes("riparo")) mods.push({nome: "Copertura", val: +3});
+                    if (testoTrattato.includes("copertura") || testoTrattato.includes("riparo")) mods.push({nome: "Copertura", val: +3});
                     isCalculated = true;
                 }
 
@@ -263,20 +258,17 @@
                     let modTotal = 0;
                     mods.forEach(m => { modTotal += m.val; logHTML += `> ${m.nome}: <span style="color:${m.val > 0 ? '#00ff00' : '#ff3333'}">${m.val > 0 ? '+' : ''}${m.val}</span><br>`; });
                     logHTML += `-----------------------<br><span class="highlight">>>> OBIETTIVO: ${base + modTotal} <<<</span><br>`;
+                    logHTML += `<span style="font-size:10px; color:var(--text-dim);">Abilità: ${match.skills}</span>`;
                 }
 
                 let newState = "";
-                if (testoOriginale.includes("morto") || testoOriginale.includes("eliminato")) { newState = "DEAD"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA.</span>`; } 
-                else if (testoOriginale.includes("inconscio") || testoOriginale.includes("a terra")) { newState = "UNCONSCIOUS"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio.</span>`; } 
-                else if (testoOriginale.includes("attivo") || testoOriginale.includes("curato")) { newState = "ACTIVE"; logHTML += `<br><span class="success">[STATUS] ${match.alias} Operativo.</span>`; }
+                if (testoTrattato.includes("morto") || testoTrattato.includes("eliminato")) { newState = "DEAD"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA.</span>`; } 
+                else if (testoTrattato.includes("inconscio") || testoTrattato.includes("a terra")) { newState = "UNCONSCIOUS"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio (WIP Medico: ${match.wip}).</span>`; } 
+                else if (testoTrattato.includes("attivo") || testoTrattato.includes("curato")) { newState = "ACTIVE"; logHTML += `<br><span class="success">[STATUS] ${match.alias} Operativo.</span>`; }
 
                 if (newState) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
             } else {
-                // SE NON TROVA MATCH, ATTIVA IL PANNELLO DI APPRENDIMENTO
-                logHTML += `<span class="alert">[ERRORE] Nome non trovato in squadra.</span>`;
-                window.lastUnknownText = testoOriginale; // Salva la frase non capita
-                document.getElementById('learningText').innerText = `Il sistema ha capito: "${testoOriginale}"`;
-                document.getElementById('learningPanel').style.display = 'block';
+                logHTML += `<span class="alert">[ERRORE] Comando annullato. Assicurati di aver registrato la voce per questa truppa.</span>`;
             }
             printLog(logHTML);
         }
