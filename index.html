@@ -1,77 +1,4 @@
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        // FIREBASE CONFIG - Inserisci i tuoi dati!
-        const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        window.roster = [];
-        window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
-        window.isLearningFor = ""; 
-
-        window.onload = () => {
-            if(!window.masterNomadsDatabase) return alert("Database non trovato!");
-            
-            // Metodo corazzato per creare le tendine su Mobile
-            const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
-            const groupSelect = document.getElementById('groupSelect');
-            
-            gruppiUnici.forEach(nome => {
-                const opt = document.createElement('option');
-                opt.value = nome;
-                opt.textContent = nome;
-                groupSelect.appendChild(opt);
-            });
-            refreshSavedRostersList();
-        };
-
-        window.updateProfileSelect = () => {
-            const groupName = document.getElementById('groupSelect').value;
-            const profileSelect = document.getElementById('profileSelect');
-            
-            // Svuota e resetta la tendina in modo sicuro
-            profileSelect.innerHTML = '';
-            const defaultOpt = document.createElement('option');
-            defaultOpt.value = "";
-            defaultOpt.textContent = "-- 2. SELEZIONA PROFILO --";
-            profileSelect.appendChild(defaultOpt);
-            
-            profileSelect.disabled = !groupName;
-            
-            if (groupName) {
-                const profili = window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName);
-                profili.forEach(unit => {
-                    const opt = document.createElement('option');
-                    opt.value = unit.id_profilo;
-                    const arma = unit.arma.split('/')[0].split(',')[0].trim();
-                    opt.textContent = `[${arma}] - BS:${unit.bs} ARM:${unit.arm}`;
-                    profileSelect.appendChild(opt);
-                });
-            }
-        };
-
-        window.addUnitToRoster = () => {
-            const idProfilo = document.getElementById('profileSelect').value;
-            let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
-            if (!idProfilo) return alert("Devi prima selezionare un profilo dalla tendina 2!");
-            
-            const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
-            if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
-            
-            if (window.roster.some(u => u.alias === aliasInput)) {
-                return alert(`ATTENZIONE: Hai già schierato una truppa chiamata "${aliasInput}".\nPer metterne una seconda uguale, devi obbligatoriamente assegnarle un SOPRANNOME nel campo 3!`);
-            }
-
-            const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, state: "ACTIVE", player: "G_NOMADS", modifiers: [] };
-            window.roster.push(unit);
-            document.getElementById('unitAlias').value = ""; 
-            renderRoster();
-        };
-
-        window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
-
+        // --- RENDER ROSTER CON TASTO CORREZIONE MANUALE ---
         window.renderRoster = () => {
             const container = document.getElementById('localRoster');
             if(window.roster.length === 0) return container.innerHTML = "<i>Nessuna unità schierata.</i>";
@@ -82,162 +9,54 @@
                     <div class="roster-item">
                         <div><b>${u.alias}</b> <span style="color:#aaa; font-size:10px;">| [${armaCorta}]</span></div>
                         <div style="display:flex;">
-                            <div class="rec-btn" onclick="startLearning('${u.alias}')">🎙️ REGISTRA<br>VARIANTE</div>
+                            <div class="rec-btn" onclick="addManualDictionary('${u.alias}')">📝 CORREGGI IA</div>
                             <div class="del-btn" onclick="removeUnit(${i})">X</div>
                         </div>
                     </div>`;
             });
         };
 
-        // --- GESTIONE VOCABOLARIO E SALVATAGGIO (Invariato) ---
-        window.toggleDictionary = () => {
-            const viewer = document.getElementById('dictViewer');
-            const content = document.getElementById('dictContent');
-            if (viewer.style.display === 'block') {
-                viewer.style.display = 'none';
-            } else {
-                window.customDictionary = JSON.parse(localStorage.getItem('infinityDictionary_Nomads') || '{}');
-                const keys = Object.keys(window.customDictionary);
-                if(keys.length === 0) {
-                    content.innerHTML = "<i>Nessuna parola registrata. L'IA è vuota.</i>";
-                } else {
-                    content.innerHTML = "<b>Memoria Traduzioni:</b><br>" + keys.map(k => `- Se sente "<b>${k}</b>" ➡️ Cerca "<b>${window.customDictionary[k]}</b>"`).join('<br>');
-                }
-                viewer.style.display = 'block';
+        // --- SISTEMA DI INSERIMENTO MANUALE NEL VOCABOLARIO ---
+        window.addManualDictionary = (alias) => {
+            // Chiede all'utente di digitare la parola sbagliata
+            let wrongWord = prompt(`L'IA capisce male il nome di ${alias} in battaglia?\n\nGuarda la console, controlla cosa capisce l'IA (es. "gatto" o "acqua cile") e scrivilo qui sotto:`);
+            
+            if (wrongWord && wrongWord.trim() !== "") {
+                wrongWord = wrongWord.toLowerCase().trim();
+                
+                // Salva nel dizionario
+                window.customDictionary[wrongWord] = alias.toLowerCase();
+                localStorage.setItem('infinityDictionary_Nomads', JSON.stringify(window.customDictionary));
+                
+                alert(`VOCABOLARIO AGGIORNATO!\n\nDa ora in poi, ogni volta che l'IA capirà "${wrongWord}", lo tradurrà istantaneamente in "${alias}".`);
             }
         };
 
-        window.clearDictionary = () => {
-            if(confirm("Vuoi cancellare tutte le registrazioni vocali personalizzate?")) {
-                localStorage.removeItem('infinityDictionary_Nomads');
-                window.customDictionary = {};
-                toggleDictionary(); 
-                alert("Memoria vocale resettata!");
-            }
-        };
-
-        window.saveRoster = () => {
-            const name = document.getElementById('saveName').value.trim().toUpperCase();
-            if(!name || window.roster.length === 0) return alert("Inserisci un nome e aggiungi un'unità!");
-            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
-            savedData[name] = window.roster;
-            localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
-            document.getElementById('saveName').value = "";
-            refreshSavedRostersList();
-        };
-
-        window.loadRoster = () => {
-            const name = document.getElementById('savedRostersSelect').value;
-            if(!name) return;
-            window.roster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || [];
-            renderRoster();
-        };
-
-        window.refreshSavedRostersList = () => {
-            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
-            const select = document.getElementById('savedRostersSelect');
-            select.innerHTML = '';
-            const defOpt = document.createElement('option'); defOpt.value = ""; defOpt.textContent = "-- SQUADRE SALVATE --";
-            select.appendChild(defOpt);
-            Object.keys(savedData).forEach(n => {
-                const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
-                select.appendChild(opt);
-            });
-        };
-
-        window.startBattle = async () => { 
-            if(window.roster.length === 0) return alert("Aggiungi un'unità!");
-            document.getElementById('setup').style.display='none'; 
-            document.getElementById('battle').style.display='block'; 
-            for (let unit of window.roster) await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
-            printLog("<span class='success'>[SISTEMA]: Uplink stabilito. IA Pronta.</span>");
-        };
-
-        // --- APPRENDIMENTO E IA ---
-        window.startLearning = (alias) => {
-            window.isLearningFor = alias;
-            alert(`SISTEMA IN ASCOLTO.\nPremi OK e pronuncia una nuova variante vocale per: ${alias}`);
-            recognition.start();
-        };
-
+        // Rimuoviamo la vecchia funzione window.startLearning e le modifiche a btnListen 
+        // L'evento onresult del riconoscimento vocale ora è pulito e dedicato solo alla battaglia:
+        
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         recognition.lang = 'it-IT';
         
-        document.getElementById('btnListen').onclick = () => { window.isLearningFor = ""; recognition.start(); };
-        recognition.onstart = () => { if (!window.isLearningFor) document.getElementById('btnListen').classList.add('recording'); };
+        document.getElementById('btnListen').onclick = () => {
+            recognition.start();
+        };
+        
+        recognition.onstart = () => {
+            document.getElementById('btnListen').classList.add('recording');
+        };
         
         recognition.onresult = async (event) => {
             document.getElementById('btnListen').classList.remove('recording');
             let testo = event.results[0][0].transcript.toLowerCase().trim();
-
-            if (window.isLearningFor !== "") {
-                window.customDictionary[testo] = window.isLearningFor.toLowerCase();
-                localStorage.setItem('infinityDictionary_Nomads', JSON.stringify(window.customDictionary));
-                alert(`VARIANTE AGGIUNTA!\n\nHai detto: "${testo}"\nTraduzione: "${window.isLearningFor}".\n(Puoi registrarne altre se vuoi!)`);
-                window.isLearningFor = ""; 
-                return;
-            }
             
+            // --- SOSTITUZIONE INTELLIGENTE (Dal più lungo al più corto) ---
             const chiaviOrdinate = Object.keys(window.customDictionary).sort((a, b) => b.length - a.length);
             chiaviOrdinate.forEach(wrongPhrase => {
                 const correctAlias = window.customDictionary[wrongPhrase];
+                // Sostituisce la parola sbagliata con l'alias corretto
                 testo = testo.replace(new RegExp(`\\b${wrongPhrase}\\b`, 'g'), correctAlias);
             });
 
             elaboraComando(testo);
         };
-
-        function printLog(msg) {
-            const consoleDiv = document.getElementById('console');
-            consoleDiv.innerHTML = msg + "\n\n" + consoleDiv.innerHTML;
-        }
-
-        async function elaboraComando(testoTrattato) {
-            const match = window.roster.find(u => testoTrattato.includes(u.alias.toLowerCase()));
-            let logHTML = `> Ordine analizzato: "<span style="color:#aaa">${testoTrattato}</span>"<br>`;
-
-            if (match) {
-                let mods = [], base = 0, totale = 0, isCalculated = false;
-
-                if (testoTrattato.includes("spara") || testoTrattato.includes("fuoco")) {
-                    logHTML += `<span class="highlight">[ATTACCO - BS]</span> ${match.alias}<br>`;
-                    base = match.bs;
-                    if (testoTrattato.includes("copertura") || testoTrattato.includes("riparo")) mods.push({nome: "Copertura Bersaglio", val: -3});
-                    if (testoTrattato.includes("mimetismo") || testoTrattato.includes("mimetico")) mods.push({nome: "Mimetismo", val: -3});
-                    if (testoTrattato.includes("ottima") || testoTrattato.includes("buona")) mods.push({nome: "Gittata Ideale", val: 3});
-                    if (testoTrattato.includes("lunga") || testoTrattato.includes("cattiva")) mods.push({nome: "Gittata Lunga", val: -3});
-                    isCalculated = true;
-                }
-                else if (testoTrattato.includes("corpo a corpo") || testoTrattato.includes("mischia")) {
-                    logHTML += `<span class="highlight">[MISCHIA - CC]</span> ${match.alias}<br>`;
-                    base = match.cc;
-                    if (match.skills.includes("Martial Arts")) mods.push({nome: "Arti Marziali", val: +3});
-                    isCalculated = true;
-                }
-                else if (testoTrattato.includes("salva") || testoTrattato.includes("colpito") || testoTrattato.includes("armatura")) {
-                    logHTML += `<span class="alert">[DIFESA - ARM]</span> ${match.alias}<br>`;
-                    base = match.arm;
-                    if (testoTrattato.includes("copertura") || testoTrattato.includes("riparo")) mods.push({nome: "Copertura", val: +3});
-                    isCalculated = true;
-                }
-
-                if (isCalculated) {
-                    logHTML += `Base: <b>${base}</b><br>`;
-                    let modTotal = 0;
-                    mods.forEach(m => { modTotal += m.val; logHTML += `> ${m.nome}: <span style="color:${m.val > 0 ? '#00ff00' : '#ff3333'}">${m.val > 0 ? '+' : ''}${m.val}</span><br>`; });
-                    logHTML += `-----------------------<br><span class="highlight">>>> OBIETTIVO: ${base + modTotal} <<<</span><br>`;
-                    logHTML += `<span style="font-size:10px; color:var(--text-dim);">Abilità: ${match.skills}</span>`;
-                }
-
-                let newState = "";
-                if (testoTrattato.includes("morto") || testoTrattato.includes("eliminato")) { newState = "DEAD"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} KIA.</span>`; } 
-                else if (testoTrattato.includes("inconscio") || testoTrattato.includes("a terra")) { newState = "UNCONSCIOUS"; logHTML += `<br><span class="alert">[STATUS] ${match.alias} Inconscio (WIP Medico: ${match.wip}).</span>`; } 
-                else if (testoTrattato.includes("attivo") || testoTrattato.includes("curato")) { newState = "ACTIVE"; logHTML += `<br><span class="success">[STATUS] ${match.alias} Operativo.</span>`; }
-
-                if (newState) await updateDoc(doc(db, "sessione_corrente", match.alias), { state: newState });
-            } else {
-                logHTML += `<span class="alert">[ERRORE] Comando non associato a nessuna unità. Controlla il nome!</span>`;
-            }
-            printLog(logHTML);
-        }
-    </script>
