@@ -1,89 +1,3 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v7.0</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#A60000">
-
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@500;700&display=swap" rel="stylesheet">
-    <script src="nomads_db.js"></script>
-
-    <style>
-        :root {
-            --bg-color: #0b0c10; --panel-bg: #1f1f1f; --nomad-red: #cc0000; 
-            --nomad-darkred: #8b0000; --nomad-orange: #ff6600; 
-            --text-main: #f0f0f0; --text-dim: #aaaaaa;
-        }
-        body { background: var(--bg-color); color: var(--text-main); font-family: 'Share Tech Mono', monospace; padding: 15px; border: 2px solid var(--nomad-red); min-height: 100vh; box-sizing: border-box; margin: 0; }
-        h2 { font-family: 'Teko', sans-serif; font-size: 28px; color: #fff; text-shadow: 2px 2px 0px var(--nomad-red); text-align: center; text-transform: uppercase; border-bottom: 2px solid var(--nomad-red); padding-bottom: 10px; margin-top: 0; }
-        .section { background: var(--panel-bg); border-left: 4px solid var(--nomad-red); padding: 15px; margin-bottom: 20px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
-        input, select { background: #000; color: var(--text-main); border: 1px solid var(--nomad-red); width: 100%; padding: 10px; margin: 5px 0; font-size: 14px; box-sizing: border-box; }
-        input:focus, select:focus { border-color: var(--nomad-orange); outline: none; }
-        button { width: 100%; padding: 12px; margin-top: 5px; cursor: pointer; font-family: 'Teko', sans-serif; font-size: 20px; font-weight: bold; text-transform: uppercase; border: none; transition: 0.3s; }
-        .btn-nomad { background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); color: #fff; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
-        .btn-nomad:hover { background: var(--nomad-orange); color: #000; }
-        .btn-status { background: #222; color: var(--nomad-red); border: 1px solid var(--nomad-red); margin-top: 15px; font-size: 18px; }
-        .btn-small { padding: 8px; font-size: 16px; margin-top: 5px; clip-path: none; border-radius: 3px; }
-        .recording { background: #ff0000 !important; color: white !important; animation: blink 1s infinite; box-shadow: 0 0 20px var(--nomad-orange); }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        #console { font-size: 13px; margin-top: 20px; color: var(--text-main); background: #050505; padding: 15px; border: 1px solid var(--nomad-red); border-left: 5px solid var(--nomad-orange); height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
-        .highlight { color: var(--nomad-orange); font-weight: bold; }
-        .alert { color: var(--nomad-red); font-weight: bold; }
-        .success { color: #00ff00; font-weight: bold; }
-        .roster-list { font-size: 12px; margin-top: 15px; border-top: 1px dashed var(--nomad-red); padding-top: 10px; }
-        .roster-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); }
-        .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 5px 10px; background: #222; border-radius: 3px; }
-        .rec-btn { color: #fff; background: var(--nomad-orange); cursor: pointer; padding: 5px 10px; border-radius: 3px; margin-right: 5px; font-weight: bold; text-align: center;}
-        .flex-row { display: flex; gap: 10px; }
-        #dictViewer { font-size: 11px; background: #000; padding: 10px; margin-top: 10px; color: #fff; display: none; border: 1px dashed var(--nomad-orange); }
-    </style>
-</head>
-<body>
-    <h2>-- TUNGUSKA DATANET --</h2>
-    
-    <div id="setup">
-        <div class="section">
-            <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">ARCHIVIO SQUADRE</h3>
-            <div class="flex-row">
-                <select id="savedRostersSelect" style="flex: 2;"><option value="">-- SQUADRE SALVATE --</option></select>
-                <button class="btn-nomad btn-small" style="flex: 1;" onclick="loadRoster()">CARICA</button>
-            </div>
-            <div class="flex-row">
-                <input type="text" id="saveName" placeholder="NOME NUOVA SQUADRA" style="flex: 2;">
-                <button class="btn-nomad btn-small" style="flex: 1;" onclick="saveRoster()">SALVA</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3 style="margin-top:0; font-size: 16px; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
-            <select id="groupSelect" onchange="updateProfileSelect()"><option value="">-- 1. SELEZIONA TRUPPA --</option></select>
-            <select id="profileSelect" disabled><option value="">-- 2. SELEZIONA PROFILO --</option></select>
-            <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (Opzionale)">
-            <button class="btn-nomad" onclick="addUnitToRoster()">AGGIUNGI</button>
-            
-            <div id="localRoster" class="roster-list"><i>Nessuna unità schierata.</i></div>
-            
-            <div style="margin-top: 20px; border-top: 1px solid #444; padding-top: 10px;">
-                <button class="btn-status btn-small" onclick="toggleDictionary()">VEDI MEMORIA VOCALE</button>
-                <div id="dictViewer">
-                    <div id="dictContent" style="margin-bottom:10px;"></div>
-                    <button class="btn-nomad btn-small" style="background:var(--nomad-red);" onclick="clearDictionary()">SVUOTA MEMORIA VOCALE</button>
-                </div>
-            </div>
-        </div>
-        
-        <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
-    </div>
-
-    <div id="battle" style="display:none;">
-        <button id="btnListen" class="btn-nomad" style="padding: 20px; font-size: 24px;">🎤 ANALISI VOCALE TATTICA</button>
-        <p style="font-size: 10px; color: #aaa; text-align: center;">Es: "Rosso spara in copertura" o "Mobile Brigada colpito"</p>
-        <div id="console"><span class="highlight">[SISTEMA OPERATIVO]:</span> In attesa di ordini.</div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -98,22 +12,42 @@
         window.isLearningFor = ""; 
 
         window.onload = () => {
-            if(!window.masterNomadsDatabase) return;
-            const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome))].sort();
+            if(!window.masterNomadsDatabase) return alert("Database non trovato!");
+            
+            // Metodo corazzato per creare le tendine su Mobile
+            const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
             const groupSelect = document.getElementById('groupSelect');
-            gruppiUnici.forEach(nome => groupSelect.innerHTML += `<option value="${nome}">${nome}</option>`);
+            
+            gruppiUnici.forEach(nome => {
+                const opt = document.createElement('option');
+                opt.value = nome;
+                opt.textContent = nome;
+                groupSelect.appendChild(opt);
+            });
             refreshSavedRostersList();
         };
 
         window.updateProfileSelect = () => {
             const groupName = document.getElementById('groupSelect').value;
             const profileSelect = document.getElementById('profileSelect');
-            profileSelect.innerHTML = '<option value="">-- 2. SELEZIONA PROFILO --</option>';
+            
+            // Svuota e resetta la tendina in modo sicuro
+            profileSelect.innerHTML = '';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "";
+            defaultOpt.textContent = "-- 2. SELEZIONA PROFILO --";
+            profileSelect.appendChild(defaultOpt);
+            
             profileSelect.disabled = !groupName;
+            
             if (groupName) {
-                window.masterNomadsDatabase.filter(u => u.nome === groupName).forEach(unit => {
+                const profili = window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName);
+                profili.forEach(unit => {
+                    const opt = document.createElement('option');
+                    opt.value = unit.id_profilo;
                     const arma = unit.arma.split('/')[0].split(',')[0].trim();
-                    profileSelect.innerHTML += `<option value="${unit.id_profilo}">[${arma}] - BS:${unit.bs} ARM:${unit.arm}</option>`;
+                    opt.textContent = `[${arma}] - BS:${unit.bs} ARM:${unit.arm}`;
+                    profileSelect.appendChild(opt);
                 });
             }
         };
@@ -121,11 +55,14 @@
         window.addUnitToRoster = () => {
             const idProfilo = document.getElementById('profileSelect').value;
             let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
-            if (!idProfilo) return alert("Devi prima selezionare un profilo!");
+            if (!idProfilo) return alert("Devi prima selezionare un profilo dalla tendina 2!");
             
             const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
-            if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase();
-            if (window.roster.some(u => u.alias === aliasInput)) return alert(`Nome già in uso! Assegna un soprannome.`);
+            if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
+            
+            if (window.roster.some(u => u.alias === aliasInput)) {
+                return alert(`ATTENZIONE: Hai già schierato una truppa chiamata "${aliasInput}".\nPer metterne una seconda uguale, devi obbligatoriamente assegnarle un SOPRANNOME nel campo 3!`);
+            }
 
             const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, state: "ACTIVE", player: "G_NOMADS", modifiers: [] };
             window.roster.push(unit);
@@ -152,7 +89,7 @@
             });
         };
 
-        // --- GESTIONE VOCABOLARIO ---
+        // --- GESTIONE VOCABOLARIO E SALVATAGGIO (Invariato) ---
         window.toggleDictionary = () => {
             const viewer = document.getElementById('dictViewer');
             const content = document.getElementById('dictContent');
@@ -174,12 +111,11 @@
             if(confirm("Vuoi cancellare tutte le registrazioni vocali personalizzate?")) {
                 localStorage.removeItem('infinityDictionary_Nomads');
                 window.customDictionary = {};
-                toggleDictionary(); // Aggiorna la vista
+                toggleDictionary(); 
                 alert("Memoria vocale resettata!");
             }
         };
 
-        // --- SALVATAGGIO SQUADRE ---
         window.saveRoster = () => {
             const name = document.getElementById('saveName').value.trim().toUpperCase();
             if(!name || window.roster.length === 0) return alert("Inserisci un nome e aggiungi un'unità!");
@@ -200,8 +136,13 @@
         window.refreshSavedRostersList = () => {
             const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
             const select = document.getElementById('savedRostersSelect');
-            select.innerHTML = '<option value="">-- SQUADRE SALVATE --</option>';
-            Object.keys(savedData).forEach(n => select.innerHTML += `<option value="${n}">${n}</option>`);
+            select.innerHTML = '';
+            const defOpt = document.createElement('option'); defOpt.value = ""; defOpt.textContent = "-- SQUADRE SALVATE --";
+            select.appendChild(defOpt);
+            Object.keys(savedData).forEach(n => {
+                const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
+                select.appendChild(opt);
+            });
         };
 
         window.startBattle = async () => { 
@@ -212,7 +153,7 @@
             printLog("<span class='success'>[SISTEMA]: Uplink stabilito. IA Pronta.</span>");
         };
 
-        // --- SISTEMA DI REGISTRAZIONE VOCALE MULTIPLA ---
+        // --- APPRENDIMENTO E IA ---
         window.startLearning = (alias) => {
             window.isLearningFor = alias;
             alert(`SISTEMA IN ASCOLTO.\nPremi OK e pronuncia una nuova variante vocale per: ${alias}`);
@@ -222,14 +163,8 @@
         const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
         recognition.lang = 'it-IT';
         
-        document.getElementById('btnListen').onclick = () => {
-            window.isLearningFor = ""; 
-            recognition.start();
-        };
-        
-        recognition.onstart = () => {
-            if (!window.isLearningFor) document.getElementById('btnListen').classList.add('recording');
-        };
+        document.getElementById('btnListen').onclick = () => { window.isLearningFor = ""; recognition.start(); };
+        recognition.onstart = () => { if (!window.isLearningFor) document.getElementById('btnListen').classList.add('recording'); };
         
         recognition.onresult = async (event) => {
             document.getElementById('btnListen').classList.remove('recording');
@@ -243,11 +178,9 @@
                 return;
             }
             
-            // --- SOSTITUZIONE INTELLIGENTE (Dal più lungo al più corto) ---
             const chiaviOrdinate = Object.keys(window.customDictionary).sort((a, b) => b.length - a.length);
             chiaviOrdinate.forEach(wrongPhrase => {
                 const correctAlias = window.customDictionary[wrongPhrase];
-                // RegExp sicura per catturare la frase esatta
                 testo = testo.replace(new RegExp(`\\b${wrongPhrase}\\b`, 'g'), correctAlias);
             });
 
@@ -308,5 +241,3 @@
             printLog(logHTML);
         }
     </script>
-</body>
-</html>
