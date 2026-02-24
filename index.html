@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v9.5</title>
+    <title>NOMADS TACTICAL TERMINAL v10.0</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -26,6 +26,7 @@
         /* BOTTONI STANDARD SETUP */
         .btn-nomad { width: 100%; background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); color: #fff; padding: 15px; margin-top: 5px; cursor: pointer; font-family: 'Teko', sans-serif; font-size: 22px; font-weight: bold; text-transform: uppercase; border: none; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
         .btn-status { width: 100%; background: #222; color: var(--nomad-red); border: 2px solid var(--nomad-red); padding: 15px; margin-top: 15px; font-family: 'Teko', sans-serif; font-size: 22px; font-weight: bold; cursor: pointer; }
+        .btn-small { padding: 10px; font-size: 18px; margin-top: 5px; clip-path: none; border-radius: 3px; }
         
         /* BOTTONI ENORMI PER LA BATTAGLIA */
         .grid-buttons { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
@@ -33,17 +34,33 @@
         .huge-btn:active { background: var(--nomad-orange); color: #000; transform: scale(0.98); }
         .huge-btn span { font-family: 'Share Tech Mono', monospace; font-size: 14px; color: var(--nomad-orange); font-weight: normal; margin-top: 5px; }
 
-        .flex-row { display: flex; gap: 10px; }
+        .flex-row { display: flex; gap: 10px; align-items: center; }
         .step-container { display: none; flex-direction: column; height: 100%; flex-grow: 1; overflow-y: auto;}
         .active-step { display: flex; }
         
         #battle-header { text-align: center; color: var(--nomad-orange); font-size: 18px; font-weight: bold; margin-bottom: 10px; padding: 10px; background: #222; border: 1px dashed var(--nomad-orange); }
+        .roster-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); font-size: 12px; }
+        .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 5px 10px; background: #222; border-radius: 3px; }
     </style>
 </head>
 <body>
     <h2>-- TUNGUSKA DATANET --</h2>
     
     <div id="setup">
+        
+        <div class="section">
+            <h3 style="margin-top:0; color: var(--nomad-orange);">ARCHIVIO SQUADRE</h3>
+            <div class="flex-row">
+                <select id="savedRostersSelect" style="flex: 2;"><option value="">-- SQUADRE SALVATE --</option></select>
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="loadRoster()">CARICA</button>
+                <button class="btn-status btn-small" style="flex: 1; margin-top: 5px; padding: 10px;" onclick="deleteRoster()">ELIMINA</button>
+            </div>
+            <div class="flex-row">
+                <input type="text" id="saveName" placeholder="NOME NUOVA SQUADRA" style="flex: 2;">
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="saveRoster()">SALVA LISTA</button>
+            </div>
+        </div>
+
         <div class="section">
             <h3 style="margin-top:0; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
             <div class="flex-row">
@@ -56,9 +73,13 @@
             <select id="profileSelect" disabled><option value="">-- 2. SELEZIONA PROFILO --</option></select>
             <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (Opzionale)">
             <button class="btn-nomad" onclick="addUnitToRoster()">SCHIERA UNITÀ</button>
-            <div id="localRoster" style="margin-top:10px; font-size:12px; border-top:1px dashed red; padding-top:10px;"></div>
+            
+            <div id="localRoster" style="margin-top:10px; border-top:1px dashed red; padding-top:10px;">
+                <i>Nessuna unità schierata.</i>
+            </div>
         </div>
-        <button class="btn-status" onclick="startBattle()">INIZIA PARTITA</button>
+        
+        <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
     </div>
 
     <div id="battle" style="display:none; flex-grow: 1; flex-direction: column;">
@@ -83,8 +104,6 @@
                 <button class="huge-btn" onclick="selectAction('ATTACCO BS')">ATTACCO BS <span>(Fuoco a Distanza)</span></button>
                 <button class="huge-btn" onclick="selectAction('CORPO A CORPO')">CORPO A CORPO <span>(Mischia)</span></button>
                 <button class="huge-btn" onclick="selectAction('SCHIVATA')">SCHIVATA <span>(Dodge)</span></button>
-                <button class="huge-btn" onclick="selectAction('ABILITÀ')">ABILITÀ <span>(Cura, Hack, Scoprire)</span></button>
-                
                 <button class="huge-btn" style="border-color: #aaa;" onclick="selectAction('GESTIONE STATI')">GESTIONE STATI <span>(Targato, Inconscio, Rimosso...)</span></button>
             </div>
             <button class="btn-status" onclick="goToStep('step-unit')">ANNULLA</button>
@@ -93,8 +112,249 @@
         <div id="step-states" class="step-container">
             <div class="grid-buttons">
                 <button class="huge-btn" style="background:#003300; border-color:#00ff00;" onclick="applyState('ACTIVE')">ATTIVO / RIPRISTINATO <span>(Rimuove malus/stati)</span></button>
-                
                 <button class="huge-btn" style="background:#330000; border-color:#ff0000;" onclick="applyState('DEAD')">MORTO / RIMOSSO <span>(Rimuove la truppa)</span></button>
                 <button class="huge-btn" style="background:#331a00; border-color:#ffaa00;" onclick="applyState('UNCONSCIOUS')">INCONSCIO <span>(A terra, curabile)</span></button>
+                <button class="huge-btn" style="border-color:#00d2ff;" onclick="applyState('TARGETED')">TARGATO <span>(Targeted)</span></button>
+                <button class="huge-btn" style="border-color:#aa00ff;" onclick="applyState('ISOLATED')">ISOLATO <span>(Isolated / No Ordini)</span></button>
+            </div>
+            <button class="btn-status" onclick="goToStep('step-action')">ANNULLA</button>
+        </div>
+
+        <div id="step-weapon" class="step-container">
+            <div class="grid-buttons" id="weapon-buttons-container">
+                </div>
+            <button class="btn-status" onclick="goToStep('step-action')">INDIETRO</button>
+        </div>
+
+        <div id="step-wait-aro" class="step-container">
+            <div class="grid-buttons" style="justify-content: center;">
+                <div style="text-align:center; padding: 20px; border: 2px dashed var(--nomad-orange); color: #fff;">
+                    <h1 style="color:var(--nomad-red); font-size:40px; margin:0;">IN ATTESA DI ARO</h1>
+                    <p>L'Avversario sta dichiarando le reazioni sulla sua app...</p>
+                    <div class="spinner" style="font-size: 50px; margin-top:20px;">⏳</div>
+                </div>
+                <button class="huge-btn" style="background:#004400; border-color:#00ff00;" onclick="goToStep('step-second-half')">PROSEGUI (TEST) <br><span>(L'avversario ha dichiarato)</span></button>
+            </div>
+            <button class="btn-status" onclick="goToStep('step-group')">CANCELLA ORDINE</button>
+        </div>
+
+        <div id="step-second-half" class="step-container">
+            <div class="grid-buttons">
+                <button class="huge-btn" onclick="goToStep('step-burst')">ATTACCO BS <span>(Seconda Metà)</span></button>
+                <button class="huge-btn" onclick="goToStep('step-burst')">SCHIVATA <span>(Dodge)</span></button>
+                <button class="huge-btn" onclick="goToStep('step-group')">SOLO MOVIMENTO <span>(Fine Ordine)</span></button>
+            </div>
+            <button class="btn-status" onclick="goToStep('step-group')">ABORTISCI</button>
+        </div>
+
+        <div id="step-burst" class="step-container">
+            <div style="color:#fff; text-align:center; font-size:20px;">SUDDIVISIONE DADI CONTRO BERSAGLI</div>
+            <div id="burst-container" style="margin-top:20px;">
+                <p style="color:#aaa; text-align:center;">Lavori in corso per il calcolo matematico...</p>
+            </div>
+            <button class="btn-status" onclick="goToStep('step-group')">FINE ATTIVAZIONE</button>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.roster = [];
+        window.currentOrder = { unit: null, action: "", weapon: "", mods: [] };
+
+        // --- SETUP ROSTER ---
+        window.onload = () => {
+            if(!window.masterNomadsDatabase) return;
+            const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
+            const groupSelect = document.getElementById('groupSelect');
+            gruppiUnici.forEach(nome => groupSelect.innerHTML += `<option value="${nome}">${nome}</option>`);
+            refreshSavedRostersList(); // Carica tendina salvataggi all'avvio
+        };
+
+        window.updateProfileSelect = () => {
+            const groupName = document.getElementById('groupSelect').value;
+            const profileSelect = document.getElementById('profileSelect');
+            profileSelect.innerHTML = '<option value="">-- 2. SELEZIONA PROFILO --</option>';
+            profileSelect.disabled = !groupName;
+            if (groupName) {
+                window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName).forEach(unit => {
+                    const arma = unit.arma.split('/')[0].split(',')[0].trim();
+                    profileSelect.innerHTML += `<option value="${unit.id_profilo}">[${arma}] - BS:${unit.bs}</option>`;
+                });
+            }
+        };
+
+        window.addUnitToRoster = () => {
+            const idProfilo = document.getElementById('profileSelect').value;
+            const cGroup = document.getElementById('combatGroup').value;
+            let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
+            if (!idProfilo) return alert("Seleziona un profilo!");
+            
+            const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
+            if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
+            
+            const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, combatGroup: parseInt(cGroup), state: "ACTIVE", player: "G_NOMADS" };
+            window.roster.push(unit); document.getElementById('unitAlias').value = ""; renderRoster();
+        };
+
+        window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
+
+        window.renderRoster = () => {
+            const container = document.getElementById('localRoster');
+            if(window.roster.length === 0) {
+                container.innerHTML = "<i>Nessuna unità schierata.</i>";
+                return;
+            }
+            container.innerHTML = "<b style='color:var(--nomad-orange);'>UNITÀ PRONTE:</b><br>";
+            window.roster.forEach((u, i) => {
+                const armaCorta = u.weapon.split('/')[0].split(',')[0];
+                container.innerHTML += `
+                    <div class="roster-item">
+                        <div><b style="color:#00ff00;">[G${u.combatGroup}]</b> <b>${u.alias}</b> <span style="color:#aaa;">| ${armaCorta}</span></div>
+                        <div class="del-btn" onclick="removeUnit(${i})">X</div>
+                    </div>`;
+            });
+        };
+
+        // --- GESTIONE ARCHIVIO SQUADRE (SALVA / CARICA / ELIMINA) ---
+        window.saveRoster = () => {
+            const name = document.getElementById('saveName').value.trim().toUpperCase();
+            if(!name || window.roster.length === 0) return alert("Inserisci un nome valido e aggiungi almeno un'unità alla lista!");
+            
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            savedData[name] = window.roster;
+            localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+            
+            document.getElementById('saveName').value = "";
+            refreshSavedRostersList();
+            alert(`Squadra "${name}" salvata con successo!`);
+        };
+
+        window.loadRoster = () => {
+            const name = document.getElementById('savedRostersSelect').value;
+            if(!name) return;
+            
+            const loadedRoster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || [];
+            
+            // Retrocompatibilità: se i vecchi salvataggi non avevano i gruppi, li mette nel Gruppo 1
+            window.roster = loadedRoster.map(u => ({
+                ...u,
+                combatGroup: u.combatGroup || 1,
+                state: u.state || "ACTIVE"
+            }));
+            
+            renderRoster();
+        };
+
+        window.deleteRoster = () => {
+            const name = document.getElementById('savedRostersSelect').value;
+            if(!name) return alert("Seleziona una squadra dalla tendina prima di eliminarla.");
+            
+            if(confirm(`Sei sicuro di voler eliminare la squadra salvata "${name}"?`)) {
+                const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+                delete savedData[name];
+                localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+                refreshSavedRostersList();
+            }
+        };
+
+        window.refreshSavedRostersList = () => {
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            const select = document.getElementById('savedRostersSelect');
+            select.innerHTML = '<option value="">-- SQUADRE SALVATE --</option>';
+            Object.keys(savedData).forEach(n => {
+                const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
+                select.appendChild(opt);
+            });
+        };
+
+        // --- AVVIO BATTAGLIA ---
+        window.startBattle = async () => { 
+            if(window.roster.length === 0) return alert("Schiera almeno un'unità!");
+            document.getElementById('setup').style.display='none'; 
+            document.getElementById('battle').style.display='flex'; 
+            for (let unit of window.roster) await setDoc(doc(db, "sessione_corrente", unit.alias), unit);
+        };
+
+        // --- MACCHINA A STATI UI BATTAGLIA ---
+        window.goToStep = (stepId, param = null) => {
+            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active-step'));
+            document.getElementById(stepId).classList.add('active-step');
+
+            const header = document.getElementById('battle-header');
+
+            if (stepId === 'step-group') header.innerText = "SELEZIONA GRUPPO DI COMBATTIMENTO";
+            
+            if (stepId === 'step-unit') {
+                header.innerText = `UNITÀ - GRUPPO ${param}`;
+                const container = document.getElementById('unit-buttons-container');
+                container.innerHTML = "";
                 
+                const unitsInGroup = window.roster.filter(u => u.combatGroup === param);
+                if(unitsInGroup.length === 0) container.innerHTML = "<p style='color:red; text-align:center;'>Nessuna unità in questo gruppo.</p>";
                 
+                unitsInGroup.forEach(u => {
+                    let btnColor = u.state === 'DEAD' ? '#330000' : (u.state === 'UNCONSCIOUS' ? '#331a00' : '#1a0000');
+                    let statusLabel = u.state !== 'ACTIVE' ? `[${u.state}]` : '';
+                    container.innerHTML += `<button class="huge-btn" style="background:${btnColor};" onclick="selectUnit('${u.alias}')">${u.alias} <br><span>${statusLabel} (${u.name})</span></button>`;
+                });
+            }
+        };
+
+        window.selectUnit = (alias) => {
+            window.currentOrder.unit = window.roster.find(u => u.alias === alias);
+            document.getElementById('battle-header').innerText = `ORDINE PER: ${alias}`;
+            goToStep('step-action');
+        };
+
+        window.selectAction = (action) => {
+            window.currentOrder.action = action;
+            
+            if (action === 'GESTIONE STATI') {
+                document.getElementById('battle-header').innerText = `AGGIORNA STATO: ${window.currentOrder.unit.alias}`;
+                goToStep('step-states');
+            } 
+            else if (action === 'ATTACCO BS') {
+                document.getElementById('battle-header').innerText = "SELEZIONA ARMA";
+                const container = document.getElementById('weapon-buttons-container');
+                container.innerHTML = "";
+                
+                const allWeapons = window.currentOrder.unit.weapon.replace('/', ',').split(',');
+                allWeapons.forEach(w => {
+                    const wClean = w.trim();
+                    container.innerHTML += `<button class="huge-btn" onclick="declareAttack('${wClean}')">${wClean}</button>`;
+                });
+                goToStep('step-weapon');
+            } 
+            else if (action === 'MOVIMENTO') {
+                document.getElementById('battle-header').innerText = "MOVIMENTO - IN ATTESA ARO";
+                goToStep('step-wait-aro');
+            } 
+            else {
+                alert("Funzione in sviluppo!");
+            }
+        };
+
+        window.applyState = async (newState) => {
+            const unitAlias = window.currentOrder.unit.alias;
+            const u = window.roster.find(unit => unit.alias === unitAlias);
+            if(u) u.state = newState;
+            await updateDoc(doc(db, "sessione_corrente", unitAlias), { state: newState });
+            goToStep('step-group');
+        };
+
+        window.declareAttack = async (weaponName) => {
+            window.currentOrder.weapon = weaponName;
+            document.getElementById('battle-header').innerText = "ATTACCO DICHIARATO - IN ATTESA ARO";
+            goToStep('step-wait-aro');
+        };
+
+    </script>
+</body>
+</html>
