@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v10.0</title>
+    <title>NOMADS TACTICAL TERMINAL v10.5</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -29,13 +29,13 @@
         .btn-small { padding: 10px; font-size: 18px; margin-top: 5px; clip-path: none; border-radius: 3px; }
         
         /* BOTTONI ENORMI PER LA BATTAGLIA */
-        .grid-buttons { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .grid-buttons { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto; padding-bottom: 10px;}
         .huge-btn { flex: 1; min-height: 80px; background: #1a0000; border: 2px solid var(--nomad-red); color: #fff; font-family: 'Teko', sans-serif; font-size: 32px; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: 0.2s; border-radius: 5px; padding: 10px; text-align: center; line-height: 1.1; }
         .huge-btn:active { background: var(--nomad-orange); color: #000; transform: scale(0.98); }
         .huge-btn span { font-family: 'Share Tech Mono', monospace; font-size: 14px; color: var(--nomad-orange); font-weight: normal; margin-top: 5px; }
 
         .flex-row { display: flex; gap: 10px; align-items: center; }
-        .step-container { display: none; flex-direction: column; height: 100%; flex-grow: 1; overflow-y: auto;}
+        .step-container { display: none; flex-direction: column; height: 100%; flex-grow: 1;}
         .active-step { display: flex; }
         
         #battle-header { text-align: center; color: var(--nomad-orange); font-size: 18px; font-weight: bold; margin-bottom: 10px; padding: 10px; background: #222; border: 1px dashed var(--nomad-orange); }
@@ -90,6 +90,7 @@
                 <button class="huge-btn" onclick="goToStep('step-unit', 1)">GRUPPO 1 <br><span>(Ordini Principali)</span></button>
                 <button class="huge-btn" onclick="goToStep('step-unit', 2)">GRUPPO 2 <br><span>(Ordini Secondari)</span></button>
             </div>
+            <button class="btn-status" onclick="location.reload()" style="margin-top: 20px;">TORNA AL SETUP INIZIALE</button>
         </div>
 
         <div id="step-unit" class="step-container">
@@ -161,31 +162,55 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
+        // INSERISCI QUI I DATI DEL TUO DATABASE FIREBASE
+        const firebaseConfig = { 
+            apiKey: "IL_TUO_API", 
+            projectId: "IL_TUO_PROGETTO" 
+        };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         window.roster = [];
         window.currentOrder = { unit: null, action: "", weapon: "", mods: [] };
 
-        // --- SETUP ROSTER ---
+        // --- SETUP ROSTER: METODO CORAZZATO DOM NATIVO ---
         window.onload = () => {
-            if(!window.masterNomadsDatabase) return;
+            if(!window.masterNomadsDatabase) return alert("Errore: Database non caricato!");
+            
             const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
             const groupSelect = document.getElementById('groupSelect');
-            gruppiUnici.forEach(nome => groupSelect.innerHTML += `<option value="${nome}">${nome}</option>`);
-            refreshSavedRostersList(); // Carica tendina salvataggi all'avvio
+            
+            gruppiUnici.forEach(nome => {
+                const opt = document.createElement('option');
+                opt.value = nome;
+                opt.textContent = nome;
+                groupSelect.appendChild(opt);
+            });
+            
+            refreshSavedRostersList(); 
         };
 
         window.updateProfileSelect = () => {
             const groupName = document.getElementById('groupSelect').value;
             const profileSelect = document.getElementById('profileSelect');
-            profileSelect.innerHTML = '<option value="">-- 2. SELEZIONA PROFILO --</option>';
+            
+            // Svuota e resetta la tendina in modo sicuro
+            profileSelect.innerHTML = '';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "";
+            defaultOpt.textContent = "-- 2. SELEZIONA PROFILO --";
+            profileSelect.appendChild(defaultOpt);
+            
             profileSelect.disabled = !groupName;
+            
             if (groupName) {
-                window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName).forEach(unit => {
+                const profili = window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName);
+                profili.forEach(unit => {
+                    const opt = document.createElement('option');
+                    opt.value = unit.id_profilo;
                     const arma = unit.arma.split('/')[0].split(',')[0].trim();
-                    profileSelect.innerHTML += `<option value="${unit.id_profilo}">[${arma}] - BS:${unit.bs}</option>`;
+                    opt.textContent = `[${arma}] - BS:${unit.bs} ARM:${unit.arm}`;
+                    profileSelect.appendChild(opt);
                 });
             }
         };
@@ -194,13 +219,19 @@
             const idProfilo = document.getElementById('profileSelect').value;
             const cGroup = document.getElementById('combatGroup').value;
             let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
-            if (!idProfilo) return alert("Seleziona un profilo!");
+            if (!idProfilo) return alert("Seleziona prima un profilo dalla tendina 2!");
             
             const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
             if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
             
+            if (window.roster.some(u => u.alias === aliasInput)) {
+                return alert(`Hai già schierato un'unità chiamata "${aliasInput}". Aggiungi un SOPRANNOME per distinguerla!`);
+            }
+            
             const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, combatGroup: parseInt(cGroup), state: "ACTIVE", player: "G_NOMADS" };
-            window.roster.push(unit); document.getElementById('unitAlias').value = ""; renderRoster();
+            window.roster.push(unit); 
+            document.getElementById('unitAlias').value = ""; 
+            renderRoster();
         };
 
         window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
@@ -222,7 +253,7 @@
             });
         };
 
-        // --- GESTIONE ARCHIVIO SQUADRE (SALVA / CARICA / ELIMINA) ---
+        // --- GESTIONE ARCHIVIO SQUADRE ---
         window.saveRoster = () => {
             const name = document.getElementById('saveName').value.trim().toUpperCase();
             if(!name || window.roster.length === 0) return alert("Inserisci un nome valido e aggiungi almeno un'unità alla lista!");
@@ -242,7 +273,6 @@
             
             const loadedRoster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || [];
             
-            // Retrocompatibilità: se i vecchi salvataggi non avevano i gruppi, li mette nel Gruppo 1
             window.roster = loadedRoster.map(u => ({
                 ...u,
                 combatGroup: u.combatGroup || 1,
@@ -267,7 +297,9 @@
         window.refreshSavedRostersList = () => {
             const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
             const select = document.getElementById('savedRostersSelect');
-            select.innerHTML = '<option value="">-- SQUADRE SALVATE --</option>';
+            select.innerHTML = '';
+            const defOpt = document.createElement('option'); defOpt.value = ""; defOpt.textContent = "-- SQUADRE SALVATE --";
+            select.appendChild(defOpt);
             Object.keys(savedData).forEach(n => {
                 const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
                 select.appendChild(opt);
