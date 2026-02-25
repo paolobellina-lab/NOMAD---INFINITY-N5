@@ -1,17 +1,19 @@
 // 13.1 modificato grafica range e assegnazione b
 // 14.1 aggiunto vai programmi hacker
 //15.1 aggiunto gittata armi variabile in base all'arma selezionata
+//16.1 creato lista armi esterna
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v15.1</title>
+    <title>NOMADS TACTICAL TERMINAL v16.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
 
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@500;700&display=swap" rel="stylesheet">
     <script src="nomads_db.js"></script>
+<script src="weapons_db.js"></script>
 
 
     <style>
@@ -186,15 +188,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- DATABASE FASCE ARMI (Puoi aggiungere tutte quelle che vuoi) ---
-        window.weaponDB = {
-            "COMBI RIFLE": [ { label: "0-16\"", mod: 3 }, { label: "16-32\"", mod: -3 }, { label: "32-48\"", mod: -6 } ],
-            "MULTI RIFLE": [ { label: "0-16\"", mod: 3 }, { label: "16-32\"", mod: -3 }, { label: "32-48\"", mod: -6 } ],
-            "HMG": [ { label: "0-8\"", mod: -3 }, { label: "8-16\"", mod: 0 }, { label: "16-32\"", mod: 3 }, { label: "32-48\"", mod: -3 } ],
-            "BOARDING SHOTGUN": [ { label: "0-8\"", mod: 3 }, { label: "8-16\"", mod: 0 }, { label: "16-24\"", mod: -3 } ],
-            "MULTI SNIPER RIFLE": [ { label: "0-16\"", mod: -3 }, { label: "16-48\"", mod: 3 }, { label: "48-96\"", mod: -3 } ],
-            "DEFAULT": [ { label: "0-8\"", mod: 3 }, { label: "8-16\"", mod: 0 }, { label: "16-32\"", mod: -3 }, { label: "32-48\"", mod: -6 } ]
-        };
+        if(!window.masterWeaponsDatabase) {
+            console.error("ATTENZIONE: File weapons_db.js non caricato!");
+        }
 
         window.roster = [];
         window.currentOrder = { unit: null, action: "", weapon: "", target: null };
@@ -235,12 +231,12 @@
             renderTargetsAllocation();
         };
 
-        // Funzione di servizio per trovare l'arma nel DB
+        // Funzione di servizio per trovare l'arma nel DB ESTERNO
         function getWeaponBands(weaponName) {
-            if(!weaponName) return window.weaponDB["DEFAULT"];
+            if(!weaponName || !window.masterWeaponsDatabase) return window.masterWeaponsDatabase["DEFAULT"];
             let upperName = weaponName.toUpperCase();
-            let matchedKey = Object.keys(window.weaponDB).find(k => upperName.includes(k));
-            return matchedKey ? window.weaponDB[matchedKey] : window.weaponDB["DEFAULT"];
+            let matchedKey = Object.keys(window.masterWeaponsDatabase).find(k => upperName.includes(k));
+            return matchedKey ? window.masterWeaponsDatabase[matchedKey] : window.masterWeaponsDatabase["DEFAULT"];
         }
         window.currentOrder = { unit: null, action: "", weapon: "", target: null };
         window.manualCover = false;
