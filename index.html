@@ -21,7 +21,8 @@
 //16.1 creato lista armi esterna
 //17.1 inserito valori completi arma 
 //18.1 INSERITO bersagli multipli
-//18.2 sistemato errori
+//18.3 sistemato errori
+//19.1 cambiato interfaccia selezione bersagli e aggiunto regoli profili akerabili
 */
         html { overscroll-behavior: none; }
         :root {
@@ -72,7 +73,7 @@
 
    <div style="position: relative;">
         <h2>-- NOMAD DATANET --</h2>
-        <span style="position: absolute; right: 5px; bottom: 20px; font-size: 14px; font-family: 'Share Tech Mono', monospace; color: var(--nomad-orange); font-weight: bold; text-shadow: none; letter-spacing: normal;">v18.2</span>
+        <span style="position: absolute; right: 5px; bottom: 20px; font-size: 14px; font-family: 'Share Tech Mono', monospace; color: var(--nomad-orange); font-weight: bold; text-shadow: none; letter-spacing: normal;">v19.1</span>
     </div>
     
     <div id="setup">
@@ -138,24 +139,19 @@
         </div>
 
         <div id="step-wait-aro" class="step-container">
-            <div class="grid-buttons" style="justify-content: flex-start;">
-                <div style="text-align:center; padding: 10px; border: 2px dashed var(--nomad-orange); color: #fff; margin-bottom: 10px;">
-                    <h2 style="color:var(--nomad-red); font-size:24px; margin:0; border:none; text-shadow:none;">FASE REATTIVA</h2>
-                    <p style="font-size: 14px; margin:0;">Seleziona tutti i nemici che dichiarano ARO</p>
-                </div>
-                
-                <h3 style="color:var(--nomad-orange); margin:0; font-size:18px;">AGGIUNGI BERSAGLIO:</h3>
-                <div class="flex-row">
-                    <select id="targetSelect" style="flex:2; padding:10px;"></select>
-                    <button class="btn-nomad btn-small" style="flex:1;" onclick="addTargetToList()">AGGIUNGI</button>
-                </div>
-
-                <div id="selected-targets-list" style="margin-top:15px; background:rgba(0,0,0,0.3); padding:10px; border-radius:5px; min-height:50px;">
-                    <i style="color:#666; font-size:12px;">Nessun bersaglio selezionato...</i>
-                </div>
-
-                <button class="huge-btn" style="background:#004400; border-color:#00ff00; min-height: 60px; margin-top:20px;" onclick="confirmMultiAro()">CONFERMA E ASSEGNA B <span>(Vai al Calcolo)</span></button>
+            <div style="text-align:center; padding: 10px; border: 2px dashed var(--nomad-orange); color: #fff; margin-bottom: 10px;">
+                <h2 style="color:var(--nomad-red); font-size:24px; margin:0; border:none; text-shadow:none;">SELEZIONA BERSAGLI</h2>
+                <p style="font-size: 14px; margin:0;" id="target-filter-desc">Seleziona i nemici validi</p>
             </div>
+            
+            <div id="selected-targets-list" style="margin-bottom:10px; background:rgba(0,0,0,0.3); padding:10px; border-radius:5px; min-height:50px;">
+                <i style="color:#666; font-size:12px;">Nessun bersaglio selezionato...</i>
+            </div>
+
+            <div class="grid-buttons" id="enemy-target-buttons" style="flex-grow:1; overflow-y:auto; border: 1px solid var(--nomad-red); padding:5px; border-radius: 5px;">
+                </div>
+
+            <button class="huge-btn" style="background:#004400; border-color:#00ff00; min-height: 60px; margin-top:10px; flex:none;" onclick="confirmMultiAro()">CONFERMA BERSAGLI <span>(Vai al Calcolo)</span></button>
             <button class="btn-status" onclick="goToStep('step-group')">ANNULLA ORDINE</button>
         </div>
 
