@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v12.0</title>
+    <title>NOMADS TACTICAL TERMINAL v12.1</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -52,6 +52,19 @@
     <h2>-- TUNGUSKA DATANET --</h2>
     
     <div id="setup">
+        <div class="section">
+            <h3 style="margin-top:0; color: var(--nomad-orange);">ARCHIVIO SQUADRE</h3>
+            <div class="flex-row">
+                <select id="savedRostersSelect" style="flex: 2;"><option value="">-- SQUADRE SALVATE --</option></select>
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="loadRoster()">CARICA</button>
+                <button class="btn-status btn-small" style="flex: 1; margin-top: 5px; padding: 10px;" onclick="deleteRoster()">ELIMINA</button>
+            </div>
+            <div class="flex-row">
+                <input type="text" id="saveName" placeholder="NOME NUOVA SQUADRA" style="flex: 2;">
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="saveRoster()">SALVA LISTA</button>
+            </div>
+        </div>
+
         <div class="section">
             <h3 style="margin-top:0; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
             <div class="flex-row">
@@ -159,15 +172,12 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // CONFIGURAZIONE FIREBASE
         const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         window.roster = [];
         window.currentOrder = { unit: null, action: "", weapon: "", target: null };
-        
-        // Variabili Telemetria Manuale
         window.manualCover = false;
         window.manualDistance = 16;
 
@@ -178,9 +188,10 @@
             const groupSelect = document.getElementById('groupSelect');
             gruppiUnici.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.textContent = nome; groupSelect.appendChild(opt); });
             
-            // Popola anche la finta lista nemici con l'intero database
             const targetSelect = document.getElementById('targetSelect');
             window.masterNomadsDatabase.forEach(u => { const opt = document.createElement('option'); opt.value = u.id_profilo; opt.textContent = u.nome; targetSelect.appendChild(opt); });
+            
+            refreshSavedRostersList(); // Carica tendina salvataggi all'avvio
         };
 
         window.updateProfileSelect = () => {
@@ -221,12 +232,63 @@
             });
         };
 
+        // --- GESTIONE ARCHIVIO SQUADRE (SALVA / CARICA / ELIMINA) ---
+        window.saveRoster = () => {
+            const name = document.getElementById('saveName').value.trim().toUpperCase();
+            if(!name || window.roster.length === 0) return alert("Inserisci un nome valido e aggiungi almeno un'unità alla lista!");
+            
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            savedData[name] = window.roster;
+            localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+            
+            document.getElementById('saveName').value = "";
+            refreshSavedRostersList();
+            alert(`Squadra "${name}" salvata con successo!`);
+        };
+
+        window.loadRoster = () => {
+            const name = document.getElementById('savedRostersSelect').value;
+            if(!name) return;
+            
+            const loadedRoster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || [];
+            
+            window.roster = loadedRoster.map(u => ({
+                ...u,
+                combatGroup: u.combatGroup || 1,
+                state: u.state || "ACTIVE"
+            }));
+            
+            renderRoster();
+        };
+
+        window.deleteRoster = () => {
+            const name = document.getElementById('savedRostersSelect').value;
+            if(!name) return alert("Seleziona una squadra dalla tendina prima di eliminarla.");
+            
+            if(confirm(`Sei sicuro di voler eliminare la squadra salvata "${name}"?`)) {
+                const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+                delete savedData[name];
+                localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+                refreshSavedRostersList();
+            }
+        };
+
+        window.refreshSavedRostersList = () => {
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            const select = document.getElementById('savedRostersSelect');
+            select.innerHTML = '<option value="">-- SQUADRE SALVATE --</option>';
+            Object.keys(savedData).forEach(n => {
+                const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
+                select.appendChild(opt);
+            });
+        };
+
+        // --- MACCHINA A STATI ---
         window.startBattle = async () => { 
             if(window.roster.length === 0) return alert("Schiera un'unità!");
             document.getElementById('setup').style.display='none'; document.getElementById('battle').style.display='flex'; 
         };
 
-        // --- MACCHINA A STATI ---
         window.goToStep = (stepId, param = null) => {
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active-step'));
             document.getElementById(stepId).classList.add('active-step');
@@ -263,12 +325,8 @@
 
         window.confirmAro = () => {
             const targetId = document.getElementById('targetSelect').value;
-            if(targetId) {
-                // Recupera il profilo del bersaglio dal DB
-                window.currentOrder.target = window.masterNomadsDatabase.find(u => u.id_profilo === targetId);
-            } else {
-                window.currentOrder.target = null; // Spara a vuoto o bersaglio senza skill
-            }
+            if(targetId) { window.currentOrder.target = window.masterNomadsDatabase.find(u => u.id_profilo === targetId); } 
+            else { window.currentOrder.target = null; }
             goToStep('step-second-half');
         };
 
@@ -292,7 +350,6 @@
             if(finalAction) window.currentOrder.action = finalAction;
             document.getElementById('calc-result').style.display = 'none';
             
-            // Reset Telemetria Manuale
             window.manualCover = false;
             document.getElementById('btn-cover').style.background = '#1a0000'; document.getElementById('btn-cover').style.color = '#fff';
             
@@ -300,22 +357,19 @@
             const autoLog = document.getElementById('auto-mods-log');
             autoLog.innerHTML = "";
 
-            // LETTURA AUTOMATICA DELLE ABILITÀ
             const unitSkills = window.currentOrder.unit.skills.toLowerCase();
             const targetSkills = window.currentOrder.target ? window.currentOrder.target.skills.toLowerCase() : "";
 
             if (window.currentOrder.action.includes('ATTACCO BS')) {
                 distDiv.style.display = 'block';
-                
                 if(targetSkills.includes("mimetism (-6)")) autoLog.innerHTML += "⚠️ Bersaglio Mimetico (-6 BS)<br>";
                 else if(targetSkills.includes("mimetism (-3)") || targetSkills.includes("camouflage")) autoLog.innerHTML += "⚠️ Bersaglio Mimetico (-3 BS)<br>";
                 else autoLog.innerHTML += "Nessun sistema difensivo rilevato sul bersaglio.<br>";
-                
             } else if (window.currentOrder.action.includes('CORPO A CORPO')) {
                 distDiv.style.display = 'none';
                 if(unitSkills.includes("martial arts")) autoLog.innerHTML += "✅ Arti Marziali Attive (+3 CC)<br>";
             } else {
-                distDiv.style.display = 'none'; // Tiro Salvezza non usa lo slider distanza
+                distDiv.style.display = 'none';
             }
             
             goToStep('step-modifiers');
@@ -330,17 +384,13 @@
 
             if (order.action.includes('ATTACCO BS')) { 
                 base = order.unit.bs; attrName = "BS"; 
-                
-                // 1. Calcolo Copertura (Manuale)
                 if(window.manualCover) { modTotal -= 3; modLog += `> Copertura Bersaglio: <b style="color:#ff3333;">-3</b><br>`; }
                 
-                // 2. Calcolo Distanza (Mock logica generica fucile, verrà sostituita dal DB armi)
                 let dist = window.manualDistance;
                 let rangeMod = (dist <= 16) ? +3 : (dist <= 32 ? -3 : -6);
                 modTotal += rangeMod;
                 modLog += `> Gittata Arma (${dist}"): <b style="color:${rangeMod>0?'#00ff00':'#ff3333'};">${rangeMod>0?'+':''}${rangeMod}</b><br>`;
                 
-                // 3. Calcolo Automatico Mimetismo (Dal DB Avversario)
                 if(targetSkills.includes("mimetism (-6)")) { modTotal -= 6; modLog += `> Mimetismo (Avversario): <b style="color:#ff3333;">-6</b><br>`; }
                 else if(targetSkills.includes("mimetism (-3)") || targetSkills.includes("camouflage")) { modTotal -= 3; modLog += `> Mimetismo (Avversario): <b style="color:#ff3333;">-3</b><br>`; }
             }
