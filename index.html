@@ -602,6 +602,21 @@
                     base = order.unit.cc; attrName = "CC"; 
                     if(unitSkills.includes("martial arts")) { modTotal += 3; modLog += `> Arti Marziali: <b style="color:#00ff00;">+3</b><br>`; }
                 }
+                else if (order.action.includes('TIRO SALVEZZA')) { 
+                    base = order.unit.arm; attrName = "ARM"; 
+                    if(window.manualCover) { modTotal += 3; modLog += `> Bonus Copertura: <b style="color:#00ff00;">+3</b><br>`; }
+                }
+                else if (order.action.includes('HACKING')) { 
+                    base = order.unit.wip; attrName = "WIP"; 
+                    
+                    // Applica il bonus del programma se presente (+3 WIP)
+                    if(order.weapon === 'SPOTLIGHT' || order.weapon === 'TRINITY') {
+                        modTotal += 3; modLog += `> Prog. ${order.weapon}: <b style="color:#00ff00;">+3</b><br>`;
+                    }
+
+                    if(tgt.skills.includes("tinbot: firewall (-6)")) { modTotal -= 6; modLog += `> Firewall Pesante: <b style="color:#ff3333;">-6</b><br>`; }
+                    else if(tgt.skills.includes("tinbot: firewall (-3)") || tgt.skills.includes("ecm: hacker (-3)")) { modTotal -= 3; modLog += `> ECM/Firewall: <b style="color:#ff3333;">-3</b><br>`; }
+                }
 
                 let targetNum = base + modTotal;
                 resHtml += `
@@ -620,11 +635,6 @@
             resHtml += `</div>`;
             document.getElementById('calc-result').innerHTML = resHtml; document.getElementById('calc-result').style.display = 'block';
         };
-            resHtml += `</div>`;
-            const resBox = document.getElementById('calc-result');
-            resBox.innerHTML = resHtml; resBox.style.display = 'block';
-        };
-
     </script>
 </body>
 </html>
