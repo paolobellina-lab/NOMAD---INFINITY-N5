@@ -2,12 +2,13 @@
 // 14.1 aggiunto vai programmi hacker
 //15.1 aggiunto gittata armi variabile in base all'arma selezionata
 //16.1 creato lista armi esterna
+//17.1 inserito valori completi arma 
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v16.1</title>
+    <title>NOMADS TACTICAL TERMINAL v17.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
 
@@ -66,7 +67,7 @@
 
    <div style="position: relative;">
         <h2>-- NOMAD DATANET --</h2>
-        <span style="position: absolute; right: 5px; bottom: 20px; font-size: 14px; font-family: 'Share Tech Mono', monospace; color: var(--nomad-orange); font-weight: bold; text-shadow: none; letter-spacing: normal;">v15.1</span>
+        <span style="position: absolute; right: 5px; bottom: 20px; font-size: 14px; font-family: 'Share Tech Mono', monospace; color: var(--nomad-orange); font-weight: bold; text-shadow: none; letter-spacing: normal;">v17.1</span>
     </div>
     
     <div id="setup">
@@ -231,13 +232,13 @@
             renderTargetsAllocation();
         };
 
-        // Funzione di servizio per trovare l'arma nel DB ESTERNO
-        function getWeaponBands(weaponName) {
+        // Funzione per trovare il Profilo completo dell'Arma nel DB ESTERNO
+        window.getWeaponProfile = (weaponName) => {
             if(!weaponName || !window.masterWeaponsDatabase) return window.masterWeaponsDatabase["DEFAULT"];
             let upperName = weaponName.toUpperCase();
             let matchedKey = Object.keys(window.masterWeaponsDatabase).find(k => upperName.includes(k));
             return matchedKey ? window.masterWeaponsDatabase[matchedKey] : window.masterWeaponsDatabase["DEFAULT"];
-        }
+        };
         window.currentOrder = { unit: null, action: "", weapon: "", target: null };
         window.manualCover = false;
         window.manualDistance = 16;
@@ -480,7 +481,7 @@
             let remainingB = window.totalBurst - currentAllocated;
             let isAttackBS = window.currentOrder.action.includes('ATTACCO BS');
             
-            let wpnBands = getWeaponBands(window.currentOrder.weapon);
+            let wpnProfile = window.getWeaponProfile(window.currentOrder.weapon);
 
             window.combatTargets.forEach((tgt, index) => {
                 let coverColor = tgt.cover ? 'var(--nomad-orange)' : '#1a0000';
@@ -489,18 +490,14 @@
                 let autoLog = "";
                 if(tgt.skills.includes("mimetism (-6)")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Mimetico (-6)</span>`;
                 else if(tgt.skills.includes("mimetism (-3)") || tgt.skills.includes("camouflage")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Mimetico (-3)</span>`;
-                if(tgt.skills.includes("tinbot: firewall (-6)")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Firewall (-6)</span>`;
-                else if(tgt.skills.includes("tinbot: firewall (-3)") || tgt.skills.includes("ecm: hacker (-3)")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Firewall (-3)</span>`;
-
-                // --- GENERAZIONE DINAMICA DELLA BARRA RANGE ---
+                
                 let segmentsHtml = "";
                 let labelsHtml = "";
-                wpnBands.forEach((band, bIdx) => {
-                    let colorClass = "seg-2"; // 0
-                    if(band.mod > 0) colorClass = "seg-1"; // +3
-                    else if(band.mod === -3) colorClass = "seg-3"; // -3
-                    else if(band.mod < -3) colorClass = "seg-4"; // -6
-                    
+                wpnProfile.bands.forEach((band, bIdx) => {
+                    let colorClass = "seg-2"; 
+                    if(band.mod > 0) colorClass = "seg-1"; 
+                    else if(band.mod === -3) colorClass = "seg-3"; 
+                    else if(band.mod < -3) colorClass = "seg-4"; 
                     let isActive = (tgt.rangeIndex === bIdx) ? "active" : "";
                     
                     segmentsHtml += `<div class="range-seg ${colorClass} ${isActive}" onclick="setTargetRange(${index}, ${bIdx}, ${band.mod})">${band.mod > 0 ? '+'+band.mod : band.mod}</div>`;
@@ -510,12 +507,8 @@
                 let rangeHtml = isAttackBS ? `
                     <div style="margin-top:15px;">
                         <span style="color:#aaa; font-size:14px;">Distanza Gittata (${window.currentOrder.weapon}):</span>
-                        <div class="range-bar">
-                            ${segmentsHtml}
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-size:11px; color:#aaa; margin-top:2px; padding:0 5px;">
-                            ${labelsHtml}
-                        </div>
+                        <div class="range-bar">${segmentsHtml}</div>
+                        <div style="display:flex; justify-content:space-between; font-size:11px; color:#aaa; margin-top:2px; padding:0 5px;">${labelsHtml}</div>
                     </div>
                 ` : "";
 
@@ -525,7 +518,6 @@
                             <b style="color:var(--nomad-orange); font-size:22px;">${tgt.name}</b>
                             ${autoLog}
                         </div>
-                        
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                             <span style="color:#fff; font-size:16px;">Assegna Dadi (B):</span>
                             <div class="burst-ctrl">
@@ -534,9 +526,7 @@
                                 <button class="burst-btn" style="opacity:${remainingB > 0 ? 1 : 0.3}" onclick="adjustTargetBurst(${index}, 1)">+</button>
                             </div>
                         </div>
-                        
                         ${rangeHtml}
-                        
                         <button class="huge-btn" style="background:${coverColor}; color:${coverText}; min-height:50px; font-size:18px; margin-top:15px; width:100%;" onclick="toggleTargetCover(${index})">COPERTURA BERSAGLIO</button>
                     </div>
                 `;
@@ -548,15 +538,17 @@
             if(finalAction) window.currentOrder.action = finalAction;
             document.getElementById('calc-result').style.display = 'none';
             
-            window.totalBurst = window.currentOrder.action.includes('ATTACCO BS') ? 3 : 1; 
+            // CARICAMENTO PROFILO ARMA DINAMICO
+            let wpnProfile = window.getWeaponProfile(window.currentOrder.weapon);
+            
+            // IL BURST ORA E' LETTO DAL DATABASE DELL'ARMA
+            window.totalBurst = window.currentOrder.action.includes('ATTACCO BS') ? wpnProfile.burst : 1; 
             window.combatTargets = [];
             
-            let wpnBands = getWeaponBands(window.currentOrder.weapon);
-            
             if (window.currentOrder.target) {
-                window.combatTargets.push({ id: window.currentOrder.target.id_profilo, name: window.currentOrder.target.nome, skills: window.currentOrder.target.skills.toLowerCase(), rangeIndex: 0, rangeMod: wpnBands[0].mod, burst: window.totalBurst, cover: false });
+                window.combatTargets.push({ id: window.currentOrder.target.id_profilo, name: window.currentOrder.target.nome, skills: window.currentOrder.target.skills.toLowerCase(), rangeIndex: 0, rangeMod: wpnProfile.bands[0].mod, burst: window.totalBurst, cover: false });
             } else {
-                window.combatTargets.push({ id: "generic1", name: "Bersaglio Primario", skills: "", rangeIndex: 0, rangeMod: wpnBands[0].mod, burst: window.totalBurst, cover: false });
+                window.combatTargets.push({ id: "generic1", name: "Bersaglio Primario", skills: "", rangeIndex: 0, rangeMod: wpnProfile.bands[0].mod, burst: window.totalBurst, cover: false });
             }
 
             document.getElementById('total-burst-display').innerText = window.totalBurst;
@@ -569,24 +561,26 @@
                 document.getElementById('add-target-btn').style.display = 'none';
             }
             
-            renderTargetsAllocation();
+            window.renderTargetsAllocation();
             goToStep('step-modifiers');
         };
 
         window.executeCalculation = () => {
             const order = window.currentOrder;
             let activeTargets = window.combatTargets.filter(t => t.burst > 0);
+            let wpnProfile = window.getWeaponProfile(order.weapon);
             
+            // Visualizza info Arma
+            let weaponInfo = order.action.includes('ATTACCO BS') ? `<br><span style="color:var(--nomad-orange); font-size:14px;">[ARMA: ${order.weapon} | DAM: ${wpnProfile.dam} | AMMO: ${wpnProfile.ammo}]</span>` : '';
+
             let resHtml = `<div style="color:#fff; line-height:1.6;">
                            <b>ATTACCANTE:</b> ${order.unit.alias}<br>
-                           <b>AZIONE:</b> ${order.action}<br>
+                           <b>AZIONE:</b> ${order.action} ${weaponInfo}<br>
                            <hr style="border-color:var(--nomad-orange);">`;
 
             if(activeTargets.length === 0) {
-                resHtml += `<p style="color:#ff3333; text-align:center; font-weight:bold;">Devi assegnare almeno 1 Dado (B) a un bersaglio!</p></div>`;
-                document.getElementById('calc-result').innerHTML = resHtml; 
-                document.getElementById('calc-result').style.display = 'block';
-                return;
+                resHtml += `<p style="color:#ff3333; text-align:center; font-weight:bold;">Assegna almeno 1 Dado (B)!</p></div>`;
+                document.getElementById('calc-result').innerHTML = resHtml; document.getElementById('calc-result').style.display = 'block'; return;
             }
 
             activeTargets.forEach(tgt => {
@@ -594,31 +588,19 @@
                 const unitSkills = order.unit.skills.toLowerCase();
 
                 if (order.action.includes('ATTACCO BS')) { 
-                    base = order.unit.bs; attrName = "BS"; 
+                    // Se l'arma usa PH (es. Granate), cambia attributo!
+                    attrName = wpnProfile.attr;
+                    base = attrName === "PH" ? order.unit.ph : order.unit.bs; 
+                    
                     if(tgt.cover) { modTotal -= 3; modLog += `> Copertura: <b style="color:#ff3333;">-3</b><br>`; }
                     modTotal += tgt.rangeMod;
-                    modLog += `> Gittata/Range: <b style="color:${tgt.rangeMod>0?'#00ff00':'#ff3333'};">${tgt.rangeMod>0?'+':''}${tgt.rangeMod}</b><br>`;
+                    modLog += `> Gittata: <b style="color:${tgt.rangeMod>0?'#00ff00':'#ff3333'};">${tgt.rangeMod>0?'+':''}${tgt.rangeMod}</b><br>`;
                     if(tgt.skills.includes("mimetism (-6)")) { modTotal -= 6; modLog += `> Mimetismo: <b style="color:#ff3333;">-6</b><br>`; }
                     else if(tgt.skills.includes("mimetism (-3)") || tgt.skills.includes("camouflage")) { modTotal -= 3; modLog += `> Mimetismo: <b style="color:#ff3333;">-3</b><br>`; }
                 }
                 else if (order.action.includes('CORPO A CORPO')) { 
                     base = order.unit.cc; attrName = "CC"; 
                     if(unitSkills.includes("martial arts")) { modTotal += 3; modLog += `> Arti Marziali: <b style="color:#00ff00;">+3</b><br>`; }
-                }
-                else if (order.action.includes('TIRO SALVEZZA')) { 
-                    base = order.unit.arm; attrName = "ARM"; 
-                    if(tgt.cover) { modTotal += 3; modLog += `> Bonus Copertura: <b style="color:#00ff00;">+3</b><br>`; }
-                }
-                else if (order.action.includes('HACKING')) { 
-                    base = order.unit.wip; attrName = "WIP"; 
-                    
-                    // Applica il bonus del programma se presente (+3 WIP)
-                    if(order.weapon === 'SPOTLIGHT' || order.weapon === 'TRINITY') {
-                        modTotal += 3; modLog += `> Prog. ${order.weapon}: <b style="color:#00ff00;">+3</b><br>`;
-                    }
-
-                    if(tgt.skills.includes("tinbot: firewall (-6)")) { modTotal -= 6; modLog += `> Firewall Pesante: <b style="color:#ff3333;">-6</b><br>`; }
-                    else if(tgt.skills.includes("tinbot: firewall (-3)") || tgt.skills.includes("ecm: hacker (-3)")) { modTotal -= 3; modLog += `> ECM/Firewall: <b style="color:#ff3333;">-3</b><br>`; }
                 }
 
                 let targetNum = base + modTotal;
@@ -635,6 +617,9 @@
                     </div>`;
             });
 
+            resHtml += `</div>`;
+            document.getElementById('calc-result').innerHTML = resHtml; document.getElementById('calc-result').style.display = 'block';
+        };
             resHtml += `</div>`;
             const resBox = document.getElementById('calc-result');
             resBox.innerHTML = resHtml; resBox.style.display = 'block';
