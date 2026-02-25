@@ -1,14 +1,9 @@
-// 13.1 modificato grafica range e assegnazione b
-// 14.1 aggiunto vai programmi hacker
-//15.1 aggiunto gittata armi variabile in base all'arma selezionata
-//16.1 creato lista armi esterna
-//17.1 inserito valori completi arma 
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v17.1</title>
+    <title>NOMADS TACTICAL TERMINAL v18.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
 
@@ -18,6 +13,15 @@
 
 
     <style>
+
+// 13.1 modificato grafica range e assegnazione b
+// 14.1 aggiunto vai programmi hacker
+//15.1 aggiunto gittata armi variabile in base all'arma selezionata
+//16.1 creato lista armi esterna
+//17.1 inserito valori completi arma 
+//18.1 INSERITO bersagli multipli
+
+
         html { overscroll-behavior: none; }
         :root {
             --bg-color: #0b0c10; --panel-bg: #1f1f1f; --nomad-red: #cc0000; 
@@ -67,7 +71,7 @@
 
    <div style="position: relative;">
         <h2>-- NOMAD DATANET --</h2>
-        <span style="position: absolute; right: 5px; bottom: 20px; font-size: 14px; font-family: 'Share Tech Mono', monospace; color: var(--nomad-orange); font-weight: bold; text-shadow: none; letter-spacing: normal;">v17.1</span>
+        <span style="position: absolute; right: 5px; bottom: 20px; font-size: 14px; font-family: 'Share Tech Mono', monospace; color: var(--nomad-orange); font-weight: bold; text-shadow: none; letter-spacing: normal;">v18.1</span>
     </div>
     
     <div id="setup">
@@ -134,18 +138,22 @@
 
         <div id="step-wait-aro" class="step-container">
             <div class="grid-buttons" style="justify-content: flex-start;">
-                <div style="text-align:center; padding: 15px; border: 2px dashed var(--nomad-orange); color: #fff; margin-bottom: 15px;">
-                    <h1 style="color:var(--nomad-red); font-size:30px; margin:0;">FASE REATTIVA</h1>
-                    <p style="font-size: 14px;">In attesa dell'avversario...</p>
+                <div style="text-align:center; padding: 10px; border: 2px dashed var(--nomad-orange); color: #fff; margin-bottom: 10px;">
+                    <h2 style="color:var(--nomad-red); font-size:24px; margin:0; border:none; text-shadow:none;">FASE REATTIVA</h2>
+                    <p style="font-size: 14px; margin:0;">Seleziona tutti i nemici che dichiarano ARO</p>
                 </div>
                 
-                <h3 style="color:var(--nomad-orange); margin:0;">SELEZIONA BERSAGLIO:</h3>
-                <p style="font-size:12px; margin-top:0;">(Il sistema leggerà le sue abilità difensive automaticamente)</p>
-                <select id="targetSelect" style="margin-bottom:20px;">
-                    <option value="">-- SELEZIONA NEMICO (Simulazione) --</option>
-                </select>
+                <h3 style="color:var(--nomad-orange); margin:0; font-size:18px;">AGGIUNGI BERSAGLIO:</h3>
+                <div class="flex-row">
+                    <select id="targetSelect" style="flex:2; padding:10px;"></select>
+                    <button class="btn-nomad btn-small" style="flex:1;" onclick="addTargetToList()">AGGIUNGI</button>
+                </div>
 
-                <button class="huge-btn" style="background:#004400; border-color:#00ff00; min-height: 60px;" onclick="confirmAro()">PROSEGUI <br><span>(ARO Completato)</span></button>
+                <div id="selected-targets-list" style="margin-top:15px; background:rgba(0,0,0,0.3); padding:10px; border-radius:5px; min-height:50px;">
+                    <i style="color:#666; font-size:12px;">Nessun bersaglio selezionato...</i>
+                </div>
+
+                <button class="huge-btn" style="background:#004400; border-color:#00ff00; min-height: 60px; margin-top:20px;" onclick="confirmMultiAro()">CONFERMA E ASSEGNA B <span>(Vai al Calcolo)</span></button>
             </div>
             <button class="btn-status" onclick="goToStep('step-group')">ANNULLA ORDINE</button>
         </div>
@@ -196,7 +204,65 @@
         window.roster = [];
         window.currentOrder = { unit: null, action: "", weapon: "", target: null };
         window.manualCover = false;
-        
+        window.pendingTargets = []; // Lista temporanea bersagli in ARO
+
+        window.addTargetToList = () => {
+            const select = document.getElementById('targetSelect');
+            const targetId = select.value;
+            if(!targetId) return;
+
+            const targetProfile = window.masterNomadsDatabase.find(u => u.id_profilo === targetId);
+            if (targetProfile && !window.pendingTargets.some(t => t.id_profilo === targetId)) {
+                window.pendingTargets.push(targetProfile);
+                renderPendingTargets();
+            }
+        };
+
+        window.removeTargetFromList = (index) => {
+            window.pendingTargets.splice(index, 1);
+            renderPendingTargets();
+        };
+
+        window.renderPendingTargets = () => {
+            const container = document.getElementById('selected-targets-list');
+            if(window.pendingTargets.length === 0) {
+                container.innerHTML = '<i style="color:#666; font-size:12px;">Nessun bersaglio selezionato...</i>';
+                return;
+            }
+            container.innerHTML = "";
+            window.pendingTargets.forEach((t, i) => {
+                container.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#222; padding:5px 10px; margin-bottom:5px; border-left:3px solid var(--nomad-orange);">
+                        <span style="font-size:14px;">${t.nome}</span>
+                        <span style="color:red; font-weight:bold; cursor:pointer; padding:5px;" onclick="removeTargetFromList(${i})">X</span>
+                    </div>`;
+            });
+        };
+
+        window.confirmMultiAro = () => {
+            if(window.pendingTargets.length === 0) {
+                alert("Seleziona almeno un bersaglio per continuare!");
+                return;
+            }
+            // Prepariamo i bersagli per la schermata successiva (quella con B e distanze)
+            window.combatTargets = window.pendingTargets.map(t => {
+                let wpnProfile = window.getWeaponProfile(window.currentOrder.weapon);
+                return {
+                    id: t.id_profilo,
+                    name: t.nome,
+                    skills: t.skills.toLowerCase(),
+                    rangeIndex: 0,
+                    rangeMod: wpnProfile.bands[0].mod,
+                    burst: 0,
+                    cover: false
+                };
+            });
+            
+            // Assegniamo tutto il Burst al primo bersaglio di default
+            window.combatTargets[0].burst = window.totalBurst;
+            
+            goToStep('step-second-half'); // O direttamente goToModifiers se vuoi saltare il movimento
+        };
         // --- GESTIONE MULTI-BERSAGLIO E BURST (B) ---
         window.totalBurst = 3;
         window.combatTargets = [];
@@ -538,28 +604,15 @@
             if(finalAction) window.currentOrder.action = finalAction;
             document.getElementById('calc-result').style.display = 'none';
             
-            // CARICAMENTO PROFILO ARMA DINAMICO
+            // Il Burst è già settato in confirmMultiAro, leggiamo solo il profilo arma
             let wpnProfile = window.getWeaponProfile(window.currentOrder.weapon);
+            window.totalBurst = window.currentOrder.action.includes('ATTACCO BS') ? wpnProfile.burst : 1;
             
-            // IL BURST ORA E' LETTO DAL DATABASE DELL'ARMA
-            window.totalBurst = window.currentOrder.action.includes('ATTACCO BS') ? wpnProfile.burst : 1; 
-            window.combatTargets = [];
-            
-            if (window.currentOrder.target) {
-                window.combatTargets.push({ id: window.currentOrder.target.id_profilo, name: window.currentOrder.target.nome, skills: window.currentOrder.target.skills.toLowerCase(), rangeIndex: 0, rangeMod: wpnProfile.bands[0].mod, burst: window.totalBurst, cover: false });
-            } else {
-                window.combatTargets.push({ id: "generic1", name: "Bersaglio Primario", skills: "", rangeIndex: 0, rangeMod: wpnProfile.bands[0].mod, burst: window.totalBurst, cover: false });
-            }
-
             document.getElementById('total-burst-display').innerText = window.totalBurst;
             
-            if (window.currentOrder.action.includes('ATTACCO BS')) {
-                document.getElementById('burst-header-ui').style.display = 'flex';
-                document.getElementById('add-target-btn').style.display = 'block';
-            } else {
-                document.getElementById('burst-header-ui').style.display = 'none';
-                document.getElementById('add-target-btn').style.display = 'none';
-            }
+            // Mostriamo o nascondiamo i controlli Burst se è un attacco
+            const isBS = window.currentOrder.action.includes('ATTACCO BS');
+            document.getElementById('burst-header-ui').style.display = isBS ? 'flex' : 'none';
             
             window.renderTargetsAllocation();
             goToStep('step-modifiers');
