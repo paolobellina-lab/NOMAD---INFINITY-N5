@@ -1,16 +1,18 @@
+// 13.1 modificato grafica range e assegnazione b
+// 14.1 aggiunto vai programmi hacker
+//15.1 aggiunto gittata armi variabile in base all'arma selezionata
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v14.1</title>
+    <title>NOMADS TACTICAL TERMINAL v15.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
 
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@500;700&display=swap" rel="stylesheet">
     <script src="nomads_db.js"></script>
-// 13.1 modificato grafica range e assegnazione b
-// 14.1 aggiunto vai programmi hacker
+
 
     <style>
         html { overscroll-behavior: none; }
@@ -48,10 +50,10 @@
         .range-bar { display: flex; width: 100%; height: 40px; border: 2px solid #fff; border-radius: 5px; overflow: hidden; margin-top: 5px; }
         .range-seg { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; font-size: 18px; cursor: pointer; transition: 0.2s; opacity: 0.4; }
         .range-seg.active { opacity: 1; color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-        .seg-1 { background: #4CAF50; flex: 1; } /* +3 */
-        .seg-2 { background: #03A9F4; flex: 2; } /* 0 */
-        .seg-3 { background: #FFC107; flex: 1.5; } /* -3 */
-        .seg-4 { background: #D32F2F; flex: 2; } /* -6 */
+        .seg-1 { background: #4CAF50; flex: 1; } /* Positivi (+3) */
+        .seg-2 { background: #03A9F4; flex: 1; } /* Neutri (0) */
+        .seg-3 { background: #FFC107; flex: 1; } /* Negativi lievi (-3) */
+        .seg-4 { background: #D32F2F; flex: 1; } /* Negativi gravi (-6) */
         
         .target-card { background: #111; border: 1px solid var(--nomad-orange); padding: 15px; margin-bottom: 15px; border-radius: 5px; }
         .burst-ctrl { display: flex; align-items: center; gap: 15px; background: #000; padding: 5px 15px; border-radius: 5px; border: 1px solid #444;}
@@ -61,8 +63,8 @@
 <body>
 
    <div style="position: relative;">
-        <h2>-- TUNGUSKA DATANET --</h2>
-        <span style="position: absolute; right: 5px; bottom: 20px; font-size: 14px; font-family: 'Share Tech Mono', monospace; color: var(--nomad-orange); font-weight: bold; text-shadow: none; letter-spacing: normal;">v12.1</span>
+        <h2>-- NOMAD DATANET --</h2>
+        <span style="position: absolute; right: 5px; bottom: 20px; font-size: 14px; font-family: 'Share Tech Mono', monospace; color: var(--nomad-orange); font-weight: bold; text-shadow: none; letter-spacing: normal;">v15.1</span>
     </div>
     
     <div id="setup">
@@ -184,7 +186,62 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // --- DATABASE FASCE ARMI (Puoi aggiungere tutte quelle che vuoi) ---
+        window.weaponDB = {
+            "COMBI RIFLE": [ { label: "0-16\"", mod: 3 }, { label: "16-32\"", mod: -3 }, { label: "32-48\"", mod: -6 } ],
+            "MULTI RIFLE": [ { label: "0-16\"", mod: 3 }, { label: "16-32\"", mod: -3 }, { label: "32-48\"", mod: -6 } ],
+            "HMG": [ { label: "0-8\"", mod: -3 }, { label: "8-16\"", mod: 0 }, { label: "16-32\"", mod: 3 }, { label: "32-48\"", mod: -3 } ],
+            "BOARDING SHOTGUN": [ { label: "0-8\"", mod: 3 }, { label: "8-16\"", mod: 0 }, { label: "16-24\"", mod: -3 } ],
+            "MULTI SNIPER RIFLE": [ { label: "0-16\"", mod: -3 }, { label: "16-48\"", mod: 3 }, { label: "48-96\"", mod: -3 } ],
+            "DEFAULT": [ { label: "0-8\"", mod: 3 }, { label: "8-16\"", mod: 0 }, { label: "16-32\"", mod: -3 }, { label: "32-48\"", mod: -6 } ]
+        };
+
         window.roster = [];
+        window.currentOrder = { unit: null, action: "", weapon: "", target: null };
+        window.manualCover = false;
+        
+        // --- GESTIONE MULTI-BERSAGLIO E BURST (B) ---
+        window.totalBurst = 3;
+        window.combatTargets = [];
+
+        window.adjustTotalBurst = (val) => {
+            window.totalBurst = Math.max(1, window.totalBurst + val);
+            let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
+            if (currentAllocated > window.totalBurst) {
+                for(let t of window.combatTargets) { if(t.burst > 0) { t.burst--; break; } }
+            }
+            document.getElementById('total-burst-display').innerText = window.totalBurst;
+            renderTargetsAllocation();
+        };
+
+        window.adjustTargetBurst = (index, val) => {
+            let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
+            let tgt = window.combatTargets[index];
+            if (val > 0 && currentAllocated < window.totalBurst) { tgt.burst += 1; } 
+            else if (val < 0 && tgt.burst > 0) { tgt.burst -= 1; }
+            renderTargetsAllocation();
+        };
+
+        window.setTargetRange = (tgtIndex, bandIndex, mod) => { 
+            window.combatTargets[tgtIndex].rangeIndex = bandIndex; 
+            window.combatTargets[tgtIndex].rangeMod = mod; 
+            renderTargetsAllocation(); 
+        };
+        window.toggleTargetCover = (index) => { window.combatTargets[index].cover = !window.combatTargets[index].cover; renderTargetsAllocation(); };
+
+        window.addNewTarget = () => {
+            let wpnBands = getWeaponBands(window.currentOrder.weapon);
+            window.combatTargets.push({ id: "generic", name: "Bersaglio Aggiuntivo", skills: "", rangeIndex: 0, rangeMod: wpnBands[0].mod, burst: 0, cover: false });
+            renderTargetsAllocation();
+        };
+
+        // Funzione di servizio per trovare l'arma nel DB
+        function getWeaponBands(weaponName) {
+            if(!weaponName) return window.weaponDB["DEFAULT"];
+            let upperName = weaponName.toUpperCase();
+            let matchedKey = Object.keys(window.weaponDB).find(k => upperName.includes(k));
+            return matchedKey ? window.weaponDB[matchedKey] : window.weaponDB["DEFAULT"];
+        }
         window.currentOrder = { unit: null, action: "", weapon: "", target: null };
         window.manualCover = false;
         window.manualDistance = 16;
@@ -426,6 +483,8 @@
             let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
             let remainingB = window.totalBurst - currentAllocated;
             let isAttackBS = window.currentOrder.action.includes('ATTACCO BS');
+            
+            let wpnBands = getWeaponBands(window.currentOrder.weapon);
 
             window.combatTargets.forEach((tgt, index) => {
                 let coverColor = tgt.cover ? 'var(--nomad-orange)' : '#1a0000';
@@ -437,17 +496,29 @@
                 if(tgt.skills.includes("tinbot: firewall (-6)")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Firewall (-6)</span>`;
                 else if(tgt.skills.includes("tinbot: firewall (-3)") || tgt.skills.includes("ecm: hacker (-3)")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Firewall (-3)</span>`;
 
+                // --- GENERAZIONE DINAMICA DELLA BARRA RANGE ---
+                let segmentsHtml = "";
+                let labelsHtml = "";
+                wpnBands.forEach((band, bIdx) => {
+                    let colorClass = "seg-2"; // 0
+                    if(band.mod > 0) colorClass = "seg-1"; // +3
+                    else if(band.mod === -3) colorClass = "seg-3"; // -3
+                    else if(band.mod < -3) colorClass = "seg-4"; // -6
+                    
+                    let isActive = (tgt.rangeIndex === bIdx) ? "active" : "";
+                    
+                    segmentsHtml += `<div class="range-seg ${colorClass} ${isActive}" onclick="setTargetRange(${index}, ${bIdx}, ${band.mod})">${band.mod > 0 ? '+'+band.mod : band.mod}</div>`;
+                    labelsHtml += `<span>${band.label}</span>`;
+                });
+
                 let rangeHtml = isAttackBS ? `
                     <div style="margin-top:15px;">
-                        <span style="color:#aaa; font-size:14px;">Distanza Gittata:</span>
+                        <span style="color:#aaa; font-size:14px;">Distanza Gittata (${window.currentOrder.weapon}):</span>
                         <div class="range-bar">
-                            <div class="range-seg seg-1 ${tgt.rangeMod === 3 ? 'active' : ''}" onclick="setTargetRange(${index}, 3)">+3</div>
-                            <div class="range-seg seg-2 ${tgt.rangeMod === 0 ? 'active' : ''}" onclick="setTargetRange(${index}, 0)">0</div>
-                            <div class="range-seg seg-3 ${tgt.rangeMod === -3 ? 'active' : ''}" onclick="setTargetRange(${index}, -3)">-3</div>
-                            <div class="range-seg seg-4 ${tgt.rangeMod === -6 ? 'active' : ''}" onclick="setTargetRange(${index}, -6)">-6</div>
+                            ${segmentsHtml}
                         </div>
                         <div style="display:flex; justify-content:space-between; font-size:11px; color:#aaa; margin-top:2px; padding:0 5px;">
-                            <span>0-8"</span><span>8-32"</span><span>32-48"</span><span>48-96"</span>
+                            ${labelsHtml}
                         </div>
                     </div>
                 ` : "";
@@ -476,20 +547,20 @@
             });
         };
 
+        // Aggiorniamo anche l'inizializzazione in goToModifiers per usare il range corretto di partenza
         window.goToModifiers = (finalAction) => {
             if(finalAction) window.currentOrder.action = finalAction;
             document.getElementById('calc-result').style.display = 'none';
             
-            // Inizializza Burst e Bersagli base
-            window.totalBurst = 3; 
+            window.totalBurst = window.currentOrder.action.includes('ATTACCO BS') ? 3 : 1; 
             window.combatTargets = [];
             
-            let defaultB = window.currentOrder.action.includes('ATTACCO BS') ? 3 : 1;
+            let wpnBands = getWeaponBands(window.currentOrder.weapon);
             
             if (window.currentOrder.target) {
-                window.combatTargets.push({ id: window.currentOrder.target.id_profilo, name: window.currentOrder.target.nome, skills: window.currentOrder.target.skills.toLowerCase(), rangeMod: 0, burst: defaultB, cover: false });
+                window.combatTargets.push({ id: window.currentOrder.target.id_profilo, name: window.currentOrder.target.nome, skills: window.currentOrder.target.skills.toLowerCase(), rangeIndex: 0, rangeMod: wpnBands[0].mod, burst: window.totalBurst, cover: false });
             } else {
-                window.combatTargets.push({ id: "generic1", name: "Bersaglio Primario", skills: "", rangeMod: 0, burst: defaultB, cover: false });
+                window.combatTargets.push({ id: "generic1", name: "Bersaglio Primario", skills: "", rangeIndex: 0, rangeMod: wpnBands[0].mod, burst: window.totalBurst, cover: false });
             }
 
             document.getElementById('total-burst-display').innerText = window.totalBurst;
