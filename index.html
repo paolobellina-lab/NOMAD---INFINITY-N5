@@ -128,7 +128,6 @@
                 <button class="huge-btn" onclick="selectAction('CORPO A CORPO')">CORPO A CORPO <span>(Mischia)</span></button>
                 <button class="huge-btn" style="border-color:#00ffff;" onclick="selectAction('HACKING')">HACKING <span>(Attacco Infoguerra)</span></button>
                 <button class="huge-btn" style="border-color:#00ffff;" onclick="selectAction('SCHIVATA')">SCHIVATA / DODGE <span>(Difesa)</span></button>
-                <button class="huge-btn" style="border-color:#00ffff;" onclick="selectAction('TIRO SALVEZZA')">TIRO SALVEZZA <span>(Difesa Danni - ARM)</span></button>
                 <button class="huge-btn" style="border-color: #aaa;" onclick="selectAction('GESTIONE STATI')">GESTIONE STATI <span>(Targato, Inconscio, Rimosso...)</span></button>
             </div>
             <button class="btn-status" onclick="goToStep('step-unit')">ANNULLA</button>
@@ -310,7 +309,11 @@
             }
         };
 
-        window.selectUnit = (alias) => { window.currentOrder.unit = window.roster.find(u => u.alias === alias); window.goToStep('step-action'); };
+        window.selectUnit = (alias) => { 
+            window.currentOrder.unit = window.roster.find(u => u.alias === alias); 
+            document.getElementById('battle-header').innerText = `ATTIVAZIONE: ${window.currentOrder.unit.alias}`;
+            window.goToStep('step-action'); 
+        };
         
         window.declareAttack = (weaponName) => { window.currentOrder.weapon = weaponName; window.setupTargetSelection(); };
         window.declareHacking = (programName) => { window.currentOrder.weapon = programName; window.setupTargetSelection(); };
@@ -318,7 +321,6 @@
         window.selectAction = (action) => {
             window.currentOrder.action = action;
             if (action === 'GESTIONE STATI') { document.getElementById('battle-header').innerText = `STATO DI: ${window.currentOrder.unit.alias}`; window.goToStep('step-states'); }
-            else if (action === 'TIRO SALVEZZA') { window.goToModifiers('TIRO SALVEZZA'); }
             else if (action === 'ATTACCO BS') {
                 document.getElementById('battle-header').innerText = "SELEZIONA ARMA";
                 const container = document.getElementById('weapon-buttons-container'); container.innerHTML = "";
@@ -419,11 +421,7 @@
                 container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('CORPO A CORPO')">CORPO A CORPO <span>(Seconda Metà)</span></button>`;
                 container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('HACKING')">HACKING <span>(Seconda Metà)</span></button>`;
                 container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('SCHIVATA')">SCHIVATA <span>(Dodge)</span></button>`;
-                container.innerHTML += `<button class="huge-btn" style="border-color: #aaa;" onclick="goToStep('step-group')">MOVIMENTO <span>(Fine Attivazione)</span></button>`;
-            } else {
-                container.innerHTML += `<button class="huge-btn" style="border-color: #aaa;" onclick="goToModifiers('${firstAction}')">MOVIMENTO <span>(Vai al Calcolo dell'Attacco)</span></button>`;
-                container.innerHTML += `<p style="color:#aaa; text-align:center; font-size:14px; padding:10px;">Regole: Hai già dichiarato un attacco. Conferma il movimento o vai al calcolo.</p>`;
-            }
+                document.getElementById('battle-header').innerText = `2° METÀ ORDINE: ${window.currentOrder.unit.alias}`;
             window.goToStep('step-second-half');
         };
 
