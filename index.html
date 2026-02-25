@@ -23,6 +23,7 @@
 //18.1 INSERITO bersagli multipli
 //18.3 sistemato errori
 //19.1 cambiato interfaccia selezione bersagli e aggiunto regoli profili akerabili
+//20.1 fatto un reset
 */
         html { overscroll-behavior: none; }
         :root {
@@ -201,127 +202,10 @@
         window.roster = [];
         window.currentOrder = { unit: null, action: "", weapon: "", target: null };
         window.manualCover = false;
-        window.pendingTargets = []; // Lista temporanea bersagli in ARO
-
-        window.addTargetToList = () => {
-            const select = document.getElementById('targetSelect');
-            const targetId = select.value;
-            if(!targetId) return;
-
-            const targetProfile = window.masterNomadsDatabase.find(u => u.id_profilo === targetId);
-            if (targetProfile && !window.pendingTargets.some(t => t.id_profilo === targetId)) {
-                window.pendingTargets.push(targetProfile);
-                renderPendingTargets();
-            }
-        };
-
-        window.removeTargetFromList = (index) => {
-            window.pendingTargets.splice(index, 1);
-            renderPendingTargets();
-        };
-
-        window.renderPendingTargets = () => {
-            const container = document.getElementById('selected-targets-list');
-            if(window.pendingTargets.length === 0) {
-                container.innerHTML = '<i style="color:#666; font-size:12px;">Nessun bersaglio selezionato...</i>';
-                return;
-            }
-            container.innerHTML = "";
-            window.pendingTargets.forEach((t, i) => {
-                container.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:#222; padding:5px 10px; margin-bottom:5px; border-left:3px solid var(--nomad-orange);">
-                        <span style="font-size:14px;">${t.nome}</span>
-                        <span style="color:red; font-weight:bold; cursor:pointer; padding:5px;" onclick="removeTargetFromList(${i})">X</span>
-                    </div>`;
-            });
-        };
-
-        window.confirmMultiAro = () => {
-            if(window.pendingTargets.length === 0) {
-                alert("Seleziona almeno un bersaglio per continuare!");
-                return;
-            }
-            
-            // Prepariamo i bersagli scelti
-            window.combatTargets = window.pendingTargets.map(t => {
-                let wpnProfile = window.getWeaponProfile(window.currentOrder.weapon);
-                return {
-                    id: t.id_profilo,
-                    name: t.nome,
-                    skills: t.skills.toLowerCase(),
-                    rangeIndex: 0,
-                    rangeMod: wpnProfile.bands[0].mod,
-                    burst: 0,
-                    cover: false
-                };
-            });
-            window.combatTargets[0].burst = window.totalBurst;
-            
-            // GENERAZIONE DINAMICA DELLA SECONDA META' DELL'ORDINE
-            const container = document.getElementById('second-half-buttons-container');
-            container.innerHTML = "";
-            const firstAction = window.currentOrder.action;
-
-            if (firstAction === 'MOVIMENTO') {
-                container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('ATTACCO BS')">ATTACCO BS <span>(Seconda Metà)</span></button>`;
-                container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('CORPO A CORPO')">CORPO A CORPO <span>(Seconda Metà)</span></button>`;
-                container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('HACKING')">HACKING <span>(Seconda Metà)</span></button>`;
-                container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('SCHIVATA')">SCHIVATA <span>(Dodge)</span></button>`;
-                container.innerHTML += `<button class="huge-btn" style="border-color: #aaa;" onclick="goToStep('step-group')">MOVIMENTO <span>(Fine Attivazione)</span></button>`;
-            } 
-            else {
-                // Se hai attaccato prima, ora puoi solo muoverti
-                container.innerHTML += `<button class="huge-btn" style="border-color: #aaa;" onclick="goToModifiers('${firstAction}')">MOVIMENTO <span>(Vai al Calcolo dell'Attacco)</span></button>`;
-                container.innerHTML += `<p style="color:#aaa; text-align:center; font-size:14px; padding:10px;">Regole: Hai già dichiarato un attacco nella prima metà dell'ordine. Conferma il movimento o vai al calcolo.</p>`;
-            }
-
-            window.goToStep('step-second-half');
-        };
-        // --- GESTIONE MULTI-BERSAGLIO E BURST (B) ---
+        
+        window.pendingTargets = [];
         window.totalBurst = 3;
         window.combatTargets = [];
-
-        window.adjustTotalBurst = (val) => {
-            window.totalBurst = Math.max(1, window.totalBurst + val);
-            let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
-            if (currentAllocated > window.totalBurst) {
-                for(let t of window.combatTargets) { if(t.burst > 0) { t.burst--; break; } }
-            }
-            document.getElementById('total-burst-display').innerText = window.totalBurst;
-            renderTargetsAllocation();
-        };
-
-        window.adjustTargetBurst = (index, val) => {
-            let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
-            let tgt = window.combatTargets[index];
-            if (val > 0 && currentAllocated < window.totalBurst) { tgt.burst += 1; } 
-            else if (val < 0 && tgt.burst > 0) { tgt.burst -= 1; }
-            renderTargetsAllocation();
-        };
-
-        window.setTargetRange = (tgtIndex, bandIndex, mod) => { 
-            window.combatTargets[tgtIndex].rangeIndex = bandIndex; 
-            window.combatTargets[tgtIndex].rangeMod = mod; 
-            renderTargetsAllocation(); 
-        };
-        window.toggleTargetCover = (index) => { window.combatTargets[index].cover = !window.combatTargets[index].cover; renderTargetsAllocation(); };
-
-        window.addNewTarget = () => {
-            let wpnBands = getWeaponBands(window.currentOrder.weapon);
-            window.combatTargets.push({ id: "generic", name: "Bersaglio Aggiuntivo", skills: "", rangeIndex: 0, rangeMod: wpnBands[0].mod, burst: 0, cover: false });
-            renderTargetsAllocation();
-        };
-
-        // Funzione per trovare il Profilo completo dell'Arma nel DB ESTERNO
-        window.getWeaponProfile = (weaponName) => {
-            if(!weaponName || !window.masterWeaponsDatabase) return window.masterWeaponsDatabase["DEFAULT"];
-            let upperName = weaponName.toUpperCase();
-            let matchedKey = Object.keys(window.masterWeaponsDatabase).find(k => upperName.includes(k));
-            return matchedKey ? window.masterWeaponsDatabase[matchedKey] : window.masterWeaponsDatabase["DEFAULT"];
-        };
-        window.currentOrder = { unit: null, action: "", weapon: "", target: null };
-        window.manualCover = false;
-        window.manualDistance = 16;
 
         // --- SETUP ROSTER ---
         window.onload = () => {
@@ -329,11 +213,7 @@
             const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
             const groupSelect = document.getElementById('groupSelect');
             gruppiUnici.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.textContent = nome; groupSelect.appendChild(opt); });
-            
-            const targetSelect = document.getElementById('targetSelect');
-            window.masterNomadsDatabase.forEach(u => { const opt = document.createElement('option'); opt.value = u.id_profilo; opt.textContent = u.nome; targetSelect.appendChild(opt); });
-            
-            refreshSavedRostersList(); // Carica tendina salvataggi all'avvio
+            window.refreshSavedRostersList();
         };
 
         window.updateProfileSelect = () => {
@@ -358,12 +238,12 @@
             if (!idProfilo) return;
             const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
             if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
-            
-            const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, combatGroup: parseInt(cGroup), state: "ACTIVE", player: "G_NOMADS" };
-            window.roster.push(unit); document.getElementById('unitAlias').value = ""; renderRoster();
+            const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, ph: dbUnit.ph || 10, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, combatGroup: parseInt(cGroup), state: "ACTIVE", player: "G_NOMADS" };
+            window.roster.push(unit); document.getElementById('unitAlias').value = ""; window.renderRoster();
         };
 
-        window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
+        window.removeUnit = (index) => { window.roster.splice(index, 1); window.renderRoster(); };
+
         window.renderRoster = () => {
             const container = document.getElementById('localRoster');
             if(window.roster.length === 0) return container.innerHTML = "<i>Nessuna unità schierata.</i>";
@@ -374,44 +254,30 @@
             });
         };
 
-        // --- GESTIONE ARCHIVIO SQUADRE (SALVA / CARICA / ELIMINA) ---
+        // --- GESTIONE ARCHIVIO SQUADRE ---
         window.saveRoster = () => {
             const name = document.getElementById('saveName').value.trim().toUpperCase();
             if(!name || window.roster.length === 0) return alert("Inserisci un nome valido e aggiungi almeno un'unità alla lista!");
-            
             const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
             savedData[name] = window.roster;
             localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
-            
-            document.getElementById('saveName').value = "";
-            refreshSavedRostersList();
-            alert(`Squadra "${name}" salvata con successo!`);
+            document.getElementById('saveName').value = ""; window.refreshSavedRostersList(); alert(`Squadra "${name}" salvata con successo!`);
         };
 
         window.loadRoster = () => {
             const name = document.getElementById('savedRostersSelect').value;
             if(!name) return;
-            
             const loadedRoster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || [];
-            
-            window.roster = loadedRoster.map(u => ({
-                ...u,
-                combatGroup: u.combatGroup || 1,
-                state: u.state || "ACTIVE"
-            }));
-            
-            renderRoster();
+            window.roster = loadedRoster.map(u => ({ ...u, combatGroup: u.combatGroup || 1, state: u.state || "ACTIVE" }));
+            window.renderRoster();
         };
 
         window.deleteRoster = () => {
             const name = document.getElementById('savedRostersSelect').value;
             if(!name) return alert("Seleziona una squadra dalla tendina prima di eliminarla.");
-            
             if(confirm(`Sei sicuro di voler eliminare la squadra salvata "${name}"?`)) {
                 const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
-                delete savedData[name];
-                localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
-                refreshSavedRostersList();
+                delete savedData[name]; localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData)); window.refreshSavedRostersList();
             }
         };
 
@@ -419,13 +285,10 @@
             const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
             const select = document.getElementById('savedRostersSelect');
             select.innerHTML = '<option value="">-- SQUADRE SALVATE --</option>';
-            Object.keys(savedData).forEach(n => {
-                const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
-                select.appendChild(opt);
-            });
+            Object.keys(savedData).forEach(n => { const opt = document.createElement('option'); opt.value = n; opt.textContent = n; select.appendChild(opt); });
         };
 
-        // --- MACCHINA A STATI ---
+        // --- MACCHINA A STATI E AZIONI ---
         window.startBattle = async () => { 
             if(window.roster.length === 0) return alert("Schiera un'unità!");
             document.getElementById('setup').style.display='none'; document.getElementById('battle').style.display='flex'; 
@@ -435,7 +298,6 @@
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active-step'));
             document.getElementById(stepId).classList.add('active-step');
             const header = document.getElementById('battle-header');
-
             if (stepId === 'step-group') header.innerText = "GRUPPO DI COMBATTIMENTO";
             if (stepId === 'step-unit') {
                 header.innerText = `UNITÀ - GRUPPO ${param}`;
@@ -448,93 +310,132 @@
             }
         };
 
-        window.selectUnit = (alias) => { window.currentOrder.unit = window.roster.find(u => u.alias === alias); goToStep('step-action'); };
+        window.selectUnit = (alias) => { window.currentOrder.unit = window.roster.find(u => u.alias === alias); window.goToStep('step-action'); };
         
+        window.declareAttack = (weaponName) => { window.currentOrder.weapon = weaponName; window.setupTargetSelection(); };
+        window.declareHacking = (programName) => { window.currentOrder.weapon = programName; window.setupTargetSelection(); };
+
         window.selectAction = (action) => {
             window.currentOrder.action = action;
-            if (action === 'GESTIONE STATI') { 
-                document.getElementById('battle-header').innerText = `STATO DI: ${window.currentOrder.unit.alias}`; 
-                goToStep('step-states'); 
-            }
-            else if (action === 'TIRO SALVEZZA') { goToModifiers('TIRO SALVEZZA'); }
+            if (action === 'GESTIONE STATI') { document.getElementById('battle-header').innerText = `STATO DI: ${window.currentOrder.unit.alias}`; window.goToStep('step-states'); }
+            else if (action === 'TIRO SALVEZZA') { window.goToModifiers('TIRO SALVEZZA'); }
             else if (action === 'ATTACCO BS') {
                 document.getElementById('battle-header').innerText = "SELEZIONA ARMA";
-                const container = document.getElementById('weapon-buttons-container');
-                container.innerHTML = "";
+                const container = document.getElementById('weapon-buttons-container'); container.innerHTML = "";
                 window.currentOrder.unit.weapon.replace('/', ',').split(',').forEach(w => {
                     container.innerHTML += `<button class="huge-btn" onclick="declareAttack('${w.trim()}')">${w.trim()}</button>`;
                 });
-                goToStep('step-weapon');
+                window.goToStep('step-weapon');
             } 
             else if (action === 'HACKING') {
                 document.getElementById('battle-header').innerText = "SELEZIONA PROGRAMMA HACKING";
-                const container = document.getElementById('weapon-buttons-container');
-                container.innerHTML = "";
-                // Lista dei programmi standard N4
+                const container = document.getElementById('weapon-buttons-container'); container.innerHTML = "";
                 const programs = [
-                    { name: "SPOTLIGHT", desc: "+3 WIP (Applica: TARGATO)" },
-                    { name: "CARBONITE", desc: "+0 WIP (Applica: IMM-A)" },
-                    { name: "OBLIVION", desc: "+0 WIP (Applica: ISOLATO)" },
-                    { name: "TRINITY", desc: "+3 WIP (Anti-Hacker)" }
+                    { name: "SPOTLIGHT", desc: "+3 WIP (Bersaglia: TUTTI)" },
+                    { name: "CARBONITE", desc: "+0 WIP (Bersaglia: HI, TAG, REM, Hacker)" },
+                    { name: "OBLIVION", desc: "+0 WIP (Bersaglia: HI, TAG, REM, Hacker)" },
+                    { name: "TRINITY", desc: "+3 WIP (Bersaglia: SOLO HACKER)" }
                 ];
-                programs.forEach(p => {
-                    container.innerHTML += `<button class="huge-btn" style="border-color:#00ffff;" onclick="declareHacking('${p.name}')">${p.name} <br><span style="color:#00ffff;">${p.desc}</span></button>`;
-                });
-                goToStep('step-weapon');
+                programs.forEach(p => { container.innerHTML += `<button class="huge-btn" style="border-color:#00ffff;" onclick="declareHacking('${p.name}')">${p.name} <br><span style="color:#00ffff;">${p.desc}</span></button>`; });
+                window.goToStep('step-weapon');
             }
-            else if (action === 'CORPO A CORPO' || action === 'MOVIMENTO') { 
-                goToStep('step-wait-aro');
-            } 
+            else if (action === 'CORPO A CORPO' || action === 'MOVIMENTO') { window.setupTargetSelection(); } 
         };
 
-        window.declareAttack = (weaponName) => { window.currentOrder.weapon = weaponName; goToStep('step-wait-aro'); };
-        
-        window.declareHacking = (programName) => { 
-            window.currentOrder.weapon = programName; // Salviamo il programma come se fosse un'arma
-            document.getElementById('battle-header').innerText = "ATTACCO INFO - IN ATTESA ARO";
-            goToStep('step-wait-aro'); 
+        // --- MOTORE DI FILTRAGGIO INTELLIGENTE BERSAGLI ---
+        window.setupTargetSelection = () => {
+            window.pendingTargets = []; window.renderPendingTargets();
+            const container = document.getElementById('enemy-target-buttons'); container.innerHTML = "";
+            const action = window.currentOrder.action;
+            const program = window.currentOrder.weapon;
+            let filterDesc = "Tutti i bersagli disponibili";
+
+            let validTargets = window.masterNomadsDatabase.filter(u => {
+                let s = (u.skills || "").toLowerCase();
+                let tipo = (u.tipo || "").toUpperCase(); 
+                if (action === 'HACKING') {
+                    if (program === 'SPOTLIGHT') return true; 
+                    if (program === 'TRINITY') return s.includes('hacker');
+                    let isHackable = s.includes('hacker') || s.includes('hackable') || tipo === 'HI' || tipo === 'TAG' || tipo === 'REM';
+                    return isHackable;
+                }
+                return true; 
+            });
+
+            if (action === 'HACKING') {
+                if (program === 'TRINITY') filterDesc = "Filtro Attivo: MOSTRA SOLO HACKER";
+                else if (program !== 'SPOTLIGHT') filterDesc = "Filtro Attivo: MOSTRA HACKER, HI, TAG, REM";
+            }
+            document.getElementById('target-filter-desc').innerText = filterDesc;
+
+            if(validTargets.length === 0) {
+                container.innerHTML = "<p style='color:red; text-align:center;'>Nessun bersaglio valido nel database per questo attacco!</p>";
+            } else {
+                validTargets.forEach(t => {
+                    let desc = t.skills.length > 35 ? t.skills.substring(0, 35) + "..." : t.skills;
+                    let tipoLabel = t.tipo ? `[${t.tipo.toUpperCase()}]` : '[LI]'; 
+                    container.innerHTML += `<button class="huge-btn" style="min-height:70px; font-size:22px; background:#111; margin-bottom:10px;" onclick="addTargetByProfile('${t.id_profilo}')">${tipoLabel} ${t.nome} <br><span style="color:#aaa; font-size:12px;">${desc || "Nessuna skill speciale"}</span></button>`;
+                });
+            }
+            window.goToStep('step-wait-aro');
         };
 
-        window.confirmAro = () => {
-            const targetId = document.getElementById('targetSelect').value;
-            if(targetId) { window.currentOrder.target = window.masterNomadsDatabase.find(u => u.id_profilo === targetId); } 
-            else { window.currentOrder.target = null; }
-            
-            // GENERAZIONE DINAMICA SECONDA META' DELL'ORDINE
-            const container = document.getElementById('second-half-buttons-container');
+        window.addTargetByProfile = (id) => {
+            const targetProfile = window.masterNomadsDatabase.find(u => u.id_profilo === id);
+            if (targetProfile && !window.pendingTargets.some(t => t.id_profilo === id)) {
+                window.pendingTargets.push(targetProfile); window.renderPendingTargets();
+            }
+        };
+
+        window.removeTargetFromList = (index) => { window.pendingTargets.splice(index, 1); window.renderPendingTargets(); };
+
+        window.renderPendingTargets = () => {
+            const container = document.getElementById('selected-targets-list');
+            if(window.pendingTargets.length === 0) {
+                container.innerHTML = '<i style="color:#666; font-size:12px;">Nessun bersaglio selezionato...</i>'; return;
+            }
             container.innerHTML = "";
+            window.pendingTargets.forEach((t, i) => {
+                container.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; background:#222; padding:5px 10px; margin-bottom:5px; border-left:3px solid var(--nomad-orange);">
+                        <span style="font-size:16px; font-weight:bold; color:#00ff00;">🎯 ${t.nome}</span>
+                        <span style="color:white; background:red; font-weight:bold; cursor:pointer; padding:5px 15px; border-radius:3px;" onclick="removeTargetFromList(${i})">X</span>
+                    </div>`;
+            });
+        };
+
+        window.confirmMultiAro = () => {
+            if(window.pendingTargets.length === 0) return alert("Seleziona almeno un bersaglio per continuare!");
+            window.combatTargets = window.pendingTargets.map(t => {
+                let wpnProfile = window.getWeaponProfile(window.currentOrder.weapon);
+                return { id: t.id_profilo, name: t.nome, skills: t.skills.toLowerCase(), rangeIndex: 0, rangeMod: wpnProfile.bands[0].mod, burst: 0, cover: false };
+            });
+            window.combatTargets[0].burst = window.totalBurst;
+            
+            const container = document.getElementById('second-half-buttons-container'); container.innerHTML = "";
             const firstAction = window.currentOrder.action;
 
             if (firstAction === 'MOVIMENTO') {
-                // Se mi sono mosso per primo, posso fare quasi tutto come seconda metà
-                container.innerHTML += `<button class="huge-btn" onclick="selectAction('ATTACCO BS')">ATTACCO BS <span>(Seconda Metà)</span></button>`;
+                container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('ATTACCO BS')">ATTACCO BS <span>(Seconda Metà)</span></button>`;
                 container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('CORPO A CORPO')">CORPO A CORPO <span>(Seconda Metà)</span></button>`;
                 container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('HACKING')">HACKING <span>(Seconda Metà)</span></button>`;
                 container.innerHTML += `<button class="huge-btn" onclick="goToModifiers('SCHIVATA')">SCHIVATA <span>(Dodge)</span></button>`;
                 container.innerHTML += `<button class="huge-btn" style="border-color: #aaa;" onclick="goToStep('step-group')">MOVIMENTO <span>(Fine Attivazione)</span></button>`;
-            } 
-            else {
-                // Se la prima metà è stata un attacco, un hack, ecc., la seconda metà PUÒ ESSERE SOLO MOVIMENTO
-                container.innerHTML += `<button class="huge-btn" style="border-color: #aaa;" onclick="goToModifiers('${firstAction}')">MOVIMENTO <span>(Esegui Calcolo dell'Attacco)</span></button>`;
-                container.innerHTML += `<p style="color:#aaa; text-align:center; font-size:14px; padding:10px;">Regole: Hai già dichiarato un'abilità di attacco/tiro nella prima metà dell'ordine. Puoi solo muoverti.</p>`;
+            } else {
+                container.innerHTML += `<button class="huge-btn" style="border-color: #aaa;" onclick="goToModifiers('${firstAction}')">MOVIMENTO <span>(Vai al Calcolo dell'Attacco)</span></button>`;
+                container.innerHTML += `<p style="color:#aaa; text-align:center; font-size:14px; padding:10px;">Regole: Hai già dichiarato un attacco. Conferma il movimento o vai al calcolo.</p>`;
             }
-
-            goToStep('step-second-half');
+            window.goToStep('step-second-half');
         };
 
         // --- GESTIONE MULTI-BERSAGLIO E BURST (B) ---
-        window.totalBurst = 3;
-        window.combatTargets = [];
-
         window.adjustTotalBurst = (val) => {
             window.totalBurst = Math.max(1, window.totalBurst + val);
             let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
             if (currentAllocated > window.totalBurst) {
-                // Se abbassi il Burst totale sotto la soglia usata, toglie dadi al primo bersaglio valido
                 for(let t of window.combatTargets) { if(t.burst > 0) { t.burst--; break; } }
             }
             document.getElementById('total-burst-display').innerText = window.totalBurst;
-            renderTargetsAllocation();
+            window.renderTargetsAllocation();
         };
 
         window.adjustTargetBurst = (index, val) => {
@@ -542,44 +443,47 @@
             let tgt = window.combatTargets[index];
             if (val > 0 && currentAllocated < window.totalBurst) { tgt.burst += 1; } 
             else if (val < 0 && tgt.burst > 0) { tgt.burst -= 1; }
-            renderTargetsAllocation();
+            window.renderTargetsAllocation();
         };
 
-        window.setTargetRange = (index, mod) => { window.combatTargets[index].rangeMod = mod; renderTargetsAllocation(); };
-        window.toggleTargetCover = (index) => { window.combatTargets[index].cover = !window.combatTargets[index].cover; renderTargetsAllocation(); };
+        window.setTargetRange = (tgtIndex, bandIndex, mod) => { window.combatTargets[tgtIndex].rangeIndex = bandIndex; window.combatTargets[tgtIndex].rangeMod = mod; window.renderTargetsAllocation(); };
+        window.toggleTargetCover = (index) => { window.combatTargets[index].cover = !window.combatTargets[index].cover; window.renderTargetsAllocation(); };
 
         window.addNewTarget = () => {
-            window.combatTargets.push({ id: "generic", name: "Bersaglio Aggiuntivo", skills: "", rangeMod: 0, burst: 0, cover: false });
-            renderTargetsAllocation();
+            let wpnBands = window.getWeaponProfile(window.currentOrder.weapon).bands;
+            window.combatTargets.push({ id: "generic", name: "Bersaglio Aggiuntivo", skills: "", rangeIndex: 0, rangeMod: wpnBands[0].mod, burst: 0, cover: false });
+            window.renderTargetsAllocation();
         };
 
-        // Genera le "schede" visive per ogni nemico
+        window.getWeaponProfile = (weaponName) => {
+            if(!weaponName || !window.masterWeaponsDatabase) return window.masterWeaponsDatabase["DEFAULT"] || { burst: 1, dam: "N/A", ammo: "Normal", attr: "BS", bands: [{ label: "0-8\"", mod: 3 }] };
+            let upperName = weaponName.toUpperCase();
+            let matchedKey = Object.keys(window.masterWeaponsDatabase).find(k => upperName.includes(k));
+            return matchedKey ? window.masterWeaponsDatabase[matchedKey] : window.masterWeaponsDatabase["DEFAULT"];
+        };
+
         window.renderTargetsAllocation = () => {
-            const container = document.getElementById('targets-allocation-container');
-            container.innerHTML = "";
+            const container = document.getElementById('targets-allocation-container'); container.innerHTML = "";
             let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
             let remainingB = window.totalBurst - currentAllocated;
             let isAttackBS = window.currentOrder.action.includes('ATTACCO BS');
-            
             let wpnProfile = window.getWeaponProfile(window.currentOrder.weapon);
 
             window.combatTargets.forEach((tgt, index) => {
                 let coverColor = tgt.cover ? 'var(--nomad-orange)' : '#1a0000';
                 let coverText = tgt.cover ? '#000' : '#fff';
-                
                 let autoLog = "";
+       
                 if(tgt.skills.includes("mimetism (-6)")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Mimetico (-6)</span>`;
                 else if(tgt.skills.includes("mimetism (-3)") || tgt.skills.includes("camouflage")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Mimetico (-3)</span>`;
                 
-                let segmentsHtml = "";
-                let labelsHtml = "";
+                let segmentsHtml = ""; let labelsHtml = "";
                 wpnProfile.bands.forEach((band, bIdx) => {
                     let colorClass = "seg-2"; 
                     if(band.mod > 0) colorClass = "seg-1"; 
                     else if(band.mod === -3) colorClass = "seg-3"; 
-                    else if(band.mod < -3) colorClass = "seg-4"; 
+                    else if(band.mod < -3) colorClass = "seg-4";
                     let isActive = (tgt.rangeIndex === bIdx) ? "active" : "";
-                    
                     segmentsHtml += `<div class="range-seg ${colorClass} ${isActive}" onclick="setTargetRange(${index}, ${bIdx}, ${band.mod})">${band.mod > 0 ? '+'+band.mod : band.mod}</div>`;
                     labelsHtml += `<span>${band.label}</span>`;
                 });
@@ -589,14 +493,12 @@
                         <span style="color:#aaa; font-size:14px;">Distanza Gittata (${window.currentOrder.weapon}):</span>
                         <div class="range-bar">${segmentsHtml}</div>
                         <div style="display:flex; justify-content:space-between; font-size:11px; color:#aaa; margin-top:2px; padding:0 5px;">${labelsHtml}</div>
-                    </div>
-                ` : "";
+                    </div>` : "";
 
                 container.innerHTML += `
                     <div class="target-card">
                         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px dashed #444; padding-bottom: 10px;">
-                            <b style="color:var(--nomad-orange); font-size:22px;">${tgt.name}</b>
-                            ${autoLog}
+                            <b style="color:var(--nomad-orange); font-size:22px;">${tgt.name}</b>${autoLog}
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                             <span style="color:#fff; font-size:16px;">Assegna Dadi (B):</span>
@@ -608,12 +510,10 @@
                         </div>
                         ${rangeHtml}
                         <button class="huge-btn" style="background:${coverColor}; color:${coverText}; min-height:50px; font-size:18px; margin-top:15px; width:100%;" onclick="toggleTargetCover(${index})">COPERTURA BERSAGLIO</button>
-                    </div>
-                `;
+                    </div>`;
             });
         };
 
-        // Aggiorniamo anche l'inizializzazione in goToModifiers per usare il range corretto di partenza
         window.goToModifiers = (finalAction) => {
             if(finalAction) window.currentOrder.action = finalAction;
             document.getElementById('calc-result').style.display = 'none';
@@ -621,7 +521,6 @@
             let wpnProfile = window.getWeaponProfile(window.currentOrder.weapon);
             window.totalBurst = window.currentOrder.action.includes('ATTACCO BS') ? wpnProfile.burst : 1;
             
-            // SE LA LISTA BERSAGLI E' VUOTA, NE CREIAMO UNO GENERICO
             if (!window.combatTargets || window.combatTargets.length === 0) {
                 if (window.currentOrder.target) {
                     window.combatTargets = [{ id: window.currentOrder.target.id_profilo, name: window.currentOrder.target.nome, skills: window.currentOrder.target.skills.toLowerCase(), rangeIndex: 0, rangeMod: wpnProfile.bands[0].mod, burst: window.totalBurst, cover: false }];
@@ -629,22 +528,15 @@
                     window.combatTargets = [{ id: "generic1", name: "Bersaglio Primario", skills: "", rangeIndex: 0, rangeMod: wpnProfile.bands[0].mod, burst: window.totalBurst, cover: false }];
                 }
             } else {
-                // Altrimenti manteniamo quelli scelti dall'ARO, assicurandoci che il primo abbia i dadi
                 let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
-                if (currentAllocated === 0 && window.combatTargets.length > 0) {
-                    window.combatTargets[0].burst = window.totalBurst;
-                }
+                if (currentAllocated === 0 && window.combatTargets.length > 0) window.combatTargets[0].burst = window.totalBurst;
             }
 
             document.getElementById('total-burst-display').innerText = window.totalBurst;
             
-            if (window.currentOrder.action.includes('ATTACCO BS')) {
-                document.getElementById('burst-header-ui').style.display = 'flex';
-                document.getElementById('add-target-btn').style.display = 'block';
-            } else {
-                document.getElementById('burst-header-ui').style.display = 'none';
-                document.getElementById('add-target-btn').style.display = 'none';
-            }
+            const isBS = window.currentOrder.action.includes('ATTACCO BS');
+            document.getElementById('burst-header-ui').style.display = isBS ? 'flex' : 'none';
+            document.getElementById('add-target-btn').style.display = isBS ? 'block' : 'none';
             
             window.renderTargetsAllocation();
             window.goToStep('step-modifiers');
@@ -654,10 +546,8 @@
             const order = window.currentOrder;
             let activeTargets = window.combatTargets.filter(t => t.burst > 0);
             let wpnProfile = window.getWeaponProfile(order.weapon);
-            
-            // Visualizza info Arma
             let weaponInfo = order.action.includes('ATTACCO BS') ? `<br><span style="color:var(--nomad-orange); font-size:14px;">[ARMA: ${order.weapon} | DAM: ${wpnProfile.dam} | AMMO: ${wpnProfile.ammo}]</span>` : '';
-
+            
             let resHtml = `<div style="color:#fff; line-height:1.6;">
                            <b>ATTACCANTE:</b> ${order.unit.alias}<br>
                            <b>AZIONE:</b> ${order.action} ${weaponInfo}<br>
@@ -673,10 +563,8 @@
                 const unitSkills = order.unit.skills.toLowerCase();
 
                 if (order.action.includes('ATTACCO BS')) { 
-                    // Se l'arma usa PH (es. Granate), cambia attributo!
                     attrName = wpnProfile.attr;
-                    base = attrName === "PH" ? order.unit.ph : order.unit.bs; 
-                    
+                    base = attrName === "PH" ? (order.unit.ph || 10) : order.unit.bs; 
                     if(tgt.cover) { modTotal -= 3; modLog += `> Copertura: <b style="color:#ff3333;">-3</b><br>`; }
                     modTotal += tgt.rangeMod;
                     modLog += `> Gittata: <b style="color:${tgt.rangeMod>0?'#00ff00':'#ff3333'};">${tgt.rangeMod>0?'+':''}${tgt.rangeMod}</b><br>`;
@@ -693,12 +581,7 @@
                 }
                 else if (order.action.includes('HACKING')) { 
                     base = order.unit.wip; attrName = "WIP"; 
-                    
-                    // Applica il bonus del programma se presente (+3 WIP)
-                    if(order.weapon === 'SPOTLIGHT' || order.weapon === 'TRINITY') {
-                        modTotal += 3; modLog += `> Prog. ${order.weapon}: <b style="color:#00ff00;">+3</b><br>`;
-                    }
-
+                    if(order.weapon === 'SPOTLIGHT' || order.weapon === 'TRINITY') { modTotal += 3; modLog += `> Prog. ${order.weapon}: <b style="color:#00ff00;">+3</b><br>`; }
                     if(tgt.skills.includes("tinbot: firewall (-6)")) { modTotal -= 6; modLog += `> Firewall Pesante: <b style="color:#ff3333;">-6</b><br>`; }
                     else if(tgt.skills.includes("tinbot: firewall (-3)") || tgt.skills.includes("ecm: hacker (-3)")) { modTotal -= 3; modLog += `> ECM/Firewall: <b style="color:#ff3333;">-3</b><br>`; }
                 }
@@ -721,5 +604,4 @@
             document.getElementById('calc-result').innerHTML = resHtml; document.getElementById('calc-result').style.display = 'block';
         };
     </script>
-</body>
 </html>
