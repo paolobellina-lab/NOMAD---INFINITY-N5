@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v13.1</title>
-// 13.1 modificato grafica range e assegnazione b
-    
+    <title>NOMADS TACTICAL TERMINAL v14.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
 
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@500;700&display=swap" rel="stylesheet">
     <script src="nomads_db.js"></script>
+// 13.1 modificato grafica range e assegnazione b
+// 14.1 aggiunto vai programmi hacker
 
     <style>
         html { overscroll-behavior: none; }
@@ -324,6 +324,7 @@
             }
             else if (action === 'TIRO SALVEZZA') { goToModifiers('TIRO SALVEZZA'); }
             else if (action === 'ATTACCO BS') {
+                document.getElementById('battle-header').innerText = "SELEZIONA ARMA";
                 const container = document.getElementById('weapon-buttons-container');
                 container.innerHTML = "";
                 window.currentOrder.unit.weapon.replace('/', ',').split(',').forEach(w => {
@@ -331,12 +332,34 @@
                 });
                 goToStep('step-weapon');
             } 
-            else if (action === 'CORPO A CORPO' || action === 'MOVIMENTO' || action === 'HACKING') { 
+            else if (action === 'HACKING') {
+                document.getElementById('battle-header').innerText = "SELEZIONA PROGRAMMA HACKING";
+                const container = document.getElementById('weapon-buttons-container');
+                container.innerHTML = "";
+                // Lista dei programmi standard N4
+                const programs = [
+                    { name: "SPOTLIGHT", desc: "+3 WIP (Applica: TARGATO)" },
+                    { name: "CARBONITE", desc: "+0 WIP (Applica: IMM-A)" },
+                    { name: "OBLIVION", desc: "+0 WIP (Applica: ISOLATO)" },
+                    { name: "TRINITY", desc: "+3 WIP (Anti-Hacker)" }
+                ];
+                programs.forEach(p => {
+                    container.innerHTML += `<button class="huge-btn" style="border-color:#00ffff;" onclick="declareHacking('${p.name}')">${p.name} <br><span style="color:#00ffff;">${p.desc}</span></button>`;
+                });
+                goToStep('step-weapon');
+            }
+            else if (action === 'CORPO A CORPO' || action === 'MOVIMENTO') { 
                 goToStep('step-wait-aro');
             } 
         };
 
         window.declareAttack = (weaponName) => { window.currentOrder.weapon = weaponName; goToStep('step-wait-aro'); };
+        
+        window.declareHacking = (programName) => { 
+            window.currentOrder.weapon = programName; // Salviamo il programma come se fosse un'arma
+            document.getElementById('battle-header').innerText = "ATTACCO INFO - IN ATTESA ARO";
+            goToStep('step-wait-aro'); 
+        };
 
         window.confirmAro = () => {
             const targetId = document.getElementById('targetSelect').value;
@@ -521,6 +544,12 @@
                 }
                 else if (order.action.includes('HACKING')) { 
                     base = order.unit.wip; attrName = "WIP"; 
+                    
+                    // Applica il bonus del programma se presente (+3 WIP)
+                    if(order.weapon === 'SPOTLIGHT' || order.weapon === 'TRINITY') {
+                        modTotal += 3; modLog += `> Prog. ${order.weapon}: <b style="color:#00ff00;">+3</b><br>`;
+                    }
+
                     if(tgt.skills.includes("tinbot: firewall (-6)")) { modTotal -= 6; modLog += `> Firewall Pesante: <b style="color:#ff3333;">-6</b><br>`; }
                     else if(tgt.skills.includes("tinbot: firewall (-3)") || tgt.skills.includes("ecm: hacker (-3)")) { modTotal -= 3; modLog += `> ECM/Firewall: <b style="color:#ff3333;">-3</b><br>`; }
                 }
