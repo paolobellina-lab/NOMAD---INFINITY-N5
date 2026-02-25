@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v12.2</title>
+    <title>NOMADS TACTICAL TERMINAL v13.1</title>
+// 13.1 modificato grafica range e assegnazione b
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
@@ -43,10 +44,18 @@
         
         #calc-result { margin-top:15px; font-size:16px; border:2px solid #00ff00; background:#001a00; padding:15px; display:none; box-shadow: 0 0 15px rgba(0,255,0,0.2); }
 
-        /* Stile per lo Slider Verticale */
-        .slider-container { display: flex; flex-direction: row; align-items: center; justify-content: center; background: #111; padding: 20px; border: 1px solid var(--nomad-orange); border-radius: 5px; margin-bottom: 15px; }
-        input[type=range][orient=vertical] { writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 40px; height: 250px; cursor: pointer; }
-        .dist-label { font-size: 40px; font-family: 'Teko', sans-serif; color: var(--nomad-orange); margin-left: 30px; text-align: center;}
+        /* Stile per Barra Gittate e Burst (B) */
+        .range-bar { display: flex; width: 100%; height: 40px; border: 2px solid #fff; border-radius: 5px; overflow: hidden; margin-top: 5px; }
+        .range-seg { display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; font-size: 18px; cursor: pointer; transition: 0.2s; opacity: 0.4; }
+        .range-seg.active { opacity: 1; color: #fff; text-shadow: 1px 1px 2px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .seg-1 { background: #4CAF50; flex: 1; } /* +3 */
+        .seg-2 { background: #03A9F4; flex: 2; } /* 0 */
+        .seg-3 { background: #FFC107; flex: 1.5; } /* -3 */
+        .seg-4 { background: #D32F2F; flex: 2; } /* -6 */
+        
+        .target-card { background: #111; border: 1px solid var(--nomad-orange); padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+        .burst-ctrl { display: flex; align-items: center; gap: 15px; background: #000; padding: 5px 15px; border-radius: 5px; border: 1px solid #444;}
+        .burst-btn { background: var(--nomad-orange); color: #000; border: none; font-size: 24px; font-weight: bold; width: 40px; height: 40px; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -144,27 +153,21 @@
 
         <div id="step-modifiers" class="step-container">
             
-            <div id="telemetry-distance" style="display:none;">
-                <h3 style="color:var(--nomad-orange); text-align:center; margin:0 0 10px 0;">DISTANZA BERSAGLIO</h3>
-                <div class="slider-container">
-                    <input type="range" id="distSlider" orient="vertical" min="0" max="48" value="16" oninput="updateDistanceLabel(this.value)">
-                    <div class="dist-label">
-                        <span id="distValueDisplay">16</span>"<br>
-                        <span style="font-size:14px; font-family:'Share Tech Mono'; color:#aaa;">POLLICI</span>
-                    </div>
+            <div id="burst-header-ui" style="display:flex; justify-content:space-between; align-items:center; background:#222; padding:10px; border:1px solid var(--nomad-red); margin-bottom:10px;">
+                <b style="color:#fff; font-size:20px;">BURST (B) TOTALE ARMA:</b>
+                <div class="burst-ctrl">
+                    <button class="burst-btn" onclick="adjustTotalBurst(-1)">-</button>
+                    <span id="total-burst-display" style="color:#fff; font-size:24px; font-weight:bold;">3</span>
+                    <button class="burst-btn" onclick="adjustTotalBurst(1)">+</button>
                 </div>
             </div>
 
-            <div id="telemetry-cover" style="margin-bottom:15px;">
-                <button id="btn-cover" class="huge-btn" style="background:#1a0000; min-height:60px;" onclick="toggleCover()">COPERTURA BERSAGLIO <span>(-3 BS / +3 ARM)</span></button>
-            </div>
+            <div id="targets-allocation-container" style="overflow-y:auto; flex-grow:1;">
+                </div>
 
-            <div style="background:#111; padding:10px; border-left: 3px solid #00ff00; font-size: 12px; margin-bottom: 10px;">
-                <b style="color:#00ff00;">SISTEMI AUTOMATICI ATTIVI:</b><br>
-                <span id="auto-mods-log" style="color:#aaa;">Lettura in corso...</span>
-            </div>
+            <button id="add-target-btn" class="btn-status" style="margin-top:5px; border-style:dashed;" onclick="addNewTarget()">+ AGGIUNGI BERSAGLIO SECONDARIO</button>
             
-            <button class="huge-btn" style="background:var(--nomad-orange); color:#000; margin-top:5px; min-height:60px;" onclick="executeCalculation()">ESEGUI CALCOLO (B)</button>
+            <button class="huge-btn" style="background:var(--nomad-orange); color:#000; margin-top:15px; min-height:60px;" onclick="executeCalculation()">ESEGUI CALCOLO FINALE</button>
             
             <div id="calc-result"></div>
             
@@ -362,100 +365,181 @@
             goToStep('step-second-half');
         };
 
-        // --- TELEMETRIA E CALCOLI ---
-        window.updateDistanceLabel = (val) => {
-            window.manualDistance = parseInt(val);
-            document.getElementById('distValueDisplay').innerText = val;
+        // --- GESTIONE MULTI-BERSAGLIO E BURST (B) ---
+        window.totalBurst = 3;
+        window.combatTargets = [];
+
+        window.adjustTotalBurst = (val) => {
+            window.totalBurst = Math.max(1, window.totalBurst + val);
+            let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
+            if (currentAllocated > window.totalBurst) {
+                // Se abbassi il Burst totale sotto la soglia usata, toglie dadi al primo bersaglio valido
+                for(let t of window.combatTargets) { if(t.burst > 0) { t.burst--; break; } }
+            }
+            document.getElementById('total-burst-display').innerText = window.totalBurst;
+            renderTargetsAllocation();
         };
 
-        window.toggleCover = () => {
-            window.manualCover = !window.manualCover;
-            const btn = document.getElementById('btn-cover');
-            if (window.manualCover) {
-                btn.style.background = 'var(--nomad-orange)'; btn.style.color = '#000';
-            } else {
-                btn.style.background = '#1a0000'; btn.style.color = '#fff';
-            }
+        window.adjustTargetBurst = (index, val) => {
+            let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
+            let tgt = window.combatTargets[index];
+            if (val > 0 && currentAllocated < window.totalBurst) { tgt.burst += 1; } 
+            else if (val < 0 && tgt.burst > 0) { tgt.burst -= 1; }
+            renderTargetsAllocation();
+        };
+
+        window.setTargetRange = (index, mod) => { window.combatTargets[index].rangeMod = mod; renderTargetsAllocation(); };
+        window.toggleTargetCover = (index) => { window.combatTargets[index].cover = !window.combatTargets[index].cover; renderTargetsAllocation(); };
+
+        window.addNewTarget = () => {
+            window.combatTargets.push({ id: "generic", name: "Bersaglio Aggiuntivo", skills: "", rangeMod: 0, burst: 0, cover: false });
+            renderTargetsAllocation();
+        };
+
+        // Genera le "schede" visive per ogni nemico
+        window.renderTargetsAllocation = () => {
+            const container = document.getElementById('targets-allocation-container');
+            container.innerHTML = "";
+            let currentAllocated = window.combatTargets.reduce((sum, t) => sum + t.burst, 0);
+            let remainingB = window.totalBurst - currentAllocated;
+            let isAttackBS = window.currentOrder.action.includes('ATTACCO BS');
+
+            window.combatTargets.forEach((tgt, index) => {
+                let coverColor = tgt.cover ? 'var(--nomad-orange)' : '#1a0000';
+                let coverText = tgt.cover ? '#000' : '#fff';
+                
+                let autoLog = "";
+                if(tgt.skills.includes("mimetism (-6)")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Mimetico (-6)</span>`;
+                else if(tgt.skills.includes("mimetism (-3)") || tgt.skills.includes("camouflage")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Mimetico (-3)</span>`;
+                if(tgt.skills.includes("tinbot: firewall (-6)")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Firewall (-6)</span>`;
+                else if(tgt.skills.includes("tinbot: firewall (-3)") || tgt.skills.includes("ecm: hacker (-3)")) autoLog += `<span style="color:#ff3333; font-size:12px; margin-left:10px;">⚠️ Firewall (-3)</span>`;
+
+                let rangeHtml = isAttackBS ? `
+                    <div style="margin-top:15px;">
+                        <span style="color:#aaa; font-size:14px;">Distanza Gittata:</span>
+                        <div class="range-bar">
+                            <div class="range-seg seg-1 ${tgt.rangeMod === 3 ? 'active' : ''}" onclick="setTargetRange(${index}, 3)">+3</div>
+                            <div class="range-seg seg-2 ${tgt.rangeMod === 0 ? 'active' : ''}" onclick="setTargetRange(${index}, 0)">0</div>
+                            <div class="range-seg seg-3 ${tgt.rangeMod === -3 ? 'active' : ''}" onclick="setTargetRange(${index}, -3)">-3</div>
+                            <div class="range-seg seg-4 ${tgt.rangeMod === -6 ? 'active' : ''}" onclick="setTargetRange(${index}, -6)">-6</div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:11px; color:#aaa; margin-top:2px; padding:0 5px;">
+                            <span>0-8"</span><span>8-32"</span><span>32-48"</span><span>48-96"</span>
+                        </div>
+                    </div>
+                ` : "";
+
+                container.innerHTML += `
+                    <div class="target-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px dashed #444; padding-bottom: 10px;">
+                            <b style="color:var(--nomad-orange); font-size:22px;">${tgt.name}</b>
+                            ${autoLog}
+                        </div>
+                        
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                            <span style="color:#fff; font-size:16px;">Assegna Dadi (B):</span>
+                            <div class="burst-ctrl">
+                                <button class="burst-btn" onclick="adjustTargetBurst(${index}, -1)">-</button>
+                                <span style="color:${tgt.burst > 0 ? '#00ff00' : '#fff'}; font-size:24px; font-weight:bold; min-width:20px; text-align:center;">${tgt.burst}</span>
+                                <button class="burst-btn" style="opacity:${remainingB > 0 ? 1 : 0.3}" onclick="adjustTargetBurst(${index}, 1)">+</button>
+                            </div>
+                        </div>
+                        
+                        ${rangeHtml}
+                        
+                        <button class="huge-btn" style="background:${coverColor}; color:${coverText}; min-height:50px; font-size:18px; margin-top:15px; width:100%;" onclick="toggleTargetCover(${index})">COPERTURA BERSAGLIO</button>
+                    </div>
+                `;
+            });
         };
 
         window.goToModifiers = (finalAction) => {
             if(finalAction) window.currentOrder.action = finalAction;
             document.getElementById('calc-result').style.display = 'none';
             
-            window.manualCover = false;
-            document.getElementById('btn-cover').style.background = '#1a0000'; document.getElementById('btn-cover').style.color = '#fff';
+            // Inizializza Burst e Bersagli base
+            window.totalBurst = 3; 
+            window.combatTargets = [];
             
-            const distDiv = document.getElementById('telemetry-distance');
-            const autoLog = document.getElementById('auto-mods-log');
-            autoLog.innerHTML = "";
-
-            const unitSkills = window.currentOrder.unit.skills.toLowerCase();
-            const targetSkills = window.currentOrder.target ? window.currentOrder.target.skills.toLowerCase() : "";
-
-            if (window.currentOrder.action.includes('ATTACCO BS')) {
-                distDiv.style.display = 'block';
-                if(targetSkills.includes("mimetism (-6)")) autoLog.innerHTML += "⚠️ Bersaglio Mimetico (-6 BS)<br>";
-                else if(targetSkills.includes("mimetism (-3)") || targetSkills.includes("camouflage")) autoLog.innerHTML += "⚠️ Bersaglio Mimetico (-3 BS)<br>";
-                else autoLog.innerHTML += "Nessun sistema difensivo rilevato sul bersaglio.<br>";
-            } else if (window.currentOrder.action.includes('CORPO A CORPO')) {
-                distDiv.style.display = 'none';
-                if(unitSkills.includes("martial arts")) autoLog.innerHTML += "✅ Arti Marziali Attive (+3 CC)<br>";
-            } else if (window.currentOrder.action.includes('HACKING')) {
-                distDiv.style.display = 'none'; // Distanza non serve per Hacking
-                if(targetSkills.includes("tinbot: firewall (-6)")) autoLog.innerHTML += "⚠️ RILEVATO FIREWALL PESANTE (-6 WIP)<br>";
-                else if(targetSkills.includes("tinbot: firewall (-3)") || targetSkills.includes("ecm: hacker (-3)")) autoLog.innerHTML += "⚠️ RILEVATE DIFESE INFO (-3 WIP)<br>";
-                else autoLog.innerHTML += "✅ Nessun Firewall rilevato sul bersaglio.<br>";
+            let defaultB = window.currentOrder.action.includes('ATTACCO BS') ? 3 : 1;
+            
+            if (window.currentOrder.target) {
+                window.combatTargets.push({ id: window.currentOrder.target.id_profilo, name: window.currentOrder.target.nome, skills: window.currentOrder.target.skills.toLowerCase(), rangeMod: 0, burst: defaultB, cover: false });
             } else {
-                distDiv.style.display = 'none';
+                window.combatTargets.push({ id: "generic1", name: "Bersaglio Primario", skills: "", rangeMod: 0, burst: defaultB, cover: false });
+            }
+
+            document.getElementById('total-burst-display').innerText = window.totalBurst;
+            
+            if (window.currentOrder.action.includes('ATTACCO BS')) {
+                document.getElementById('burst-header-ui').style.display = 'flex';
+                document.getElementById('add-target-btn').style.display = 'block';
+            } else {
+                document.getElementById('burst-header-ui').style.display = 'none';
+                document.getElementById('add-target-btn').style.display = 'none';
             }
             
+            renderTargetsAllocation();
             goToStep('step-modifiers');
         };
+
         window.executeCalculation = () => {
             const order = window.currentOrder;
-            let base = 0; let attrName = ""; let modTotal = 0; let modLog = "";
-
-            const unitSkills = order.unit.skills.toLowerCase();
-            const targetSkills = order.target ? order.target.skills.toLowerCase() : "";
-
-            if (order.action.includes('ATTACCO BS')) { 
-                base = order.unit.bs; attrName = "BS"; 
-                if(window.manualCover) { modTotal -= 3; modLog += `> Copertura Bersaglio: <b style="color:#ff3333;">-3</b><br>`; }
-                
-                let dist = window.manualDistance;
-                let rangeMod = (dist <= 16) ? +3 : (dist <= 32 ? -3 : -6);
-                modTotal += rangeMod;
-                modLog += `> Gittata Arma (${dist}"): <b style="color:${rangeMod>0?'#00ff00':'#ff3333'};">${rangeMod>0?'+':''}${rangeMod}</b><br>`;
-                
-                if(targetSkills.includes("mimetism (-6)")) { modTotal -= 6; modLog += `> Mimetismo (Avversario): <b style="color:#ff3333;">-6</b><br>`; }
-                else if(targetSkills.includes("mimetism (-3)") || targetSkills.includes("camouflage")) { modTotal -= 3; modLog += `> Mimetismo (Avversario): <b style="color:#ff3333;">-3</b><br>`; }
-            }
-            else if (order.action.includes('CORPO A CORPO')) { 
-                base = order.unit.cc; attrName = "CC"; 
-                if(unitSkills.includes("martial arts")) { modTotal += 3; modLog += `> Arti Marziali: <b style="color:#00ff00;">+3</b><br>`; }
-            }
-            else if (order.action.includes('TIRO SALVEZZA')) { 
-                base = order.unit.arm; attrName = "ARM"; 
-                if(window.manualCover) { modTotal += 3; modLog += `> Bonus Copertura: <b style="color:#00ff00;">+3</b><br>`; }
-            }
-            else if (order.action.includes('HACKING')) { 
-                base = order.unit.wip; attrName = "WIP"; 
-                if(targetSkills.includes("tinbot: firewall (-6)")) { modTotal -= 6; modLog += `> Firewall Pesante: <b style="color:#ff3333;">-6</b><br>`; }
-                else if(targetSkills.includes("tinbot: firewall (-3)") || targetSkills.includes("ecm: hacker (-3)")) { modTotal -= 3; modLog += `> ECM/Firewall: <b style="color:#ff3333;">-3</b><br>`; }
-            }
-
-            let target = base + modTotal;
-            let targetName = order.target ? order.target.nome : "Nessuno/Ignoto";
-
+            let activeTargets = window.combatTargets.filter(t => t.burst > 0);
+            
             let resHtml = `<div style="color:#fff; line-height:1.6;">
                            <b>ATTACCANTE:</b> ${order.unit.alias}<br>
-                           <b>BERSAGLIO:</b> ${targetName}<br>
-                           <br><b>BASE (${attrName}):</b> ${base}<br>
-                           ${modLog}
-                           <hr style="border-color:var(--nomad-orange);">
-                           <div style="font-size:32px; color:#00ff00; font-weight:bold; text-align:center;">TARGET: ${target}</div>
-                           </div>`;
+                           <b>AZIONE:</b> ${order.action}<br>
+                           <hr style="border-color:var(--nomad-orange);">`;
 
+            if(activeTargets.length === 0) {
+                resHtml += `<p style="color:#ff3333; text-align:center; font-weight:bold;">Devi assegnare almeno 1 Dado (B) a un bersaglio!</p></div>`;
+                document.getElementById('calc-result').innerHTML = resHtml; 
+                document.getElementById('calc-result').style.display = 'block';
+                return;
+            }
+
+            activeTargets.forEach(tgt => {
+                let base = 0; let attrName = ""; let modTotal = 0; let modLog = "";
+                const unitSkills = order.unit.skills.toLowerCase();
+
+                if (order.action.includes('ATTACCO BS')) { 
+                    base = order.unit.bs; attrName = "BS"; 
+                    if(tgt.cover) { modTotal -= 3; modLog += `> Copertura: <b style="color:#ff3333;">-3</b><br>`; }
+                    modTotal += tgt.rangeMod;
+                    modLog += `> Gittata/Range: <b style="color:${tgt.rangeMod>0?'#00ff00':'#ff3333'};">${tgt.rangeMod>0?'+':''}${tgt.rangeMod}</b><br>`;
+                    if(tgt.skills.includes("mimetism (-6)")) { modTotal -= 6; modLog += `> Mimetismo: <b style="color:#ff3333;">-6</b><br>`; }
+                    else if(tgt.skills.includes("mimetism (-3)") || tgt.skills.includes("camouflage")) { modTotal -= 3; modLog += `> Mimetismo: <b style="color:#ff3333;">-3</b><br>`; }
+                }
+                else if (order.action.includes('CORPO A CORPO')) { 
+                    base = order.unit.cc; attrName = "CC"; 
+                    if(unitSkills.includes("martial arts")) { modTotal += 3; modLog += `> Arti Marziali: <b style="color:#00ff00;">+3</b><br>`; }
+                }
+                else if (order.action.includes('TIRO SALVEZZA')) { 
+                    base = order.unit.arm; attrName = "ARM"; 
+                    if(tgt.cover) { modTotal += 3; modLog += `> Bonus Copertura: <b style="color:#00ff00;">+3</b><br>`; }
+                }
+                else if (order.action.includes('HACKING')) { 
+                    base = order.unit.wip; attrName = "WIP"; 
+                    if(tgt.skills.includes("tinbot: firewall (-6)")) { modTotal -= 6; modLog += `> Firewall Pesante: <b style="color:#ff3333;">-6</b><br>`; }
+                    else if(tgt.skills.includes("tinbot: firewall (-3)") || tgt.skills.includes("ecm: hacker (-3)")) { modTotal -= 3; modLog += `> ECM/Firewall: <b style="color:#ff3333;">-3</b><br>`; }
+                }
+
+                let targetNum = base + modTotal;
+                resHtml += `
+                    <div style="background:#1a0000; padding:15px; border:1px solid var(--nomad-red); margin-bottom:15px; border-radius:5px;">
+                        <b style="color:var(--nomad-orange); font-size:20px;">VS ${tgt.name}</b> 
+                        <span style="background:#00ff00; color:#000; padding:3px 10px; font-weight:bold; border-radius:3px; float:right;">DADI (B): ${tgt.burst}</span><br>
+                        <div style="margin-top:10px;">
+                            <span style="color:#aaa; font-size:14px;">Base (${attrName}): ${base}</span><br>
+                            ${modLog}
+                        </div>
+                        <hr style="border-color:#444;">
+                        <div style="font-size:32px; color:#00ff00; font-weight:bold; text-align:center;">TARGET SU D20: ${targetNum}</div>
+                    </div>`;
+            });
+
+            resHtml += `</div>`;
             const resBox = document.getElementById('calc-result');
             resBox.innerHTML = resHtml; resBox.style.display = 'block';
         };
