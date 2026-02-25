@@ -1,4 +1,329 @@
-window.confirmAro = () => {
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOMADS TACTICAL TERMINAL v12.1</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#A60000">
+
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Teko:wght@500;700&display=swap" rel="stylesheet">
+    <script src="nomads_db.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0b0c10; --panel-bg: #1f1f1f; --nomad-red: #cc0000; 
+            --nomad-darkred: #8b0000; --nomad-orange: #ff6600; 
+            --text-main: #f0f0f0; --text-dim: #aaaaaa;
+        }
+        body { background: var(--bg-color); color: var(--text-main); font-family: 'Share Tech Mono', monospace; padding: 10px; border: 2px solid var(--nomad-red); min-height: 100vh; box-sizing: border-box; margin: 0; display: flex; flex-direction: column; overscroll-behavior-y: none; touch-action: pan-x pan-y; }
+        h2 { font-family: 'Teko', sans-serif; font-size: 28px; color: #fff; text-shadow: 2px 2px 0px var(--nomad-red); text-align: center; text-transform: uppercase; border-bottom: 2px solid var(--nomad-red); padding-bottom: 5px; margin-top: 0; margin-bottom: 15px;}
+        
+        .section { background: var(--panel-bg); border-left: 4px solid var(--nomad-red); padding: 10px; margin-bottom: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        input, select { background: #000; color: var(--text-main); border: 1px solid var(--nomad-red); width: 100%; padding: 15px; margin: 5px 0; font-size: 16px; box-sizing: border-box; }
+        
+        .btn-nomad { width: 100%; background: linear-gradient(135deg, var(--nomad-red) 0%, var(--nomad-darkred) 100%); color: #fff; padding: 15px; margin-top: 5px; cursor: pointer; font-family: 'Teko', sans-serif; font-size: 22px; font-weight: bold; text-transform: uppercase; border: none; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
+        .btn-status { width: 100%; background: #222; color: var(--nomad-red); border: 2px solid var(--nomad-red); padding: 15px; margin-top: 15px; font-family: 'Teko', sans-serif; font-size: 22px; font-weight: bold; cursor: pointer; }
+        .btn-small { padding: 10px; font-size: 18px; margin-top: 5px; clip-path: none; border-radius: 3px; }
+        
+        .grid-buttons { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto; padding-bottom: 10px;}
+        .huge-btn { flex: 1; min-height: 80px; background: #1a0000; border: 2px solid var(--nomad-red); color: #fff; font-family: 'Teko', sans-serif; font-size: 32px; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: 0.2s; border-radius: 5px; padding: 10px; text-align: center; line-height: 1.1; }
+        .huge-btn:active { background: var(--nomad-orange); color: #000; transform: scale(0.98); }
+        .huge-btn span { font-family: 'Share Tech Mono', monospace; font-size: 14px; color: var(--nomad-orange); font-weight: normal; margin-top: 5px; }
+
+        .flex-row { display: flex; gap: 10px; align-items: center; }
+        .step-container { display: none; flex-direction: column; height: 100%; flex-grow: 1;}
+        .active-step { display: flex; }
+        
+        #battle-header { text-align: center; color: var(--nomad-orange); font-size: 18px; font-weight: bold; margin-bottom: 10px; padding: 10px; background: #222; border: 1px dashed var(--nomad-orange); }
+        .roster-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; margin-bottom: 5px; border-left: 2px solid var(--nomad-orange); font-size: 12px; }
+        .del-btn { color: var(--nomad-red); font-weight: bold; cursor: pointer; padding: 5px 10px; background: #222; border-radius: 3px; }
+        
+        #calc-result { margin-top:15px; font-size:16px; border:2px solid #00ff00; background:#001a00; padding:15px; display:none; box-shadow: 0 0 15px rgba(0,255,0,0.2); }
+
+        /* Stile per lo Slider Verticale */
+        .slider-container { display: flex; flex-direction: row; align-items: center; justify-content: center; background: #111; padding: 20px; border: 1px solid var(--nomad-orange); border-radius: 5px; margin-bottom: 15px; }
+        input[type=range][orient=vertical] { writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 40px; height: 250px; cursor: pointer; }
+        .dist-label { font-size: 40px; font-family: 'Teko', sans-serif; color: var(--nomad-orange); margin-left: 30px; text-align: center;}
+    </style>
+</head>
+<body>
+    <h2>-- TUNGUSKA DATANET --</h2>
+    
+    <div id="setup">
+        <div class="section">
+            <h3 style="margin-top:0; color: var(--nomad-orange);">ARCHIVIO SQUADRE</h3>
+            <div class="flex-row">
+                <select id="savedRostersSelect" style="flex: 2;"><option value="">-- SQUADRE SALVATE --</option></select>
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="loadRoster()">CARICA</button>
+                <button class="btn-status btn-small" style="flex: 1; margin-top: 5px; padding: 10px;" onclick="deleteRoster()">ELIMINA</button>
+            </div>
+            <div class="flex-row">
+                <input type="text" id="saveName" placeholder="NOME NUOVA SQUADRA" style="flex: 2;">
+                <button class="btn-nomad btn-small" style="flex: 1;" onclick="saveRoster()">SALVA LISTA</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3 style="margin-top:0; color: var(--nomad-orange);">SCHIERAMENTO TRUPPE</h3>
+            <div class="flex-row">
+                <select id="groupSelect" style="flex:2;" onchange="updateProfileSelect()"><option value="">-- 1. TRUPPA --</option></select>
+                <select id="combatGroup" style="flex:1;"><option value="1">GRUPPO 1</option><option value="2">GRUPPO 2</option></select>
+            </div>
+            <select id="profileSelect" disabled><option value="">-- 2. SELEZIONA PROFILO --</option></select>
+            <input type="text" id="unitAlias" placeholder="3. ASSEGNA SOPRANNOME (Opzionale)">
+            <button class="btn-nomad" onclick="addUnitToRoster()">SCHIERA UNITÀ</button>
+            <div id="localRoster" style="margin-top:10px; border-top:1px dashed red; padding-top:10px;"><i>Nessuna unità schierata.</i></div>
+        </div>
+        <button class="btn-status" onclick="startBattle()">INVIA DATI E INIZIA PARTITA</button>
+    </div>
+
+    <div id="battle" style="display:none; flex-grow: 1; flex-direction: column;">
+        <div id="battle-header">SELEZIONA GRUPPO DI COMBATTIMENTO</div>
+
+        <div id="step-group" class="step-container active-step">
+            <div class="grid-buttons">
+                <button class="huge-btn" onclick="goToStep('step-unit', 1)">GRUPPO 1 <br><span>(Ordini Principali)</span></button>
+                <button class="huge-btn" onclick="goToStep('step-unit', 2)">GRUPPO 2 <br><span>(Ordini Secondari)</span></button>
+            </div>
+            <button class="btn-status" onclick="location.reload()" style="margin-top: 20px;">TORNA AL SETUP INIZIALE</button>
+        </div>
+
+        <div id="step-unit" class="step-container">
+            <div class="grid-buttons" id="unit-buttons-container"></div>
+            <button class="btn-status" onclick="goToStep('step-group')">INDIETRO</button>
+        </div>
+
+        <div id="step-action" class="step-container">
+            <div class="grid-buttons" style="overflow-y:auto;">
+                <button class="huge-btn" onclick="selectAction('MOVIMENTO')">MOVIMENTO <span>(Innesca ARO)</span></button>
+                <button class="huge-btn" onclick="selectAction('ATTACCO BS')">ATTACCO BS <span>(Fuoco a Distanza)</span></button>
+                <button class="huge-btn" onclick="selectAction('CORPO A CORPO')">CORPO A CORPO <span>(Mischia)</span></button>
+                <button class="huge-btn" style="border-color:#00ffff;" onclick="selectAction('HACKING')">HACKING <span>(Attacco Infoguerra)</span></button>
+                <button class="huge-btn" style="border-color:#00ffff;" onclick="selectAction('SCHIVATA')">SCHIVATA / DODGE <span>(Difesa)</span></button>
+                <button class="huge-btn" style="border-color:#00ffff;" onclick="selectAction('TIRO SALVEZZA')">TIRO SALVEZZA <span>(Difesa Danni - ARM)</span></button>
+                <button class="huge-btn" style="border-color: #aaa;" onclick="selectAction('GESTIONE STATI')">GESTIONE STATI <span>(Targato, Inconscio, Rimosso...)</span></button>
+            </div>
+            <button class="btn-status" onclick="goToStep('step-unit')">ANNULLA</button>
+        </div>
+
+        <div id="step-weapon" class="step-container">
+            <div class="grid-buttons" id="weapon-buttons-container"></div>
+            <button class="btn-status" onclick="goToStep('step-action')">INDIETRO</button>
+        </div>
+
+        <div id="step-wait-aro" class="step-container">
+            <div class="grid-buttons" style="justify-content: flex-start;">
+                <div style="text-align:center; padding: 15px; border: 2px dashed var(--nomad-orange); color: #fff; margin-bottom: 15px;">
+                    <h1 style="color:var(--nomad-red); font-size:30px; margin:0;">FASE REATTIVA</h1>
+                    <p style="font-size: 14px;">In attesa dell'avversario...</p>
+                </div>
+                
+                <h3 style="color:var(--nomad-orange); margin:0;">SELEZIONA BERSAGLIO:</h3>
+                <p style="font-size:12px; margin-top:0;">(Il sistema leggerà le sue abilità difensive automaticamente)</p>
+                <select id="targetSelect" style="margin-bottom:20px;">
+                    <option value="">-- SELEZIONA NEMICO (Simulazione) --</option>
+                </select>
+
+                <button class="huge-btn" style="background:#004400; border-color:#00ff00; min-height: 60px;" onclick="confirmAro()">PROSEGUI <br><span>(ARO Completato)</span></button>
+            </div>
+            <button class="btn-status" onclick="goToStep('step-group')">ANNULLA ORDINE</button>
+        </div>
+
+        <div id="step-second-half" class="step-container">
+            <div class="grid-buttons" id="second-half-buttons-container">
+                </div>
+            <button class="btn-status" onclick="goToStep('step-group')">ABORTISCI ATTIVAZIONE</button>
+        </div>
+
+        <div id="step-modifiers" class="step-container">
+            
+            <div id="telemetry-distance" style="display:none;">
+                <h3 style="color:var(--nomad-orange); text-align:center; margin:0 0 10px 0;">DISTANZA BERSAGLIO</h3>
+                <div class="slider-container">
+                    <input type="range" id="distSlider" orient="vertical" min="0" max="48" value="16" oninput="updateDistanceLabel(this.value)">
+                    <div class="dist-label">
+                        <span id="distValueDisplay">16</span>"<br>
+                        <span style="font-size:14px; font-family:'Share Tech Mono'; color:#aaa;">POLLICI</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="telemetry-cover" style="margin-bottom:15px;">
+                <button id="btn-cover" class="huge-btn" style="background:#1a0000; min-height:60px;" onclick="toggleCover()">COPERTURA BERSAGLIO <span>(-3 BS / +3 ARM)</span></button>
+            </div>
+
+            <div style="background:#111; padding:10px; border-left: 3px solid #00ff00; font-size: 12px; margin-bottom: 10px;">
+                <b style="color:#00ff00;">SISTEMI AUTOMATICI ATTIVI:</b><br>
+                <span id="auto-mods-log" style="color:#aaa;">Lettura in corso...</span>
+            </div>
+            
+            <button class="huge-btn" style="background:var(--nomad-orange); color:#000; margin-top:5px; min-height:60px;" onclick="executeCalculation()">ESEGUI CALCOLO (B)</button>
+            
+            <div id="calc-result"></div>
+            
+            <button class="btn-status" style="margin-top:20px;" onclick="goToStep('step-group')">FINE ORDINE (TORNA AL MENU)</button>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "IL_TUO_API", projectId: "IL_TUO_PROGETTO" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.roster = [];
+        window.currentOrder = { unit: null, action: "", weapon: "", target: null };
+        window.manualCover = false;
+        window.manualDistance = 16;
+
+        // --- SETUP ROSTER ---
+        window.onload = () => {
+            if(!window.masterNomadsDatabase) return;
+            const gruppiUnici = [...new Set(window.masterNomadsDatabase.map(u => u.nome.trim()))].sort();
+            const groupSelect = document.getElementById('groupSelect');
+            gruppiUnici.forEach(nome => { const opt = document.createElement('option'); opt.value = nome; opt.textContent = nome; groupSelect.appendChild(opt); });
+            
+            const targetSelect = document.getElementById('targetSelect');
+            window.masterNomadsDatabase.forEach(u => { const opt = document.createElement('option'); opt.value = u.id_profilo; opt.textContent = u.nome; targetSelect.appendChild(opt); });
+            
+            refreshSavedRostersList(); // Carica tendina salvataggi all'avvio
+        };
+
+        window.updateProfileSelect = () => {
+            const groupName = document.getElementById('groupSelect').value;
+            const profileSelect = document.getElementById('profileSelect');
+            profileSelect.innerHTML = '<option value="">-- 2. SELEZIONA PROFILO --</option>';
+            profileSelect.disabled = !groupName;
+            if (groupName) {
+                window.masterNomadsDatabase.filter(u => u.nome.trim() === groupName).forEach(unit => {
+                    const opt = document.createElement('option'); opt.value = unit.id_profilo;
+                    const arma = unit.arma.split('/')[0].split(',')[0].trim();
+                    opt.textContent = `[${arma}] - BS:${unit.bs} ARM:${unit.arm}`;
+                    profileSelect.appendChild(opt);
+                });
+            }
+        };
+
+        window.addUnitToRoster = () => {
+            const idProfilo = document.getElementById('profileSelect').value;
+            const cGroup = document.getElementById('combatGroup').value;
+            let aliasInput = document.getElementById('unitAlias').value.toUpperCase().trim();
+            if (!idProfilo) return;
+            const dbUnit = window.masterNomadsDatabase.find(u => u.id_profilo === idProfilo);
+            if (!aliasInput) aliasInput = dbUnit.nome.toUpperCase().trim();
+            
+            const unit = { alias: aliasInput, name: dbUnit.nome, weapon: dbUnit.arma, bs: dbUnit.bs, cc: dbUnit.cc, wip: dbUnit.wip, arm: dbUnit.arm, skills: dbUnit.skills, combatGroup: parseInt(cGroup), state: "ACTIVE", player: "G_NOMADS" };
+            window.roster.push(unit); document.getElementById('unitAlias').value = ""; renderRoster();
+        };
+
+        window.removeUnit = (index) => { window.roster.splice(index, 1); renderRoster(); };
+        window.renderRoster = () => {
+            const container = document.getElementById('localRoster');
+            if(window.roster.length === 0) return container.innerHTML = "<i>Nessuna unità schierata.</i>";
+            container.innerHTML = "";
+            window.roster.forEach((u, i) => {
+                const armaCorta = u.weapon.split('/')[0].split(',')[0];
+                container.innerHTML += `<div class="roster-item"><div><b style="color:#00ff00;">[G${u.combatGroup}]</b> <b>${u.alias}</b> <span style="color:#aaa;">| ${armaCorta}</span></div><div class="del-btn" onclick="removeUnit(${i})">X</div></div>`;
+            });
+        };
+
+        // --- GESTIONE ARCHIVIO SQUADRE (SALVA / CARICA / ELIMINA) ---
+        window.saveRoster = () => {
+            const name = document.getElementById('saveName').value.trim().toUpperCase();
+            if(!name || window.roster.length === 0) return alert("Inserisci un nome valido e aggiungi almeno un'unità alla lista!");
+            
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            savedData[name] = window.roster;
+            localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+            
+            document.getElementById('saveName').value = "";
+            refreshSavedRostersList();
+            alert(`Squadra "${name}" salvata con successo!`);
+        };
+
+        window.loadRoster = () => {
+            const name = document.getElementById('savedRostersSelect').value;
+            if(!name) return;
+            
+            const loadedRoster = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}')[name] || [];
+            
+            window.roster = loadedRoster.map(u => ({
+                ...u,
+                combatGroup: u.combatGroup || 1,
+                state: u.state || "ACTIVE"
+            }));
+            
+            renderRoster();
+        };
+
+        window.deleteRoster = () => {
+            const name = document.getElementById('savedRostersSelect').value;
+            if(!name) return alert("Seleziona una squadra dalla tendina prima di eliminarla.");
+            
+            if(confirm(`Sei sicuro di voler eliminare la squadra salvata "${name}"?`)) {
+                const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+                delete savedData[name];
+                localStorage.setItem('infinityRosters_Nomads', JSON.stringify(savedData));
+                refreshSavedRostersList();
+            }
+        };
+
+        window.refreshSavedRostersList = () => {
+            const savedData = JSON.parse(localStorage.getItem('infinityRosters_Nomads') || '{}');
+            const select = document.getElementById('savedRostersSelect');
+            select.innerHTML = '<option value="">-- SQUADRE SALVATE --</option>';
+            Object.keys(savedData).forEach(n => {
+                const opt = document.createElement('option'); opt.value = n; opt.textContent = n;
+                select.appendChild(opt);
+            });
+        };
+
+        // --- MACCHINA A STATI ---
+        window.startBattle = async () => { 
+            if(window.roster.length === 0) return alert("Schiera un'unità!");
+            document.getElementById('setup').style.display='none'; document.getElementById('battle').style.display='flex'; 
+        };
+
+        window.goToStep = (stepId, param = null) => {
+            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active-step'));
+            document.getElementById(stepId).classList.add('active-step');
+            const header = document.getElementById('battle-header');
+
+            if (stepId === 'step-group') header.innerText = "GRUPPO DI COMBATTIMENTO";
+            if (stepId === 'step-unit') {
+                header.innerText = `UNITÀ - GRUPPO ${param}`;
+                const container = document.getElementById('unit-buttons-container'); container.innerHTML = "";
+                const unitsInGroup = window.roster.filter(u => u.combatGroup === param);
+                unitsInGroup.forEach(u => {
+                    let btnColor = u.state === 'DEAD' ? '#330000' : '#1a0000';
+                    container.innerHTML += `<button class="huge-btn" style="background:${btnColor};" onclick="selectUnit('${u.alias}')">${u.alias}</button>`;
+                });
+            }
+        };
+
+        window.selectUnit = (alias) => { window.currentOrder.unit = window.roster.find(u => u.alias === alias); goToStep('step-action'); };
+        
+        window.selectAction = (action) => {
+            window.currentOrder.action = action;
+            if (action === 'TIRO SALVEZZA') { goToModifiers('TIRO SALVEZZA'); }
+            else if (action === 'ATTACCO BS') {
+                const container = document.getElementById('weapon-buttons-container'); container.innerHTML = "";
+                window.currentOrder.unit.weapon.replace('/', ',').split(',').forEach(w => {
+                    container.innerHTML += `<button class="huge-btn" onclick="declareAttack('${w.trim()}')">${w.trim()}</button>`;
+                });
+                goToStep('step-weapon');
+            } 
+            else if (action === 'CORPO A CORPO' || action === 'MOVIMENTO') { goToStep('step-wait-aro'); } 
+        };
+
+        window.declareAttack = (weaponName) => { window.currentOrder.weapon = weaponName; goToStep('step-wait-aro'); };
+
+        window.confirmAro = () => {
             const targetId = document.getElementById('targetSelect').value;
             if(targetId) { window.currentOrder.target = window.masterNomadsDatabase.find(u => u.id_profilo === targetId); } 
             else { window.currentOrder.target = null; }
@@ -24,3 +349,96 @@ window.confirmAro = () => {
 
             goToStep('step-second-half');
         };
+
+        // --- TELEMETRIA E CALCOLI ---
+        window.updateDistanceLabel = (val) => {
+            window.manualDistance = parseInt(val);
+            document.getElementById('distValueDisplay').innerText = val;
+        };
+
+        window.toggleCover = () => {
+            window.manualCover = !window.manualCover;
+            const btn = document.getElementById('btn-cover');
+            if (window.manualCover) {
+                btn.style.background = 'var(--nomad-orange)'; btn.style.color = '#000';
+            } else {
+                btn.style.background = '#1a0000'; btn.style.color = '#fff';
+            }
+        };
+
+        window.goToModifiers = (finalAction) => {
+            if(finalAction) window.currentOrder.action = finalAction;
+            document.getElementById('calc-result').style.display = 'none';
+            
+            window.manualCover = false;
+            document.getElementById('btn-cover').style.background = '#1a0000'; document.getElementById('btn-cover').style.color = '#fff';
+            
+            const distDiv = document.getElementById('telemetry-distance');
+            const autoLog = document.getElementById('auto-mods-log');
+            autoLog.innerHTML = "";
+
+            const unitSkills = window.currentOrder.unit.skills.toLowerCase();
+            const targetSkills = window.currentOrder.target ? window.currentOrder.target.skills.toLowerCase() : "";
+
+            if (window.currentOrder.action.includes('ATTACCO BS')) {
+                distDiv.style.display = 'block';
+                if(targetSkills.includes("mimetism (-6)")) autoLog.innerHTML += "⚠️ Bersaglio Mimetico (-6 BS)<br>";
+                else if(targetSkills.includes("mimetism (-3)") || targetSkills.includes("camouflage")) autoLog.innerHTML += "⚠️ Bersaglio Mimetico (-3 BS)<br>";
+                else autoLog.innerHTML += "Nessun sistema difensivo rilevato sul bersaglio.<br>";
+            } else if (window.currentOrder.action.includes('CORPO A CORPO')) {
+                distDiv.style.display = 'none';
+                if(unitSkills.includes("martial arts")) autoLog.innerHTML += "✅ Arti Marziali Attive (+3 CC)<br>";
+            } else {
+                distDiv.style.display = 'none';
+            }
+            
+            goToStep('step-modifiers');
+        };
+
+        window.executeCalculation = () => {
+            const order = window.currentOrder;
+            let base = 0; let attrName = ""; let modTotal = 0; let modLog = "";
+
+            const unitSkills = order.unit.skills.toLowerCase();
+            const targetSkills = order.target ? order.target.skills.toLowerCase() : "";
+
+            if (order.action.includes('ATTACCO BS')) { 
+                base = order.unit.bs; attrName = "BS"; 
+                if(window.manualCover) { modTotal -= 3; modLog += `> Copertura Bersaglio: <b style="color:#ff3333;">-3</b><br>`; }
+                
+                let dist = window.manualDistance;
+                let rangeMod = (dist <= 16) ? +3 : (dist <= 32 ? -3 : -6);
+                modTotal += rangeMod;
+                modLog += `> Gittata Arma (${dist}"): <b style="color:${rangeMod>0?'#00ff00':'#ff3333'};">${rangeMod>0?'+':''}${rangeMod}</b><br>`;
+                
+                if(targetSkills.includes("mimetism (-6)")) { modTotal -= 6; modLog += `> Mimetismo (Avversario): <b style="color:#ff3333;">-6</b><br>`; }
+                else if(targetSkills.includes("mimetism (-3)") || targetSkills.includes("camouflage")) { modTotal -= 3; modLog += `> Mimetismo (Avversario): <b style="color:#ff3333;">-3</b><br>`; }
+            }
+            else if (order.action.includes('CORPO A CORPO')) { 
+                base = order.unit.cc; attrName = "CC"; 
+                if(unitSkills.includes("martial arts")) { modTotal += 3; modLog += `> Arti Marziali: <b style="color:#00ff00;">+3</b><br>`; }
+            }
+            else if (order.action.includes('TIRO SALVEZZA')) { 
+                base = order.unit.arm; attrName = "ARM"; 
+                if(window.manualCover) { modTotal += 3; modLog += `> Bonus Copertura: <b style="color:#00ff00;">+3</b><br>`; }
+            }
+
+            let target = base + modTotal;
+            let targetName = order.target ? order.target.nome : "Nessuno/Ignoto";
+
+            let resHtml = `<div style="color:#fff; line-height:1.6;">
+                           <b>ATTACCANTE:</b> ${order.unit.alias}<br>
+                           <b>BERSAGLIO:</b> ${targetName}<br>
+                           <br><b>BASE (${attrName}):</b> ${base}<br>
+                           ${modLog}
+                           <hr style="border-color:var(--nomad-orange);">
+                           <div style="font-size:32px; color:#00ff00; font-weight:bold; text-align:center;">TARGET: ${target}</div>
+                           </div>`;
+
+            const resBox = document.getElementById('calc-result');
+            resBox.innerHTML = resHtml; resBox.style.display = 'block';
+        };
+
+    </script>
+</body>
+</html>
