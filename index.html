@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOMADS TACTICAL TERMINAL v18.2</title>
+    <title>NOMADS TACTICAL TERMINAL v18.1</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#A60000">
 
@@ -14,15 +13,15 @@
 
 
     <style>
-        /* 
+
 // 13.1 modificato grafica range e assegnazione b
 // 14.1 aggiunto vai programmi hacker
 //15.1 aggiunto gittata armi variabile in base all'arma selezionata
 //16.1 creato lista armi esterna
 //17.1 inserito valori completi arma 
 //18.1 INSERITO bersagli multipli
-//18.2 sistemato errori
-*/
+
+
         html { overscroll-behavior: none; }
         :root {
             --bg-color: #0b0c10; --panel-bg: #1f1f1f; --nomad-red: #cc0000; 
@@ -72,7 +71,7 @@
 
    <div style="position: relative;">
         <h2>-- NOMAD DATANET --</h2>
-        <span style="position: absolute; right: 5px; bottom: 20px; font-size: 14px; font-family: 'Share Tech Mono', monospace; color: var(--nomad-orange); font-weight: bold; text-shadow: none; letter-spacing: normal;">v18.2</span>
+        <span style="position: absolute; right: 5px; bottom: 20px; font-size: 14px; font-family: 'Share Tech Mono', monospace; color: var(--nomad-orange); font-weight: bold; text-shadow: none; letter-spacing: normal;">v18.1</span>
     </div>
     
     <div id="setup">
@@ -261,6 +260,7 @@
             
             // Assegniamo tutto il Burst al primo bersaglio di default
             window.combatTargets[0].burst = window.totalBurst;
+            
             goToStep('step-second-half'); // O direttamente goToModifiers se vuoi saltare il movimento
         };
         // --- GESTIONE MULTI-BERSAGLIO E BURST (B) ---
